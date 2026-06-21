@@ -313,3 +313,18 @@ export const password = {
       false
     ),
 };
+
+// ---------------------------------------------------------------------------
+// Telegram link
+// ---------------------------------------------------------------------------
+
+export interface LinkStartResponse {
+  code: string;
+  expires_in: number;
+  deep_link: string;
+}
+
+export const tgLink = {
+  start: () => post<LinkStartResponse>("/android/link/start"),
+  unlink: () => del<void>("/android/link/telegram"),
+};

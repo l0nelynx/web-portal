@@ -1,8 +1,8 @@
 import { Alert, App, Button, Card, Col, Descriptions, Divider, Form, Input, Modal, Row, Space, Tag, Typography } from "antd";
-import { CheckCircleOutlined, LockOutlined, LogoutOutlined, MailOutlined, SafetyCertificateOutlined, WarningOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, LinkOutlined, LockOutlined, LogoutOutlined, MailOutlined, SafetyCertificateOutlined, SendOutlined, WarningOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, email, password, sessions } from "../../api/client";
+import { ApiError, email, password, sessions, tgLink } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import { useLang } from "../../locale";
 
@@ -10,7 +10,7 @@ const { Title, Text } = Typography;
 
 export default function SettingsTab() {
   const { message: msg } = App.useApp();
-  const { user, profile, logout } = useAuth();
+  const { user, profile, logout, refreshProfile } = useAuth();
   const { L } = useLang();
   const navigate = useNavigate();
   const [pwdForm] = Form.useForm();
@@ -18,6 +18,9 @@ export default function SettingsTab() {
   const [pwdError, setPwdError] = useState<string | null>(null);
   const [revokeLoading, setRevokeLoading] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [unlinkLoading, setUnlinkLoading] = useState(false);
+  const [tgLinkOpened, setTgLinkOpened] = useState(false);
 
   async function onPasswordChange(values: { current: string; next: string }) {
     setPwdLoading(true);
@@ -81,6 +84,45 @@ export default function SettingsTab() {
     }
   }
 
+  async function handleLinkTelegram() {
+    setLinkLoading(true);
+    try {
+      const resp = await tgLink.start();
+      window.open(resp.deep_link, "_blank", "noopener");
+      setTgLinkOpened(true);
+    } catch (e) {
+      if (e instanceof ApiError && e.code === "already_linked") {
+        await refreshProfile();
+      } else {
+        msg.error(L.err_tg_link);
+      }
+    } finally {
+      setLinkLoading(false);
+    }
+  }
+
+  async function handleUnlinkTelegram() {
+    Modal.confirm({
+      title: L.confirm_unlink_tg,
+      content: L.confirm_unlink_tg_body,
+      okText: L.btn_unlink_telegram,
+      cancelText: L.cancel,
+      okButtonProps: { danger: true },
+      centered: true,
+      async onOk() {
+        setUnlinkLoading(true);
+        try {
+          await tgLink.unlink();
+          await refreshProfile();
+        } catch {
+          msg.error(L.err_tg_unlink);
+        } finally {
+          setUnlinkLoading(false);
+        }
+      },
+    });
+  }
+
   return (
     <div>
       <Title level={4} style={{ color: "#fff", marginBottom: 24 }}>
@@ -113,11 +155,41 @@ export default function SettingsTab() {
                 )}
               </Descriptions.Item>
               <Descriptions.Item label={L.label_telegram}>
-                {profile?.user.tg_id
-                  ? <Tag color="processing">{L.tg_linked}</Tag>
-                  : <Tag>{L.tg_not_linked}</Tag>}
+                <Space wrap>
+                  {profile?.user.tg_id
+                    ? <Tag color="processing" icon={<SendOutlined />}>{L.tg_linked}</Tag>
+                    : <Tag>{L.tg_not_linked}</Tag>}
+                  {profile?.user.tg_id ? (
+                    <Button size="small" danger loading={unlinkLoading} onClick={handleUnlinkTelegram}
+                      style={{ fontSize: 11, borderRadius: 6 }}>
+                      {L.btn_unlink_telegram}
+                    </Button>
+                  ) : (
+                    <Button size="small" loading={linkLoading} onClick={handleLinkTelegram}
+                      icon={<LinkOutlined />}
+                      style={{ fontSize: 11, borderRadius: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}>
+                      {L.btn_link_telegram}
+                    </Button>
+                  )}
+                </Space>
               </Descriptions.Item>
             </Descriptions>
+            {tgLinkOpened && (
+              <Alert
+                type="info"
+                message={L.tg_link_opened}
+                style={{ marginTop: 12, borderRadius: 10 }}
+                showIcon
+                closable
+                onClose={() => setTgLinkOpened(false)}
+                action={
+                  <Button size="small" onClick={() => refreshProfile().then(() => setTgLinkOpened(false))}
+                    style={{ borderRadius: 6, fontSize: 11 }}>
+                    {L.btn_refresh}
+                  </Button>
+                }
+              />
+            )}
           </Card>
         </Col>
 

@@ -1,7 +1,8 @@
-import { App, Avatar, Button, Layout, Menu, Typography } from "antd";
+import { App, Avatar, Button, Drawer, Grid, Layout, Menu, Typography } from "antd";
 import {
   LaptopOutlined,
   LogoutOutlined,
+  MenuOutlined,
   SafetyCertificateOutlined,
   ShoppingCartOutlined,
   WifiOutlined,
@@ -19,6 +20,7 @@ import SettingsTab from "./dashboard/SettingsTab";
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 type TabKey = "subscription" | "buy" | "devices" | "settings";
 
@@ -26,8 +28,12 @@ export default function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { L, toggle } = useLang();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
   const [tab, setTab] = useState<TabKey>("subscription");
   const [collapsed, setCollapsed] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const MENU_ITEMS = [
     { key: "subscription", icon: <WifiOutlined />, label: L.menu_subscription },
@@ -41,9 +47,14 @@ export default function DashboardPage() {
     navigate("/login", { replace: true });
   }
 
+  function selectTab(key: TabKey) {
+    setTab(key);
+    setDrawerOpen(false);
+  }
+
   function renderTab() {
     switch (tab) {
-      case "subscription": return <SubscriptionTab onBuyClick={() => setTab("buy")} />;
+      case "subscription": return <SubscriptionTab onBuyClick={() => selectTab("buy")} />;
       case "buy": return <BuyTab />;
       case "devices": return <DevicesTab />;
       case "settings": return <SettingsTab />;
@@ -52,99 +63,113 @@ export default function DashboardPage() {
 
   const shortName = BRAND_NAME.split(" ")[0];
 
-  return (
-    <App>
-      {/* Root layout fills the viewport and never grows taller */}
-      <Layout style={{ height: "100vh", overflow: "hidden", background: "#0B0B14" }}>
-
-        {/* ── Sidebar (sticky, does not scroll with content) ──────────────── */}
-        <Sider
-          collapsible
-          collapsed={collapsed}
-          onCollapse={setCollapsed}
-          breakpoint="md"
-          width={220}
+  /* ── Sidebar content shared between Sider and Drawer ─────────────── */
+  function NavContent({ drawer = false }: { drawer?: boolean }) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <Link
+          to="/"
           style={{
-            height: "100vh",
-            position: "sticky",
-            top: 0,
-            background: "rgba(255,255,255,0.03)",
-            borderRight: "1px solid rgba(255,255,255,0.07)",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: collapsed && !drawer ? "20px 18px" : "20px 24px",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
             overflow: "hidden",
+            flexShrink: 0,
+            textDecoration: "none",
+            transition: "padding 0.2s",
           }}
         >
-          {/* Flex column fills the sider */}
-          <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <BrandLogo size={32} style={{ flexShrink: 0 }} />
+          {(!collapsed || drawer) && (
+            <Text strong style={{ color: "#fff", fontSize: 15, whiteSpace: "nowrap" }}>
+              {shortName}
+            </Text>
+          )}
+        </Link>
 
-            {/* Logo — links to landing page */}
-            <Link
-              to="/"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: collapsed ? "20px 18px" : "20px 24px",
-                borderBottom: "1px solid rgba(255,255,255,0.07)",
-                overflow: "hidden",
-                flexShrink: 0,
-                textDecoration: "none",
-                transition: "padding 0.2s",
-              }}
-            >
-              <BrandLogo size={32} style={{ flexShrink: 0 }} />
-              {!collapsed && (
-                <Text strong style={{ color: "#fff", fontSize: 15, whiteSpace: "nowrap" }}>
-                  {shortName}
-                </Text>
-              )}
-            </Link>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          <Menu
+            mode="inline"
+            selectedKeys={[tab]}
+            items={MENU_ITEMS}
+            onClick={({ key }) => selectTab(key as TabKey)}
+            style={{ background: "transparent", border: "none", padding: "12px 0" }}
+            theme="dark"
+          />
+        </div>
 
-            {/* Navigation — fills remaining space */}
-            <div style={{ flex: 1, overflowY: "auto" }}>
-              <Menu
-                mode="inline"
-                selectedKeys={[tab]}
-                items={MENU_ITEMS}
-                onClick={({ key }) => setTab(key as TabKey)}
-                style={{ background: "transparent", border: "none", padding: "12px 0" }}
-                theme="dark"
-              />
-            </div>
-
-            {/* Logout — pinned above the collapse trigger (trigger is ~48px) */}
-            <div
-              style={{
-                flexShrink: 0,
-                padding: collapsed ? "12px 12px 60px" : "12px 12px 60px",
-                borderTop: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <Button
-                icon={<LogoutOutlined />}
-                onClick={handleLogout}
-                block
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "rgba(255,255,255,0.5)",
-                  borderRadius: 10,
-                  textAlign: "left",
-                }}
-              >
-                {!collapsed && L.btn_logout}
-              </Button>
-            </div>
-          </div>
-        </Sider>
-
-        {/* ── Main area ────────────────────────────────────────────────────── */}
-        <Layout
+        <div
           style={{
-            background: "#0B0B14",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
+            flexShrink: 0,
+            padding: drawer ? "12px 12px 24px" : "12px 12px 60px",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
           }}
+        >
+          <Button
+            icon={<LogoutOutlined />}
+            onClick={handleLogout}
+            block
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.5)",
+              borderRadius: 10,
+              textAlign: "left",
+            }}
+          >
+            {(!collapsed || drawer) && L.btn_logout}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <App>
+      {/* Mobile navigation drawer */}
+      {isMobile && (
+        <Drawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          placement="left"
+          width={240}
+          closable={false}
+          styles={{
+            body: { padding: 0, background: "#0D0D1A", height: "100%" },
+            mask: { background: "rgba(0,0,0,0.6)" },
+          }}
+        >
+          <NavContent drawer />
+        </Drawer>
+      )}
+
+      <Layout style={{ height: "100vh", overflow: "hidden", background: "#0B0B14" }}>
+
+        {/* Desktop sidebar */}
+        {!isMobile && (
+          <Sider
+            collapsible
+            collapsed={collapsed}
+            onCollapse={setCollapsed}
+            width={220}
+            style={{
+              height: "100vh",
+              position: "sticky",
+              top: 0,
+              background: "rgba(255,255,255,0.03)",
+              borderRight: "1px solid rgba(255,255,255,0.07)",
+              overflow: "hidden",
+            }}
+          >
+            <NavContent />
+          </Sider>
+        )}
+
+        {/* Main area */}
+        <Layout
+          style={{ background: "#0B0B14", display: "flex", flexDirection: "column", overflow: "hidden" }}
         >
           {/* Header */}
           <Header
@@ -154,16 +179,29 @@ export default function DashboardPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              padding: "0 32px",
+              padding: isMobile ? "0 16px" : "0 32px",
               height: 60,
               flexShrink: 0,
             }}
           >
-            <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
-              {L.header_portal}
-            </Text>
+            {/* Left */}
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {/* Language toggle */}
+              {isMobile ? (
+                <Button
+                  type="text"
+                  icon={<MenuOutlined />}
+                  onClick={() => setDrawerOpen(true)}
+                  style={{ color: "rgba(255,255,255,0.7)", fontSize: 18, padding: "4px 8px" }}
+                />
+              ) : (
+                <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
+                  {L.header_portal}
+                </Text>
+              )}
+            </div>
+
+            {/* Right */}
+            <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
               <Button
                 size="small"
                 onClick={toggle}
@@ -180,23 +218,25 @@ export default function DashboardPage() {
               </Button>
               <Avatar
                 size={32}
-                style={{ background: "linear-gradient(135deg, #06D6A0, #0096C7)", fontSize: 14 }}
+                style={{ background: "linear-gradient(135deg, #06D6A0, #0096C7)", fontSize: 14, flexShrink: 0 }}
               >
                 {(user?.email || "U")[0].toUpperCase()}
               </Avatar>
-              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
-                {user?.email || "—"}
-              </Text>
+              {!isMobile && (
+                <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
+                  {user?.email || "—"}
+                </Text>
+              )}
             </div>
           </Header>
 
           {/* Content — only this area scrolls */}
           <Content
             style={{
-              padding: "32px 40px",
+              padding: isMobile ? "16px" : "32px 40px",
               overflowY: "auto",
               flex: 1,
-              maxWidth: 1100,
+              maxWidth: isMobile ? "100%" : 1100,
               width: "100%",
             }}
           >

@@ -139,6 +139,14 @@ export interface Translations {
   msg_code_sent: string;
   err_send_code: string;
   err_change_pwd: string;
+  // Telegram link
+  btn_link_telegram: string;
+  btn_unlink_telegram: string;
+  tg_link_opened: string;
+  err_tg_link: string;
+  err_tg_unlink: string;
+  confirm_unlink_tg: string;
+  confirm_unlink_tg_body: string;
 }
 
 const en: Translations = {
@@ -262,6 +270,13 @@ const en: Translations = {
   msg_code_sent: "Code sent to your email",
   err_send_code: "Failed to send code",
   err_change_pwd: "Failed to change password",
+  btn_link_telegram: "Link Telegram",
+  btn_unlink_telegram: "Unlink",
+  tg_link_opened: "Telegram link opened — click Start in the bot, then refresh this page",
+  err_tg_link: "Failed to generate Telegram link",
+  err_tg_unlink: "Failed to unlink Telegram",
+  confirm_unlink_tg: "Unlink Telegram?",
+  confirm_unlink_tg_body: "Your Telegram account will be disconnected. You can re-link it later.",
 };
 
 const ru: Translations = {
@@ -389,6 +404,13 @@ const ru: Translations = {
   msg_code_sent: "Код отправлен на ваш email",
   err_send_code: "Не удалось отправить код",
   err_change_pwd: "Ошибка смены пароля",
+  btn_link_telegram: "Привязать Telegram",
+  btn_unlink_telegram: "Отвязать",
+  tg_link_opened: "Ссылка открыта — нажмите Start в боте, затем обновите эту страницу",
+  err_tg_link: "Не удалось создать ссылку Telegram",
+  err_tg_unlink: "Не удалось отвязать Telegram",
+  confirm_unlink_tg: "Отвязать Telegram?",
+  confirm_unlink_tg_body: "Аккаунт Telegram будет отключён. Вы сможете привязать его снова позже.",
 };
 
 const T: Record<Lang, Translations> = { en, ru };
