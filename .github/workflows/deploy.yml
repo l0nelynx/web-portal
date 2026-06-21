@@ -34,10 +34,48 @@ jobs:
           VITE_BRAND_NAME: ${{ vars.VITE_BRAND_NAME }}
           VITE_BRAND_LOGO: ${{ vars.VITE_BRAND_LOGO }}
           VITE_MIRRORS: ${{ vars.VITE_MIRRORS }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
 
       - name: Write custom domain
         if: vars.PAGES_CNAME != ''
         run: echo "${{ vars.PAGES_CNAME }}" > dist/CNAME
+
+      - name: SEO — inject canonical URL and generate sitemap
+        if: vars.VITE_SITE_URL != ''
+        env:
+          SITE_URL: ${{ vars.VITE_SITE_URL }}
+        run: |
+          DATE=$(date +%Y-%m-%d)
+
+          # Inject canonical + og:url into index.html (after <meta name="robots">)
+          sed -i "s|<meta name=\"robots\" content=\"index, follow\" />|<meta name=\"robots\" content=\"index, follow\" />\n    <link rel=\"canonical\" href=\"${SITE_URL}/\" />\n    <meta property=\"og:url\" content=\"${SITE_URL}/\" />|" dist/index.html
+
+          # Generate sitemap.xml
+          cat > dist/sitemap.xml << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+            <url>
+              <loc>${SITE_URL}/</loc>
+              <changefreq>weekly</changefreq>
+              <priority>1.0</priority>
+              <lastmod>${DATE}</lastmod>
+            </url>
+            <url>
+              <loc>${SITE_URL}/register</loc>
+              <changefreq>monthly</changefreq>
+              <priority>0.8</priority>
+              <lastmod>${DATE}</lastmod>
+            </url>
+            <url>
+              <loc>${SITE_URL}/login</loc>
+              <changefreq>monthly</changefreq>
+              <priority>0.5</priority>
+            </url>
+          </urlset>
+          EOF
+
+          # Append Sitemap directive to robots.txt
+          echo "Sitemap: ${SITE_URL}/sitemap.xml" >> dist/robots.txt
 
       - uses: actions/upload-pages-artifact@v3
         with:
