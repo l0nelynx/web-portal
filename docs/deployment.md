@@ -16,12 +16,12 @@ Configure in **GitHub → repo → Settings → Secrets and variables → Action
 
 ### Variables (`vars.*`) — non-sensitive, visible in logs
 
-| Variable | Required | Description |
-|---|---|---|
-| `VITE_BRAND_NAME` | Yes | Brand name shown throughout the portal, e.g. `Cheeze Networks`. Substituted into `index.html` and JS bundle at build time. |
-| `VITE_SITE_URL` | Yes | Public origin of the portal, e.g. `https://www.cheezyvpn.uk`. Used by CI to inject `<link rel="canonical">`, `<meta og:url>` into `index.html`, generate `sitemap.xml`, and append `Sitemap:` to `robots.txt`. No trailing slash. |
-| `PAGES_CNAME` | GH Pages only | Custom domain written to `dist/CNAME`, e.g. `www.cheezyvpn.uk`. Leave empty to use the default `*.github.io` URL. |
-| `VITE_BRAND_LOGO` | No | URL to an SVG logo file. If omitted, the built-in CheezyLogo SVG is used. |
+| Variable | Required | Description                                                                                                                                                                                                                                                            |
+|---|---|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `VITE_BRAND_NAME` | Yes | Brand name shown throughout the portal, e.g. `Cheeze Networks`. Substituted into `index.html` and JS bundle at build time.                                                                                                                                             |
+| `VITE_SITE_URL` | Yes | Public origin of the portal, e.g. `https://www.domain.com`. Used by CI to inject `<link rel="canonical">`, `<meta og:url>` into `index.html`, generate `sitemap.xml`, and append `Sitemap:` to `robots.txt`. No trailing slash.                                        |
+| `PAGES_CNAME` | GH Pages only | Custom domain written to `dist/CNAME`, e.g. `www.domain.com`. Leave empty to use the default `*.github.io` URL.                                                                                                                                                        |
+| `VITE_BRAND_LOGO` | No | URL to an SVG logo file. If omitted, the built-in CheezyLogo SVG is used.                                                                                                                                                                                              |
 | `VITE_MIRRORS` | No | Comma-separated list of **all** mirror origins (including the primary). At runtime the current origin is excluded automatically. Example: `https://www.cheezyvpn.uk,https://myrepo.vercel.app,https://l0nelynx.github.io/web-portal`. Leave empty to disable failover. |
 
 ### What CI does with these variables
@@ -66,7 +66,7 @@ PAGES_CNAME step:
 3. Set `PAGES_CNAME=www.yourdomain.com` in Actions variables.
 4. Wait for GitHub to issue the Let's Encrypt certificate (~1–5 min after DNS propagates).
 5. Enable **Enforce HTTPS** in GitHub Pages settings.
-6. Add a Cloudflare **Redirect Rule**: `cheezyvpn.uk → https://www.cheezyvpn.uk` (301).
+6. Add a Cloudflare **Redirect Rule**: `domain.com → https://www.domain.com` (301).
 7. Once HTTPS is verified, re-enable proxy (orange cloud) on the `www` CNAME if desired.
 
 ### SPA routing
@@ -102,7 +102,7 @@ the real URL before React renders — transparent to the user.
 Set `VITE_MIRRORS` to a comma-separated list of **all** deployment URLs:
 
 ```
-VITE_MIRRORS=https://www.cheezyvpn.uk,https://myorg.vercel.app,https://l0nelynx.github.io
+VITE_MIRRORS=https://www.domain.com,https://myorg.vercel.app,https://username.github.io
 ```
 
 At runtime (`src/main.tsx`):
@@ -122,14 +122,14 @@ Add to `config.yml` on the server:
 
 ```yaml
 web_allowed_origins:
-  - https://www.cheezyvpn.uk
+  - https://www.domain.com
   - https://myorg.vercel.app        # add any mirror origins too
 ```
 
 Or as a comma-separated string:
 
 ```yaml
-web_allowed_origins: "https://www.cheezyvpn.uk,https://myorg.vercel.app"
+web_allowed_origins: "https://www.domain.com,https://myorg.vercel.app"
 ```
 
 The miniapp service reads this at startup and configures `CORSMiddleware` with
@@ -142,10 +142,10 @@ The miniapp service reads this at startup and configures `CORSMiddleware` with
 After the first deploy with `VITE_SITE_URL` set, submit the sitemap to Google Search Console:
 
 1. Go to [search.google.com/search-console](https://search.google.com/search-console).
-2. Add property → **URL prefix** → `https://www.cheezyvpn.uk`.
+2. Add property → **URL prefix** → `https://www.domain.com`.
 3. Verify ownership via **HTML file** method: download the file Google provides, place it in
    `public/`, commit and push, then click **Verify**.
-4. **Sitemaps** → add `https://www.cheezyvpn.uk/sitemap.xml`.
+4. **Sitemaps** → add `https://www.domain.com/sitemap.xml`.
 
 The sitemap is regenerated on every CI deploy with the current date as `lastmod`.
 
