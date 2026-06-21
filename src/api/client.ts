@@ -315,6 +315,67 @@ export const password = {
 };
 
 // ---------------------------------------------------------------------------
+// Promo codes
+// ---------------------------------------------------------------------------
+
+export interface PromoState {
+  can_activate: boolean;
+  active_promo: string | null;
+  discount_percent: number;
+  default_discount_percent: number;
+}
+
+export interface PromoActivateResponse {
+  ok: boolean;
+  active_promo: string;
+  discount_percent: number;
+}
+
+export const promo = {
+  getState: () => get<PromoState>("/android/promo"),
+  activate: (promo_code: string) =>
+    post<PromoActivateResponse>("/android/promo", { promo_code }),
+};
+
+// ---------------------------------------------------------------------------
+// Support tickets
+// ---------------------------------------------------------------------------
+
+export interface TicketSummary {
+  id: number;
+  subject: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  last_message_preview: string;
+}
+
+export interface MessageItem {
+  id: number;
+  sender: string;
+  text: string;
+  created_at: string;
+}
+
+export interface TicketDetail {
+  id: number;
+  subject: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  messages: MessageItem[];
+}
+
+export const support = {
+  listTickets: () => get<TicketSummary[]>("/android/support/tickets"),
+  getTicket: (id: number) => get<TicketDetail>(`/android/support/tickets/${id}`),
+  createTicket: (subject: string, message: string) =>
+    post<TicketDetail>("/android/support/tickets", { subject, message }),
+  addMessage: (ticket_id: number, text: string) =>
+    post<MessageItem>(`/android/support/tickets/${ticket_id}/messages`, { text }),
+};
+
+// ---------------------------------------------------------------------------
 // Telegram link
 // ---------------------------------------------------------------------------
 

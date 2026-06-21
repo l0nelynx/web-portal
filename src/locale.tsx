@@ -213,6 +213,45 @@ export interface Translations {
   err_tg_unlink: string;
   confirm_unlink_tg: string;
   confirm_unlink_tg_body: string;
+  // Promo codes (Settings tab)
+  menu_support: string;
+  promo_title: string;
+  promo_active_label: string;
+  promo_code_placeholder: string;
+  promo_cant_activate: string;
+  btn_activate_promo: string;
+  err_promo_invalid: string;
+  err_promo_own: string;
+  err_promo_already_used: string;
+  err_promo_active_exists: string;
+  err_promo_referral_only_one: string;
+  err_promo_referral_not_new: string;
+  err_promo_activate: string;
+  msg_promo_activated: (pct: number) => string;
+  // Support tickets tab
+  support_title: string;
+  btn_new_ticket: string;
+  ticket_list_empty: string;
+  ticket_subject_label: string;
+  ticket_subject_placeholder: string;
+  ticket_message_label: string;
+  ticket_message_placeholder: string;
+  btn_send_ticket: string;
+  err_create_ticket: string;
+  err_load_tickets: string;
+  err_load_ticket: string;
+  err_send_reply: string;
+  err_too_many_tickets: string;
+  ticket_status_open: string;
+  ticket_status_in_progress: string;
+  ticket_status_closed: string;
+  reply_placeholder: string;
+  btn_send_reply: string;
+  val_subject_req: string;
+  val_message_req: string;
+  btn_back_to_tickets: string;
+  lbl_you: string;
+  lbl_support_agent: string;
 }
 
 const en: Translations = {
@@ -405,6 +444,45 @@ const en: Translations = {
   err_tg_unlink: "Failed to unlink Telegram",
   confirm_unlink_tg: "Unlink Telegram?",
   confirm_unlink_tg_body: "Your Telegram account will be disconnected. You can re-link it later.",
+  // Promo codes
+  menu_support: "Support",
+  promo_title: "Promo Code",
+  promo_active_label: "Active promo:",
+  promo_code_placeholder: "Enter promo code",
+  promo_cant_activate: "Promo is active — will apply to your next payment.",
+  btn_activate_promo: "Activate",
+  err_promo_invalid: "Invalid promo code",
+  err_promo_own: "Cannot use your own promo code",
+  err_promo_already_used: "You have already used this promo code",
+  err_promo_active_exists: "A promo is already active — use it first",
+  err_promo_referral_only_one: "You have already used a referral code",
+  err_promo_referral_not_new: "Referral codes are for new users only",
+  err_promo_activate: "Failed to activate promo code",
+  msg_promo_activated: (pct) => `Promo activated — ${pct}% discount applied`,
+  // Support tickets
+  support_title: "Support",
+  btn_new_ticket: "New Ticket",
+  ticket_list_empty: "No support tickets yet",
+  ticket_subject_label: "Subject",
+  ticket_subject_placeholder: "Brief description of the issue",
+  ticket_message_label: "Message",
+  ticket_message_placeholder: "Describe your issue in detail…",
+  btn_send_ticket: "Submit",
+  err_create_ticket: "Failed to create ticket",
+  err_load_tickets: "Failed to load tickets",
+  err_load_ticket: "Failed to load ticket",
+  err_send_reply: "Failed to send reply",
+  err_too_many_tickets: "Too many open tickets. Close some first.",
+  ticket_status_open: "Open",
+  ticket_status_in_progress: "In Progress",
+  ticket_status_closed: "Closed",
+  reply_placeholder: "Type your reply…",
+  btn_send_reply: "Send",
+  val_subject_req: "Enter a subject",
+  val_message_req: "Enter a message",
+  btn_back_to_tickets: "Back to tickets",
+  lbl_you: "You",
+  lbl_support_agent: "Support",
 };
 
 const ru: Translations = {
@@ -601,6 +679,45 @@ const ru: Translations = {
   err_tg_unlink: "Не удалось отвязать Telegram",
   confirm_unlink_tg: "Отвязать Telegram?",
   confirm_unlink_tg_body: "Аккаунт Telegram будет отключён. Вы сможете привязать его снова позже.",
+  // Promo codes
+  menu_support: "Поддержка",
+  promo_title: "Промокод",
+  promo_active_label: "Активный промокод:",
+  promo_code_placeholder: "Введите промокод",
+  promo_cant_activate: "Промокод активен — будет применён к следующему платежу.",
+  btn_activate_promo: "Применить",
+  err_promo_invalid: "Неверный промокод",
+  err_promo_own: "Нельзя использовать собственный промокод",
+  err_promo_already_used: "Вы уже использовали этот промокод",
+  err_promo_active_exists: "Промокод уже активен — сначала используйте его",
+  err_promo_referral_only_one: "Реферальный код уже был использован",
+  err_promo_referral_not_new: "Реферальные коды доступны только новым пользователям",
+  err_promo_activate: "Не удалось активировать промокод",
+  msg_promo_activated: (pct) => `Промокод активирован — скидка ${pct}%`,
+  // Support tickets
+  support_title: "Поддержка",
+  btn_new_ticket: "Новое обращение",
+  ticket_list_empty: "Обращений пока нет",
+  ticket_subject_label: "Тема",
+  ticket_subject_placeholder: "Краткое описание проблемы",
+  ticket_message_label: "Сообщение",
+  ticket_message_placeholder: "Опишите проблему подробнее…",
+  btn_send_ticket: "Отправить",
+  err_create_ticket: "Не удалось создать обращение",
+  err_load_tickets: "Не удалось загрузить обращения",
+  err_load_ticket: "Не удалось загрузить обращение",
+  err_send_reply: "Не удалось отправить ответ",
+  err_too_many_tickets: "Слишком много открытых обращений. Закройте некоторые.",
+  ticket_status_open: "Открыто",
+  ticket_status_in_progress: "В работе",
+  ticket_status_closed: "Закрыто",
+  reply_placeholder: "Введите ответ…",
+  btn_send_reply: "Отправить",
+  val_subject_req: "Введите тему",
+  val_message_req: "Введите сообщение",
+  btn_back_to_tickets: "Назад к обращениям",
+  lbl_you: "Вы",
+  lbl_support_agent: "Поддержка",
 };
 
 const T: Record<Lang, Translations> = { en, ru };

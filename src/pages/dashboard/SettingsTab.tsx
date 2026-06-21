@@ -1,8 +1,8 @@
 import { Alert, App, Button, Card, Col, Descriptions, Divider, Form, Input, Modal, Row, Space, Tag, Typography } from "antd";
-import { CheckCircleOutlined, LinkOutlined, LockOutlined, LogoutOutlined, MailOutlined, SafetyCertificateOutlined, SendOutlined, WarningOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { CheckCircleOutlined, GiftOutlined, LinkOutlined, LockOutlined, LogoutOutlined, MailOutlined, SafetyCertificateOutlined, SendOutlined, WarningOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, email, password, sessions, tgLink } from "../../api/client";
+import { ApiError, email, password, promo, PromoState, sessions, tgLink } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import { useLang } from "../../locale";
 
@@ -21,6 +21,14 @@ export default function SettingsTab() {
   const [linkLoading, setLinkLoading] = useState(false);
   const [unlinkLoading, setUnlinkLoading] = useState(false);
   const [tgLinkOpened, setTgLinkOpened] = useState(false);
+  const [promoState, setPromoState] = useState<PromoState | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
+  useEffect(() => {
+    promo.getState().then(setPromoState).catch(() => {});
+  }, []);
 
   async function onPasswordChange(values: { current: string; next: string }) {
     setPwdLoading(true);
@@ -121,6 +129,37 @@ export default function SettingsTab() {
         }
       },
     });
+  }
+
+  async function handleActivatePromo() {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError(null);
+    try {
+      const res = await promo.activate(promoCode.trim());
+      msg.success(L.msg_promo_activated(res.discount_percent));
+      setPromoCode("");
+      setPromoState((prev) =>
+        prev ? { ...prev, can_activate: false, active_promo: res.active_promo, discount_percent: res.discount_percent } : prev
+      );
+    } catch (e) {
+      if (e instanceof ApiError) {
+        const map: Record<string, string> = {
+          invalid_promo_code: L.err_promo_invalid,
+          "invalid promo code": L.err_promo_invalid,
+          "cannot use your own promo code": L.err_promo_own,
+          "you have already used this promo code": L.err_promo_already_used,
+          "a promo is already active — use it first": L.err_promo_active_exists,
+          "you have already used a referral code": L.err_promo_referral_only_one,
+          "referral codes are for new users only": L.err_promo_referral_not_new,
+        };
+        setPromoError(map[e.code] || map[e.message] || L.err_promo_activate);
+      } else {
+        setPromoError(L.err_promo_activate);
+      }
+    } finally {
+      setPromoLoading(false);
+    }
   }
 
   return (
@@ -230,6 +269,51 @@ export default function SettingsTab() {
                 {L.btn_change_pwd}
               </Button>
             </Form>
+          </Card>
+        </Col>
+
+        {/* Promo code */}
+        <Col xs={24} lg={12}>
+          <Card
+            title={<Text style={{ color: "#fff" }}><GiftOutlined style={{ marginRight: 8 }} />{L.promo_title}</Text>}
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16 }}
+            styles={{ header: { borderBottom: "1px solid rgba(255,255,255,0.07)" } }}
+          >
+            {promoState?.active_promo ? (
+              <Space direction="vertical" style={{ width: "100%" }}>
+                <Space>
+                  <Text style={{ color: "rgba(255,255,255,0.5)" }}>{L.promo_active_label}</Text>
+                  <Tag color="success">{promoState.active_promo}</Tag>
+                  {promoState.discount_percent > 0 && (
+                    <Tag color="blue">{promoState.discount_percent}%</Tag>
+                  )}
+                </Space>
+                <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>{L.promo_cant_activate}</Text>
+              </Space>
+            ) : (
+              <Space.Compact style={{ width: "100%" }}>
+                <Input
+                  value={promoCode}
+                  onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(null); }}
+                  onPressEnter={handleActivatePromo}
+                  placeholder={L.promo_code_placeholder}
+                  maxLength={20}
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "10px 0 0 10px", color: "#fff" }}
+                  disabled={promoLoading}
+                />
+                <Button
+                  type="primary"
+                  loading={promoLoading}
+                  onClick={handleActivatePromo}
+                  style={{ background: "linear-gradient(135deg, #06D6A0, #0096C7)", border: "none", borderRadius: "0 10px 10px 0" }}
+                >
+                  {L.btn_activate_promo}
+                </Button>
+              </Space.Compact>
+            )}
+            {promoError && (
+              <Alert type="error" message={promoError} style={{ marginTop: 12, borderRadius: 10 }} showIcon closable onClose={() => setPromoError(null)} />
+            )}
           </Card>
         </Col>
 

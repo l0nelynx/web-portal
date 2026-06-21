@@ -1,5 +1,6 @@
 import { App, Avatar, Button, Drawer, Grid, Layout, Menu, Typography } from "antd";
 import {
+  CustomerServiceOutlined,
   LaptopOutlined,
   LogoutOutlined,
   MenuOutlined,
@@ -17,12 +18,13 @@ import SubscriptionTab from "./dashboard/SubscriptionTab";
 import BuyTab from "./dashboard/BuyTab";
 import DevicesTab from "./dashboard/DevicesTab";
 import SettingsTab from "./dashboard/SettingsTab";
+import SupportTab from "./dashboard/SupportTab";
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
-type TabKey = "subscription" | "buy" | "devices" | "settings";
+type TabKey = "subscription" | "buy" | "devices" | "support" | "settings";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -39,6 +41,7 @@ export default function DashboardPage() {
     { key: "subscription", icon: <WifiOutlined />, label: L.menu_subscription },
     { key: "buy", icon: <ShoppingCartOutlined />, label: L.menu_buy },
     { key: "devices", icon: <LaptopOutlined />, label: L.menu_devices },
+    { key: "support", icon: <CustomerServiceOutlined />, label: L.menu_support },
     { key: "settings", icon: <SafetyCertificateOutlined />, label: L.menu_settings },
   ];
 
@@ -57,6 +60,7 @@ export default function DashboardPage() {
       case "subscription": return <SubscriptionTab onBuyClick={() => selectTab("buy")} />;
       case "buy": return <BuyTab />;
       case "devices": return <DevicesTab />;
+      case "support": return <SupportTab />;
       case "settings": return <SettingsTab />;
     }
   }
