@@ -33,6 +33,23 @@
     </script>
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Google Analytics (GA4) — skipped if VITE_GA_ID is not set -->
+    <script>
+      (function () {
+        var id = '%VITE_GA_ID%';
+        if (!id || id === 'undefined' || id === '') return;
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', id, { send_page_view: false });
+        var s = document.createElement('script');
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+        s.async = true;
+        document.head.appendChild(s);
+      })();
+    </script>
   </head>
   <body>
     <div id="web-root"></div>

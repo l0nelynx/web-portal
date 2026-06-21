@@ -12,6 +12,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
+import { pageView } from "../analytics";
 import BrandLogo from "../components/BrandLogo";
 import { BRAND_NAME } from "../branding";
 import SubscriptionTab from "./dashboard/SubscriptionTab";
@@ -53,6 +54,7 @@ export default function DashboardPage() {
   function selectTab(key: TabKey) {
     setTab(key);
     setDrawerOpen(false);
+    pageView(`/dashboard/${key}`);
   }
 
   function renderTab() {

@@ -1,7 +1,9 @@
 import { ConfigProvider, Spin } from "antd";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "./auth/AuthContext";
 import { LangProvider } from "./locale";
+import { pageView } from "./analytics";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -38,10 +40,19 @@ function RequireVerified({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function RouteTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    pageView(location.pathname);
+  }, [location.pathname]);
+  return null;
+}
+
 export default function WebApp() {
   return (
     <LangProvider>
     <ConfigProvider {...webThemeConfig}>
+      <RouteTracker />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
