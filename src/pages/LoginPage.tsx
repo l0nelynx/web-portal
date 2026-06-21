@@ -6,18 +6,14 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { useLang } from "../locale";
 
 const { Title, Text } = Typography;
-
-const ERROR_MESSAGES: Record<string, string> = {
-  invalid_credentials: "Неверный email или пароль",
-  banned: "Аккаунт заблокирован",
-  http_429: "Слишком много попыток. Попробуйте позже",
-};
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { L, toggle } = useLang();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,9 +25,15 @@ export default function LoginPage() {
       navigate("/dashboard", { replace: true });
     } catch (e) {
       if (e instanceof ApiError) {
-        setError(ERROR_MESSAGES[e.code] || "Ошибка входа. Попробуйте снова.");
+        const map: Record<string, string> = {
+          invalid_credentials: L.err_invalid_login,
+          banned: L.err_banned,
+          rate_limited: L.err_rate_limited,
+          http_429: L.err_rate_limited,
+        };
+        setError(map[e.code] || L.err_login);
       } else {
-        setError("Ошибка сети. Проверьте соединение.");
+        setError(L.err_network);
       }
     } finally {
       setLoading(false);
@@ -63,6 +65,26 @@ export default function LoginPage() {
         }}
       />
 
+      {/* Language toggle */}
+      <Button
+        size="small"
+        onClick={toggle}
+        style={{
+          position: "fixed",
+          top: 16,
+          right: 16,
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          color: "rgba(255,255,255,0.6)",
+          borderRadius: 6,
+          fontSize: 12,
+          minWidth: 34,
+          zIndex: 10,
+        }}
+      >
+        {L.lang_toggle}
+      </Button>
+
       <div style={{ width: "100%", maxWidth: 420, position: "relative" }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -85,7 +107,7 @@ export default function LoginPage() {
           styles={{ body: { padding: 36 } }}
         >
           <Title level={3} style={{ color: "#fff", margin: "0 0 8px", textAlign: "center" }}>
-            Вход в аккаунт
+            {L.login_title}
           </Title>
           <Text
             style={{
@@ -95,7 +117,7 @@ export default function LoginPage() {
               marginBottom: 28,
             }}
           >
-            Клиентский портал {BRAND_NAME}
+            {L.login_subtitle}
           </Text>
 
           {error && (
@@ -104,6 +126,8 @@ export default function LoginPage() {
               message={error}
               style={{ marginBottom: 20, borderRadius: 10 }}
               showIcon
+              closable
+              onClose={() => setError(null)}
             />
           )}
 
@@ -111,13 +135,13 @@ export default function LoginPage() {
             <Form.Item
               name="email"
               rules={[
-                { required: true, message: "Введите email" },
-                { type: "email", message: "Некорректный email" },
+                { required: true, message: L.val_email_req },
+                { type: "email", message: L.val_email_format },
               ]}
             >
               <Input
                 prefix={<MailOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                placeholder="Email адрес"
+                placeholder="Email"
                 autoComplete="email"
                 style={{
                   background: "rgba(255,255,255,0.06)",
@@ -130,12 +154,12 @@ export default function LoginPage() {
 
             <Form.Item
               name="password"
-              rules={[{ required: true, message: "Введите пароль" }]}
+              rules={[{ required: true, message: L.val_pwd_req }]}
               style={{ marginBottom: 24 }}
             >
               <Input.Password
                 prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                placeholder="Пароль"
+                placeholder={L.pwd_label}
                 autoComplete="current-password"
                 style={{
                   background: "rgba(255,255,255,0.06)",
@@ -160,18 +184,15 @@ export default function LoginPage() {
                 fontWeight: 600,
               }}
             >
-              Войти
+              {L.btn_login}
             </Button>
           </Form>
 
           <div style={{ textAlign: "center", marginTop: 24 }}>
             <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
-              Нет аккаунта?{" "}
-              <Link
-                to="/register"
-                style={{ color: "#06D6A0", fontWeight: 500 }}
-              >
-                Зарегистрироваться
+              {L.no_account}{" "}
+              <Link to="/register" style={{ color: "#06D6A0", fontWeight: 500 }}>
+                {L.btn_register}
               </Link>
             </Text>
           </div>
@@ -179,7 +200,7 @@ export default function LoginPage() {
 
         <div style={{ textAlign: "center", marginTop: 16 }}>
           <Text style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>
-            Регистрация доступна только по коду приглашения
+            {L.login_invite_hint}
           </Text>
         </div>
       </div>

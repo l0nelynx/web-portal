@@ -1,4 +1,4 @@
-import { Button, Col, Grid, Row, Space, Typography } from "antd";
+import { Button, Col, Grid, Row, Typography } from "antd";
 import {
   LockOutlined,
   RocketOutlined,
@@ -10,56 +10,36 @@ import {
 import { useNavigate } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo";
 import { BRAND_NAME } from "../branding";
+import { useLang } from "../locale";
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
 
-const FEATURES = [
-  {
-    icon: <LockOutlined style={{ fontSize: 28, color: "#06D6A0" }} />,
-    title: "Zero-Trust Access",
-    desc: "Every connection authenticated, encrypted and isolated. No implicit trust, no perimeter exposure.",
-  },
-  {
-    icon: <GlobalOutlined style={{ fontSize: 28, color: "#06D6A0" }} />,
-    title: "Global Infrastructure",
-    desc: "High-availability nodes across multiple regions. 99.9% SLA with automatic failover and load balancing.",
-  },
-  {
-    icon: <TeamOutlined style={{ fontSize: 28, color: "#06D6A0" }} />,
-    title: "Team Connectivity",
-    desc: "Centralised access policies, device management and role-based controls for organisations of any size.",
-  },
-  {
-    icon: <ThunderboltOutlined style={{ fontSize: 28, color: "#06D6A0" }} />,
-    title: "High Throughput",
-    desc: "Optimised routing protocols deliver low-latency, high-bandwidth connections for demanding workloads.",
-  },
-  {
-    icon: <SafetyCertificateOutlined style={{ fontSize: 28, color: "#06D6A0" }} />,
-    title: "Compliance Ready",
-    desc: "Traffic isolation, audit logging and data-residency controls built for regulated industries.",
-  },
-  {
-    icon: <RocketOutlined style={{ fontSize: 28, color: "#06D6A0" }} />,
-    title: "Instant Deployment",
-    desc: "Connect in minutes. Cross-platform clients for Windows, macOS, Linux, iOS and Android.",
-  },
-];
-
-const STATS = [
-  { value: "99.9%", label: "Uptime SLA" },
-  { value: "50+", label: "Network Nodes" },
-  { value: "10 Gbps", label: "Peak Throughput" },
-  { value: "24/7", label: "Support" },
-];
+const STATS_VALUES = ["99.9%", "50+", "10 Gbps", "24/7"];
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { L, toggle } = useLang();
   const screens = useBreakpoint();
   const isMobile = !screens.sm;
 
   const px = isMobile ? "16px" : "48px";
+
+  const FEATURES = [
+    { icon: <LockOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_zero_trust_title, desc: L.feat_zero_trust_desc },
+    { icon: <GlobalOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_global_title, desc: L.feat_global_desc },
+    { icon: <TeamOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_team_title, desc: L.feat_team_desc },
+    { icon: <ThunderboltOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_throughput_title, desc: L.feat_throughput_desc },
+    { icon: <SafetyCertificateOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_compliance_title, desc: L.feat_compliance_desc },
+    { icon: <RocketOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_deploy_title, desc: L.feat_deploy_desc },
+  ];
+
+  const STATS = [
+    { value: STATS_VALUES[0], label: L.stat_uptime },
+    { value: STATS_VALUES[1], label: L.stat_nodes },
+    { value: STATS_VALUES[2], label: L.stat_throughput },
+    { value: STATS_VALUES[3], label: L.stat_support },
+  ];
 
   return (
     <div style={{ background: "#0B0B14", minHeight: "100vh", color: "rgba(255,255,255,0.92)", overflowX: "hidden" }}>
@@ -88,14 +68,14 @@ export default function LandingPage() {
           </Text>
         </div>
 
-        <Space size={isMobile ? 8 : 12}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
           {!isMobile && (
             <Button
               type="text"
               style={{ color: "rgba(255,255,255,0.65)" }}
               onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
             >
-              Solutions
+              {L.nav_solutions}
             </Button>
           )}
           {!isMobile && (
@@ -104,9 +84,24 @@ export default function LandingPage() {
               style={{ color: "rgba(255,255,255,0.65)" }}
               onClick={() => document.getElementById("stats")?.scrollIntoView({ behavior: "smooth" })}
             >
-              Platform
+              {L.nav_platform}
             </Button>
           )}
+          {/* Language toggle */}
+          <Button
+            size={isMobile ? "small" : "middle"}
+            onClick={toggle}
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.6)",
+              borderRadius: 6,
+              fontSize: 12,
+              minWidth: 34,
+            }}
+          >
+            {L.lang_toggle}
+          </Button>
           <Button
             size={isMobile ? "small" : "middle"}
             style={{
@@ -116,9 +111,9 @@ export default function LandingPage() {
             }}
             onClick={() => navigate("/login")}
           >
-            {isMobile ? "Sign In" : "Client Portal"}
+            {isMobile ? L.btn_login : L.header_portal}
           </Button>
-        </Space>
+        </div>
       </nav>
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
@@ -155,7 +150,7 @@ export default function LandingPage() {
             }}
           >
             <Text style={{ fontSize: 13, color: "#06D6A0", letterSpacing: "0.5px" }}>
-              Enterprise Network Infrastructure
+              {L.hero_badge}
             </Text>
           </div>
 
@@ -170,7 +165,7 @@ export default function LandingPage() {
               letterSpacing: "-1px",
             }}
           >
-            Private Connectivity
+            {L.hero_title_1}
             <br />
             <span
               style={{
@@ -179,7 +174,7 @@ export default function LandingPage() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              Built for Modern Teams
+              {L.hero_title_2}
             </span>
           </Title>
 
@@ -192,11 +187,10 @@ export default function LandingPage() {
               lineHeight: 1.7,
             }}
           >
-            Secure, high-performance network access for distributed teams.
-            Zero-trust architecture, global infrastructure, enterprise-grade reliability.
+            {L.hero_desc}
           </Paragraph>
 
-          <Space size={12} wrap style={{ justifyContent: "center" }}>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Button
               type="primary"
               size="large"
@@ -211,7 +205,7 @@ export default function LandingPage() {
               }}
               onClick={() => navigate("/register")}
             >
-              Get Started
+              {L.btn_get_started}
             </Button>
             <Button
               size="large"
@@ -226,9 +220,9 @@ export default function LandingPage() {
               }}
               onClick={() => navigate("/login")}
             >
-              Sign In
+              {L.btn_login}
             </Button>
-          </Space>
+          </div>
         </div>
       </section>
 
@@ -266,10 +260,10 @@ export default function LandingPage() {
             level={2}
             style={{ color: "#fff", fontWeight: 700, fontSize: isMobile ? 26 : 36, marginBottom: 12 }}
           >
-            Everything your team needs
+            {L.features_title}
           </Title>
           <Paragraph style={{ color: "rgba(255,255,255,0.55)", fontSize: 16 }}>
-            A complete private network platform — from access control to compliance.
+            {L.features_subtitle}
           </Paragraph>
         </div>
 
@@ -317,10 +311,10 @@ export default function LandingPage() {
         }}
       >
         <Title level={2} style={{ color: "#fff", marginBottom: 12, fontSize: isMobile ? 22 : 30 }}>
-          Ready to connect your team?
+          {L.cta_title}
         </Title>
         <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 16, marginBottom: 32 }}>
-          Access requires an invitation code from an existing client or partner.
+          {L.cta_desc}
         </Paragraph>
         <Button
           type="primary"
@@ -336,7 +330,7 @@ export default function LandingPage() {
           }}
           onClick={() => navigate("/register")}
         >
-          Create Account
+          {L.btn_create_account}
         </Button>
       </section>
 
@@ -355,11 +349,11 @@ export default function LandingPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <BrandLogo size={26} />
           <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
-            © {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
+            © {new Date().getFullYear()} {BRAND_NAME}. {L.footer_rights}
           </Text>
         </div>
         <Text style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
-          Secure · Private · Reliable
+          {L.footer_tagline}
         </Text>
       </footer>
     </div>

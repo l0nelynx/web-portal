@@ -9,6 +9,11 @@ function savedLang(): Lang {
     const v = localStorage.getItem(STORAGE_KEY);
     if (v === "ru" || v === "en") return v;
   } catch {}
+  // Fall back to browser language
+  try {
+    const nav = navigator.language || "";
+    if (nav.toLowerCase().startsWith("ru")) return "ru";
+  } catch {}
   return "en";
 }
 
@@ -21,6 +26,67 @@ export interface Translations {
   menu_settings: string;
   btn_logout: string;
   header_portal: string;
+  // Landing — nav
+  nav_solutions: string;
+  nav_platform: string;
+  // Landing — hero
+  hero_badge: string;
+  hero_title_1: string;
+  hero_title_2: string;
+  hero_desc: string;
+  btn_get_started: string;
+  // Landing — stats
+  stat_uptime: string;
+  stat_nodes: string;
+  stat_throughput: string;
+  stat_support: string;
+  // Landing — features
+  features_title: string;
+  features_subtitle: string;
+  feat_zero_trust_title: string;
+  feat_zero_trust_desc: string;
+  feat_global_title: string;
+  feat_global_desc: string;
+  feat_team_title: string;
+  feat_team_desc: string;
+  feat_throughput_title: string;
+  feat_throughput_desc: string;
+  feat_compliance_title: string;
+  feat_compliance_desc: string;
+  feat_deploy_title: string;
+  feat_deploy_desc: string;
+  // Landing — CTA + footer
+  cta_title: string;
+  cta_desc: string;
+  btn_create_account: string;
+  footer_rights: string;
+  footer_tagline: string;
+  // Login page
+  login_title: string;
+  login_subtitle: string;
+  btn_login: string;
+  no_account: string;
+  btn_register: string;
+  login_invite_hint: string;
+  err_invalid_login: string;
+  err_banned: string;
+  err_login: string;
+  // Verify email page
+  verify_title: string;
+  verify_send_to: string;
+  verify_confirm_fallback: string;
+  btn_send_code: string;
+  verify_sent_hint: string;
+  verify_code_label: string;
+  val_code_req: string;
+  val_code_len: string;
+  btn_confirm: string;
+  btn_resend: string;
+  verify_success_title: string;
+  verify_success_text: string;
+  err_verify: string;
+  err_code_invalid: string;
+  err_code_expired: string;
   // Register
   reg_title: string;
   reg_subtitle: string;
@@ -157,6 +223,68 @@ const en: Translations = {
   menu_settings: "Settings",
   btn_logout: "Sign Out",
   header_portal: "Client Portal",
+  // Landing — nav
+  nav_solutions: "Solutions",
+  nav_platform: "Platform",
+  // Landing — hero
+  hero_badge: "Enterprise Network Infrastructure",
+  hero_title_1: "Private Connectivity",
+  hero_title_2: "Built for Modern Teams",
+  hero_desc: "Secure, high-performance network access for distributed teams. Zero-trust architecture, global infrastructure, enterprise-grade reliability.",
+  btn_get_started: "Get Started",
+  // Landing — stats
+  stat_uptime: "Uptime SLA",
+  stat_nodes: "Network Nodes",
+  stat_throughput: "Peak Throughput",
+  stat_support: "Support",
+  // Landing — features
+  features_title: "Everything your team needs",
+  features_subtitle: "A complete private network platform — from access control to compliance.",
+  feat_zero_trust_title: "Zero-Trust Access",
+  feat_zero_trust_desc: "Every connection authenticated, encrypted and isolated. No implicit trust, no perimeter exposure.",
+  feat_global_title: "Global Infrastructure",
+  feat_global_desc: "High-availability nodes across multiple regions. 99.9% SLA with automatic failover and load balancing.",
+  feat_team_title: "Team Connectivity",
+  feat_team_desc: "Centralised access policies, device management and role-based controls for organisations of any size.",
+  feat_throughput_title: "High Throughput",
+  feat_throughput_desc: "Optimised routing protocols deliver low-latency, high-bandwidth connections for demanding workloads.",
+  feat_compliance_title: "Compliance Ready",
+  feat_compliance_desc: "Traffic isolation, audit logging and data-residency controls built for regulated industries.",
+  feat_deploy_title: "Instant Deployment",
+  feat_deploy_desc: "Connect in minutes. Cross-platform clients for Windows, macOS, Linux, iOS and Android.",
+  // Landing — CTA + footer
+  cta_title: "Ready to connect your team?",
+  cta_desc: "Access requires an invitation code from an existing client or partner.",
+  btn_create_account: "Create Account",
+  footer_rights: "All rights reserved.",
+  footer_tagline: "Secure · Private · Reliable",
+  // Login page
+  login_title: "Sign In",
+  login_subtitle: "Welcome back",
+  btn_login: "Sign In",
+  no_account: "Don't have an account?",
+  btn_register: "Register",
+  login_invite_hint: "Registration is by invitation code only",
+  err_invalid_login: "Invalid email or password",
+  err_banned: "Account is suspended",
+  err_login: "Sign in failed. Please try again.",
+  // Verify email page
+  verify_title: "Email Verification",
+  verify_send_to: "We'll send a confirmation code to",
+  verify_confirm_fallback: "Please verify your email address",
+  btn_send_code: "Send Code",
+  verify_sent_hint: "Code sent. Check your inbox (including Spam).",
+  verify_code_label: "Confirmation code (6 digits)",
+  val_code_req: "Enter the code",
+  val_code_len: "Code must be 6 digits",
+  btn_confirm: "Confirm",
+  btn_resend: "Resend",
+  verify_success_title: "Email confirmed!",
+  verify_success_text: "Redirecting to your account…",
+  err_verify: "Verification failed",
+  err_code_invalid: "Invalid or expired code",
+  err_code_expired: "Code expired. Request a new one.",
+  // Register
   reg_title: "Create Account",
   reg_subtitle: "An invitation code is required to register",
   invite_label: "Invitation Code",
@@ -287,6 +415,68 @@ const ru: Translations = {
   menu_settings: "Настройки",
   btn_logout: "Выйти",
   header_portal: "Клиентский портал",
+  // Landing — nav
+  nav_solutions: "Возможности",
+  nav_platform: "Платформа",
+  // Landing — hero
+  hero_badge: "Корпоративная сетевая инфраструктура",
+  hero_title_1: "Приватное подключение",
+  hero_title_2: "Для современных команд",
+  hero_desc: "Защищённый высокоскоростной сетевой доступ для распределённых команд. Архитектура нулевого доверия, глобальная инфраструктура, надёжность корпоративного уровня.",
+  btn_get_started: "Начать",
+  // Landing — stats
+  stat_uptime: "Гарантия работы",
+  stat_nodes: "Серверов",
+  stat_throughput: "Пиковая скорость",
+  stat_support: "Поддержка",
+  // Landing — features
+  features_title: "Всё необходимое для вашей команды",
+  features_subtitle: "Полноценная платформа приватной сети — от управления доступом до соответствия требованиям.",
+  feat_zero_trust_title: "Нулевое доверие",
+  feat_zero_trust_desc: "Каждое соединение аутентифицировано, зашифровано и изолировано. Никакого неявного доверия и уязвимых периметров.",
+  feat_global_title: "Глобальная инфраструктура",
+  feat_global_desc: "Высокодоступные узлы в нескольких регионах. Гарантия SLA 99.9% с автоматическим переключением и балансировкой нагрузки.",
+  feat_team_title: "Подключение команды",
+  feat_team_desc: "Централизованные политики доступа, управление устройствами и ролевые права для организаций любого размера.",
+  feat_throughput_title: "Высокая пропускная способность",
+  feat_throughput_desc: "Оптимизированные протоколы маршрутизации обеспечивают низкую задержку и высокую скорость для любых задач.",
+  feat_compliance_title: "Соответствие требованиям",
+  feat_compliance_desc: "Изоляция трафика, журналы аудита и контроль размещения данных для регулируемых отраслей.",
+  feat_deploy_title: "Быстрое подключение",
+  feat_deploy_desc: "Подключитесь за минуты. Кросс-платформенные клиенты для Windows, macOS, Linux, iOS и Android.",
+  // Landing — CTA + footer
+  cta_title: "Готовы подключить вашу команду?",
+  cta_desc: "Доступ возможен только по коду приглашения от действующего клиента или партнёра.",
+  btn_create_account: "Создать аккаунт",
+  footer_rights: "Все права защищены.",
+  footer_tagline: "Безопасно · Приватно · Надёжно",
+  // Login page
+  login_title: "Вход",
+  login_subtitle: "С возвращением",
+  btn_login: "Войти",
+  no_account: "Нет аккаунта?",
+  btn_register: "Зарегистрироваться",
+  login_invite_hint: "Регистрация только по коду приглашения",
+  err_invalid_login: "Неверный email или пароль",
+  err_banned: "Аккаунт заблокирован",
+  err_login: "Ошибка входа. Попробуйте снова.",
+  // Verify email page
+  verify_title: "Подтверждение email",
+  verify_send_to: "Отправим код подтверждения на",
+  verify_confirm_fallback: "Подтвердите свой email адрес",
+  btn_send_code: "Отправить код",
+  verify_sent_hint: "Код отправлен. Проверьте почту (в т.ч. папку «Спам»).",
+  verify_code_label: "Код подтверждения (6 цифр)",
+  val_code_req: "Введите код",
+  val_code_len: "Код состоит из 6 цифр",
+  btn_confirm: "Подтвердить",
+  btn_resend: "Отправить повторно",
+  verify_success_title: "Email подтверждён!",
+  verify_success_text: "Переход в личный кабинет…",
+  err_verify: "Ошибка подтверждения",
+  err_code_invalid: "Неверный или истёкший код",
+  err_code_expired: "Код истёк. Запросите новый.",
+  // Register
   reg_title: "Регистрация",
   reg_subtitle: "Для регистрации необходим код приглашения",
   invite_label: "Код приглашения",

@@ -7,19 +7,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError, email } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { useLang } from "../locale";
 
 const { Title, Text } = Typography;
-
-const ERROR_MESSAGES: Record<string, string> = {
-  code_invalid: "Неверный или истёкший код",
-  code_expired: "Код истёк. Запросите новый",
-  rate_limited: "Слишком много попыток. Подождите",
-  http_429: "Слишком много запросов",
-};
 
 export default function VerifyEmailPage() {
   const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const { L } = useLang();
   const [loading, setLoading] = useState(false);
   const [sendLoading, setSendLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,9 +29,15 @@ export default function VerifyEmailPage() {
       setSent(true);
     } catch (e) {
       if (e instanceof ApiError) {
-        setError(ERROR_MESSAGES[e.code] || "Не удалось отправить код");
+        const map: Record<string, string> = {
+          code_invalid: L.err_code_invalid,
+          code_expired: L.err_code_expired,
+          rate_limited: L.err_rate_limited,
+          http_429: L.err_rate_limited,
+        };
+        setError(map[e.code] || L.err_send_code);
       } else {
-        setError("Ошибка сети");
+        setError(L.err_network);
       }
     } finally {
       setSendLoading(false);
@@ -53,9 +54,15 @@ export default function VerifyEmailPage() {
       setTimeout(() => navigate("/dashboard", { replace: true }), 2000);
     } catch (e) {
       if (e instanceof ApiError) {
-        setError(ERROR_MESSAGES[e.code] || "Ошибка подтверждения");
+        const map: Record<string, string> = {
+          code_invalid: L.err_code_invalid,
+          code_expired: L.err_code_expired,
+          rate_limited: L.err_rate_limited,
+          http_429: L.err_rate_limited,
+        };
+        setError(map[e.code] || L.err_verify);
       } else {
-        setError("Ошибка сети");
+        setError(L.err_network);
       }
     } finally {
       setLoading(false);
@@ -76,10 +83,10 @@ export default function VerifyEmailPage() {
         <div style={{ textAlign: "center" }}>
           <CheckCircleOutlined style={{ fontSize: 64, color: "#06D6A0", marginBottom: 16 }} />
           <Title level={3} style={{ color: "#fff" }}>
-            Email подтверждён!
+            {L.verify_success_title}
           </Title>
           <Text style={{ color: "rgba(255,255,255,0.5)" }}>
-            Переход в личный кабинет…
+            {L.verify_success_text}
           </Text>
         </div>
       </div>
@@ -147,16 +154,16 @@ export default function VerifyEmailPage() {
               <MailOutlined style={{ fontSize: 28, color: "#06D6A0" }} />
             </div>
             <Title level={3} style={{ color: "#fff", margin: "0 0 8px" }}>
-              Подтверждение email
+              {L.verify_title}
             </Title>
             <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
               {user?.email ? (
                 <>
-                  Отправим код подтверждения на{" "}
+                  {L.verify_send_to}{" "}
                   <Text style={{ color: "rgba(255,255,255,0.75)" }}>{user.email}</Text>
                 </>
               ) : (
-                "Подтвердите свой email адрес"
+                L.verify_confirm_fallback
               )}
             </Text>
           </div>
@@ -188,13 +195,13 @@ export default function VerifyEmailPage() {
                 fontWeight: 600,
               }}
             >
-              Отправить код
+              {L.btn_send_code}
             </Button>
           ) : (
             <>
               <Alert
                 type="info"
-                message="Код отправлен. Проверьте почту (в т.ч. папку «Спам»)."
+                message={L.verify_sent_hint}
                 style={{ marginBottom: 20, borderRadius: 10 }}
                 showIcon
               />
@@ -204,12 +211,12 @@ export default function VerifyEmailPage() {
                   name="code"
                   label={
                     <Text style={{ color: "rgba(255,255,255,0.75)" }}>
-                      Код подтверждения (6 цифр)
+                      {L.verify_code_label}
                     </Text>
                   }
                   rules={[
-                    { required: true, message: "Введите код" },
-                    { len: 6, message: "Код состоит из 6 цифр" },
+                    { required: true, message: L.val_code_req },
+                    { len: 6, message: L.val_code_len },
                   ]}
                   style={{ marginBottom: 20 }}
                 >
@@ -243,7 +250,7 @@ export default function VerifyEmailPage() {
                       fontWeight: 600,
                     }}
                   >
-                    Подтвердить
+                    {L.btn_confirm}
                   </Button>
                   <Button
                     block
@@ -257,7 +264,7 @@ export default function VerifyEmailPage() {
                       borderRadius: 12,
                     }}
                   >
-                    Отправить повторно
+                    {L.btn_resend}
                   </Button>
                 </Space>
               </Form>
