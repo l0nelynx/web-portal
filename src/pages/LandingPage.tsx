@@ -1,4 +1,4 @@
-import { Button, Col, Row, Space, Typography } from "antd";
+import { Button, Col, Grid, Row, Space, Typography } from "antd";
 import {
   LockOutlined,
   RocketOutlined,
@@ -12,6 +12,7 @@ import BrandLogo from "../components/BrandLogo";
 import { BRAND_NAME } from "../branding";
 
 const { Title, Paragraph, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const FEATURES = [
   {
@@ -55,47 +56,59 @@ const STATS = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const screens = useBreakpoint();
+  const isMobile = !screens.sm;
+
+  const px = isMobile ? "16px" : "48px";
 
   return (
-    <div style={{ background: "#0B0B14", minHeight: "100vh", color: "rgba(255,255,255,0.92)" }}>
+    <div style={{ background: "#0B0B14", minHeight: "100vh", color: "rgba(255,255,255,0.92)", overflowX: "hidden" }}>
+
       {/* ── Navigation ─────────────────────────────────────────────────────── */}
       <nav
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "18px 48px",
+          padding: isMobile ? "14px 16px" : "18px 48px",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
           position: "sticky",
           top: 0,
           zIndex: 100,
           background: "rgba(11,11,20,0.85)",
           backdropFilter: "blur(20px)",
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <BrandLogo size={34} />
-          <Text strong style={{ fontSize: 18, color: "#fff", letterSpacing: "-0.3px" }}>
+          <BrandLogo size={isMobile ? 28 : 34} />
+          <Text strong style={{ fontSize: isMobile ? 15 : 18, color: "#fff", letterSpacing: "-0.3px" }}>
             {BRAND_NAME}
           </Text>
         </div>
 
-        <Space size={12}>
+        <Space size={isMobile ? 8 : 12}>
+          {!isMobile && (
+            <Button
+              type="text"
+              style={{ color: "rgba(255,255,255,0.65)" }}
+              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              Solutions
+            </Button>
+          )}
+          {!isMobile && (
+            <Button
+              type="text"
+              style={{ color: "rgba(255,255,255,0.65)" }}
+              onClick={() => document.getElementById("stats")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              Platform
+            </Button>
+          )}
           <Button
-            type="text"
-            style={{ color: "rgba(255,255,255,0.65)" }}
-            onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-          >
-            Solutions
-          </Button>
-          <Button
-            type="text"
-            style={{ color: "rgba(255,255,255,0.65)" }}
-            onClick={() => document.getElementById("stats")?.scrollIntoView({ behavior: "smooth" })}
-          >
-            Platform
-          </Button>
-          <Button
+            size={isMobile ? "small" : "middle"}
             style={{
               background: "rgba(6,214,160,0.15)",
               borderColor: "rgba(6,214,160,0.4)",
@@ -103,7 +116,7 @@ export default function LandingPage() {
             }}
             onClick={() => navigate("/login")}
           >
-            Client Portal
+            {isMobile ? "Sign In" : "Client Portal"}
           </Button>
         </Space>
       </nav>
@@ -112,22 +125,20 @@ export default function LandingPage() {
       <section
         style={{
           textAlign: "center",
-          padding: "120px 24px 100px",
+          padding: isMobile ? "64px 20px 56px" : "120px 24px 100px",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        {/* Decorative gradient glow */}
         <div
           style={{
             position: "absolute",
             top: "20%",
             left: "50%",
             transform: "translateX(-50%)",
-            width: 700,
-            height: 400,
-            background:
-              "radial-gradient(ellipse, rgba(6,214,160,0.12) 0%, transparent 70%)",
+            width: isMobile ? 320 : 700,
+            height: isMobile ? 200 : 400,
+            background: "radial-gradient(ellipse, rgba(6,214,160,0.12) 0%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
@@ -152,7 +163,7 @@ export default function LandingPage() {
             level={1}
             style={{
               color: "#fff",
-              fontSize: "clamp(36px, 5vw, 64px)",
+              fontSize: "clamp(28px, 8vw, 64px)",
               fontWeight: 700,
               lineHeight: 1.15,
               margin: "0 0 20px",
@@ -174,7 +185,7 @@ export default function LandingPage() {
 
           <Paragraph
             style={{
-              fontSize: 18,
+              fontSize: isMobile ? 16 : 18,
               color: "rgba(255,255,255,0.6)",
               maxWidth: 560,
               margin: "0 auto 40px",
@@ -185,16 +196,16 @@ export default function LandingPage() {
             Zero-trust architecture, global infrastructure, enterprise-grade reliability.
           </Paragraph>
 
-          <Space size={16} wrap style={{ justifyContent: "center" }}>
+          <Space size={12} wrap style={{ justifyContent: "center" }}>
             <Button
               type="primary"
               size="large"
               style={{
                 background: "linear-gradient(135deg, #06D6A0, #0096C7)",
                 border: "none",
-                height: 50,
-                padding: "0 32px",
-                fontSize: 16,
+                height: isMobile ? 44 : 50,
+                padding: "0 28px",
+                fontSize: isMobile ? 15 : 16,
                 fontWeight: 600,
                 borderRadius: 12,
               }}
@@ -208,9 +219,9 @@ export default function LandingPage() {
                 background: "rgba(255,255,255,0.06)",
                 border: "1px solid rgba(255,255,255,0.16)",
                 color: "rgba(255,255,255,0.85)",
-                height: 50,
-                padding: "0 32px",
-                fontSize: 16,
+                height: isMobile ? 44 : 50,
+                padding: "0 28px",
+                fontSize: isMobile ? 15 : 16,
                 borderRadius: 12,
               }}
               onClick={() => navigate("/login")}
@@ -227,17 +238,17 @@ export default function LandingPage() {
         style={{
           borderTop: "1px solid rgba(255,255,255,0.06)",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
-          padding: "40px 48px",
+          padding: isMobile ? "28px 16px" : "40px 48px",
           background: "rgba(255,255,255,0.02)",
         }}
       >
-        <Row justify="center" gutter={[48, 24]}>
+        <Row justify="center" gutter={[isMobile ? 24 : 48, 20]}>
           {STATS.map((s) => (
-            <Col key={s.label} style={{ textAlign: "center", minWidth: 140 }}>
-              <div style={{ fontSize: 32, fontWeight: 700, color: "#06D6A0", lineHeight: 1 }}>
+            <Col key={s.label} style={{ textAlign: "center", minWidth: isMobile ? 80 : 140 }}>
+              <div style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, color: "#06D6A0", lineHeight: 1 }}>
                 {s.value}
               </div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>
                 {s.label}
               </div>
             </Col>
@@ -246,11 +257,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features ───────────────────────────────────────────────────────── */}
-      <section id="features" style={{ padding: "100px 48px", maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 64 }}>
+      <section
+        id="features"
+        style={{ padding: isMobile ? "56px 16px" : "100px 48px", maxWidth: 1200, margin: "0 auto" }}
+      >
+        <div style={{ textAlign: "center", marginBottom: isMobile ? 36 : 64 }}>
           <Title
             level={2}
-            style={{ color: "#fff", fontWeight: 700, fontSize: 36, marginBottom: 12 }}
+            style={{ color: "#fff", fontWeight: 700, fontSize: isMobile ? 26 : 36, marginBottom: 12 }}
           >
             Everything your team needs
           </Title>
@@ -259,7 +273,7 @@ export default function LandingPage() {
           </Paragraph>
         </div>
 
-        <Row gutter={[24, 24]}>
+        <Row gutter={[20, 20]}>
           {FEATURES.map((f) => (
             <Col key={f.title} xs={24} sm={12} lg={8}>
               <div
@@ -267,20 +281,18 @@ export default function LandingPage() {
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.09)",
                   borderRadius: 16,
-                  padding: 28,
+                  padding: isMobile ? 20 : 28,
                   height: "100%",
                   transition: "border-color 0.2s",
                 }}
                 onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(6,214,160,0.3)")
+                  ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(6,214,160,0.3)")
                 }
                 onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(255,255,255,0.09)")
+                  ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.09)")
                 }
               >
-                <div style={{ marginBottom: 16 }}>{f.icon}</div>
+                <div style={{ marginBottom: 14 }}>{f.icon}</div>
                 <Title level={4} style={{ color: "#fff", marginBottom: 8, fontSize: 17 }}>
                   {f.title}
                 </Title>
@@ -296,15 +308,15 @@ export default function LandingPage() {
       {/* ── CTA banner ─────────────────────────────────────────────────────── */}
       <section
         style={{
-          margin: "0 48px 80px",
+          margin: isMobile ? "0 16px 48px" : "0 48px 80px",
           borderRadius: 20,
           background: "linear-gradient(135deg, rgba(6,214,160,0.12), rgba(0,150,199,0.12))",
           border: "1px solid rgba(6,214,160,0.2)",
-          padding: "60px 40px",
+          padding: isMobile ? "40px 24px" : "60px 40px",
           textAlign: "center",
         }}
       >
-        <Title level={2} style={{ color: "#fff", marginBottom: 12 }}>
+        <Title level={2} style={{ color: "#fff", marginBottom: 12, fontSize: isMobile ? 22 : 30 }}>
           Ready to connect your team?
         </Title>
         <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 16, marginBottom: 32 }}>
@@ -332,7 +344,7 @@ export default function LandingPage() {
       <footer
         style={{
           borderTop: "1px solid rgba(255,255,255,0.07)",
-          padding: "32px 48px",
+          padding: `24px ${px}`,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
