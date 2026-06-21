@@ -34,6 +34,10 @@ jobs:
           VITE_BRAND_NAME: ${{ vars.VITE_BRAND_NAME }}
           VITE_BRAND_LOGO: ${{ vars.VITE_BRAND_LOGO }}
 
+      - name: Write custom domain
+        if: vars.PAGES_CNAME != ''
+        run: echo "${{ vars.PAGES_CNAME }}" > dist/CNAME
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
