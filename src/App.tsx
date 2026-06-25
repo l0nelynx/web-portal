@@ -18,7 +18,6 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
       <div
         style={{
           minHeight: "100vh",
-          background: "#0B0B14",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

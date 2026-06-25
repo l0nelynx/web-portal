@@ -265,7 +265,7 @@ export default function SettingsTab() {
                 <Input.Password style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10 }} />
               </Form.Item>
               <Button type="primary" htmlType="submit" loading={pwdLoading}
-                style={{ background: "linear-gradient(135deg, #06D6A0, #0096C7)", border: "none", borderRadius: 10 }}>
+                style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}>
                 {L.btn_change_pwd}
               </Button>
             </Form>
@@ -305,7 +305,7 @@ export default function SettingsTab() {
                   type="primary"
                   loading={promoLoading}
                   onClick={handleActivatePromo}
-                  style={{ background: "linear-gradient(135deg, #06D6A0, #0096C7)", border: "none", borderRadius: "0 10px 10px 0" }}
+                  style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: "0 10px 10px 0" }}
                 >
                   {L.btn_activate_promo}
                 </Button>

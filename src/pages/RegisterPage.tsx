@@ -92,7 +92,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0B0B14", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ position: "fixed", top: "20%", left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "radial-gradient(ellipse, rgba(6,214,160,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
 
       <div style={{ width: "100%", maxWidth: 440, position: "relative" }}>
@@ -216,7 +216,7 @@ export default function RegisterPage() {
               loading={loading}
               disabled={!inviteStatus.valid}
               style={{
-                background: inviteStatus.valid ? "linear-gradient(135deg, #06D6A0, #0096C7)" : "rgba(255,255,255,0.1)",
+                background: inviteStatus.valid ? "linear-gradient(135deg, #7C9CFF, #B47CFF)" : "rgba(255,255,255,0.1)",
                 border: "none", height: 48, borderRadius: 12, fontSize: 16, fontWeight: 600,
               }}
             >
@@ -227,7 +227,7 @@ export default function RegisterPage() {
           <div style={{ textAlign: "center", marginTop: 24 }}>
             <Text style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
               {L.have_account}{" "}
-              <Link to="/login" style={{ color: "#06D6A0" }}>{L.sign_in}</Link>
+              <Link to="/login" style={{ color: "#7C9CFF" }}>{L.sign_in}</Link>
             </Text>
           </div>
         </Card>

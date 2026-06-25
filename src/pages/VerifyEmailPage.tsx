@@ -74,14 +74,13 @@ export default function VerifyEmailPage() {
       <div
         style={{
           minHeight: "100vh",
-          background: "#0B0B14",
-          display: "flex",
+                    display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <CheckCircleOutlined style={{ fontSize: 64, color: "#06D6A0", marginBottom: 16 }} />
+          <CheckCircleOutlined style={{ fontSize: 64, color: "#7C9CFF", marginBottom: 16 }} />
           <Title level={3} style={{ color: "#fff" }}>
             {L.verify_success_title}
           </Title>
@@ -97,8 +96,7 @@ export default function VerifyEmailPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#0B0B14",
-        display: "flex",
+                display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
@@ -151,7 +149,7 @@ export default function VerifyEmailPage() {
                 margin: "0 auto 16px",
               }}
             >
-              <MailOutlined style={{ fontSize: 28, color: "#06D6A0" }} />
+              <MailOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />
             </div>
             <Title level={3} style={{ color: "#fff", margin: "0 0 8px" }}>
               {L.verify_title}
@@ -187,7 +185,7 @@ export default function VerifyEmailPage() {
               loading={sendLoading}
               onClick={sendCode}
               style={{
-                background: "linear-gradient(135deg, #06D6A0, #0096C7)",
+                background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
                 border: "none",
                 height: 48,
                 borderRadius: 12,
@@ -242,7 +240,7 @@ export default function VerifyEmailPage() {
                     block
                     loading={loading}
                     style={{
-                      background: "linear-gradient(135deg, #06D6A0, #0096C7)",
+                      background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
                       border: "none",
                       height: 48,
                       borderRadius: 12,

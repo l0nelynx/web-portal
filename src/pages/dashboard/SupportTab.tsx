@@ -141,7 +141,7 @@ export default function SupportTab() {
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => setView("create")}
-            style={{ background: "linear-gradient(135deg, #06D6A0, #0096C7)", border: "none", borderRadius: 10 }}
+            style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}
           >
             {L.btn_new_ticket}
           </Button>
@@ -245,7 +245,7 @@ export default function SupportTab() {
               htmlType="submit"
               loading={createLoading}
               icon={<SendOutlined />}
-              style={{ background: "linear-gradient(135deg, #06D6A0, #0096C7)", border: "none", borderRadius: 10 }}
+              style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}
             >
               {L.btn_send_ticket}
             </Button>
@@ -304,7 +304,7 @@ export default function SupportTab() {
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      {!isUser && <CustomerServiceOutlined style={{ color: "#06D6A0", fontSize: 13 }} />}
+                      {!isUser && <CustomerServiceOutlined style={{ color: "#7C9CFF", fontSize: 13 }} />}
                       <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>
                         {isUser ? L.lbl_you : L.lbl_support_agent} · {formatDate(m.created_at)}
                       </Text>
@@ -353,7 +353,7 @@ export default function SupportTab() {
                 onClick={handleReply}
                 icon={<SendOutlined />}
                 style={{
-                  background: "linear-gradient(135deg, #06D6A0, #0096C7)",
+                  background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
                   border: "none",
                   borderRadius: "0 10px 10px 0",
                   height: "auto",

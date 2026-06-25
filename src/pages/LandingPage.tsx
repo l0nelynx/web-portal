@@ -26,12 +26,12 @@ export default function LandingPage() {
   const px = isMobile ? "16px" : "48px";
 
   const FEATURES = [
-    { icon: <LockOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_zero_trust_title, desc: L.feat_zero_trust_desc },
-    { icon: <GlobalOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_global_title, desc: L.feat_global_desc },
-    { icon: <TeamOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_team_title, desc: L.feat_team_desc },
-    { icon: <ThunderboltOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_throughput_title, desc: L.feat_throughput_desc },
-    { icon: <SafetyCertificateOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_compliance_title, desc: L.feat_compliance_desc },
-    { icon: <RocketOutlined style={{ fontSize: 28, color: "#06D6A0" }} />, title: L.feat_deploy_title, desc: L.feat_deploy_desc },
+    { icon: <LockOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_zero_trust_title, desc: L.feat_zero_trust_desc },
+    { icon: <GlobalOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_global_title, desc: L.feat_global_desc },
+    { icon: <TeamOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_team_title, desc: L.feat_team_desc },
+    { icon: <ThunderboltOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_throughput_title, desc: L.feat_throughput_desc },
+    { icon: <SafetyCertificateOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_compliance_title, desc: L.feat_compliance_desc },
+    { icon: <RocketOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_deploy_title, desc: L.feat_deploy_desc },
   ];
 
   const STATS = [
@@ -42,7 +42,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div style={{ background: "#0B0B14", minHeight: "100vh", color: "rgba(255,255,255,0.92)", overflowX: "hidden" }}>
+    <div style={{ minHeight: "100vh", color: "rgba(255,255,255,0.92)", overflowX: "hidden" }}>
 
       {/* ── Navigation ─────────────────────────────────────────────────────── */}
       <nav
@@ -55,7 +55,7 @@ export default function LandingPage() {
           position: "sticky",
           top: 0,
           zIndex: 100,
-          background: "rgba(11,11,20,0.85)",
+          background: "rgba(11,11,20,0.75)",
           backdropFilter: "blur(20px)",
           width: "100%",
           boxSizing: "border-box",
@@ -107,7 +107,7 @@ export default function LandingPage() {
             style={{
               background: "rgba(6,214,160,0.15)",
               borderColor: "rgba(6,214,160,0.4)",
-              color: "#06D6A0",
+              color: "#7C9CFF",
             }}
             onClick={() => navigate("/login")}
           >
@@ -125,19 +125,6 @@ export default function LandingPage() {
           overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: "20%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: isMobile ? 320 : 700,
-            height: isMobile ? 200 : 400,
-            background: "radial-gradient(ellipse, rgba(6,214,160,0.12) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-
         <div style={{ position: "relative", maxWidth: 800, margin: "0 auto" }}>
           <div
             style={{
@@ -149,7 +136,7 @@ export default function LandingPage() {
               marginBottom: 24,
             }}
           >
-            <Text style={{ fontSize: 13, color: "#06D6A0", letterSpacing: "0.5px" }}>
+            <Text style={{ fontSize: 13, color: "#7C9CFF", letterSpacing: "0.5px" }}>
               {L.hero_badge}
             </Text>
           </div>
@@ -169,7 +156,7 @@ export default function LandingPage() {
             <br />
             <span
               style={{
-                background: "linear-gradient(135deg, #06D6A0, #0096C7)",
+                background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -195,7 +182,7 @@ export default function LandingPage() {
               type="primary"
               size="large"
               style={{
-                background: "linear-gradient(135deg, #06D6A0, #0096C7)",
+                background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
                 border: "none",
                 height: isMobile ? 44 : 50,
                 padding: "0 28px",
@@ -239,7 +226,7 @@ export default function LandingPage() {
         <Row justify="center" gutter={[isMobile ? 24 : 48, 20]}>
           {STATS.map((s) => (
             <Col key={s.label} style={{ textAlign: "center", minWidth: isMobile ? 80 : 140 }}>
-              <div style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, color: "#06D6A0", lineHeight: 1 }}>
+              <div style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, color: "#7C9CFF", lineHeight: 1 }}>
                 {s.value}
               </div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>
@@ -320,7 +307,7 @@ export default function LandingPage() {
           type="primary"
           size="large"
           style={{
-            background: "linear-gradient(135deg, #06D6A0, #0096C7)",
+            background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
             border: "none",
             height: 50,
             padding: "0 40px",

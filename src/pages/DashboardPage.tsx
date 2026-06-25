@@ -143,7 +143,7 @@ export default function DashboardPage() {
           width={240}
           closable={false}
           styles={{
-            body: { padding: 0, background: "#0D0D1A", height: "100%" },
+            body: { padding: 0, background: "rgba(13,13,26,0.92)", height: "100%" },
             mask: { background: "rgba(0,0,0,0.6)" },
           }}
         >
@@ -151,7 +151,7 @@ export default function DashboardPage() {
         </Drawer>
       )}
 
-      <Layout style={{ height: "100vh", overflow: "hidden", background: "#0B0B14" }}>
+      <Layout style={{ height: "100vh", overflow: "hidden", background: "transparent" }}>
 
         {/* Desktop sidebar */}
         {!isMobile && (
@@ -175,7 +175,7 @@ export default function DashboardPage() {
 
         {/* Main area */}
         <Layout
-          style={{ background: "#0B0B14", display: "flex", flexDirection: "column", overflow: "hidden" }}
+          style={{ background: "transparent", display: "flex", flexDirection: "column", overflow: "hidden" }}
         >
           {/* Header */}
           <Header
@@ -224,7 +224,7 @@ export default function DashboardPage() {
               </Button>
               <Avatar
                 size={32}
-                style={{ background: "linear-gradient(135deg, #06D6A0, #0096C7)", fontSize: 14, flexShrink: 0 }}
+                style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", fontSize: 14, flexShrink: 0 }}
               >
                 {(user?.email || "U")[0].toUpperCase()}
               </Avatar>

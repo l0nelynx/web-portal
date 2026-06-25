@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Empty, Modal, Popconfirm, Spin, Table, Tag, Typography } from "antd";
+import { Alert, Button, Modal, Popconfirm, Spin, Tag, Typography } from "antd";
 import { DeleteOutlined, LaptopOutlined, MobileOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, devices, DeviceItem } from "../../api/client";
@@ -9,8 +9,8 @@ const { Title, Text } = Typography;
 function platformIcon(platform: string | null) {
   const p = (platform || "").toLowerCase();
   if (p.includes("android") || p.includes("ios") || p.includes("mobile"))
-    return <MobileOutlined style={{ color: "#06D6A0" }} />;
-  return <LaptopOutlined style={{ color: "#06D6A0" }} />;
+    return <MobileOutlined />;
+  return <LaptopOutlined />;
 }
 
 export default function DevicesTab() {
@@ -43,72 +43,17 @@ export default function DevicesTab() {
     }
   }
 
-  const columns = [
-    {
-      title: L.col_device,
-      dataIndex: "device_model",
-      key: "device",
-      render: (_: unknown, rec: DeviceItem) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 20 }}>{platformIcon(rec.platform)}</span>
-          <div>
-            <div style={{ color: "#fff", fontWeight: 500 }}>{rec.device_model || L.unknown_device}</div>
-            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
-              {[rec.platform, rec.os_version].filter(Boolean).join(" ")}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: L.col_platform,
-      dataIndex: "platform",
-      key: "platform",
-      responsive: ["md" as const],
-      render: (v: string | null) =>
-        v ? <Tag>{v}</Tag> : <Text style={{ color: "rgba(255,255,255,0.3)" }}>—</Text>,
-    },
-    {
-      title: L.col_added,
-      dataIndex: "created_at",
-      key: "created_at",
-      responsive: ["lg" as const],
-      render: (v: string | null) =>
-        v ? (
-          <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
-            {new Date(v).toLocaleDateString()}
-          </Text>
-        ) : <Text style={{ color: "rgba(255,255,255,0.3)" }}>—</Text>,
-    },
-    {
-      title: "",
-      key: "actions",
-      width: 60,
-      render: (_: unknown, rec: DeviceItem) => (
-        <Popconfirm
-          title={L.confirm_remove}
-          description={L.confirm_remove_desc}
-          onConfirm={() => handleRemove(rec.hwid)}
-          okText={L.ok_remove}
-          cancelText={L.cancel}
-          okButtonProps={{ danger: true }}
-        >
-          <Button danger icon={<DeleteOutlined />} size="small" loading={removingHwid === rec.hwid} style={{ borderRadius: 8 }} />
-        </Popconfirm>
-      ),
-    },
-  ];
-
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <Title level={4} style={{ color: "#fff", margin: 0 }}>
           <LaptopOutlined style={{ marginRight: 8 }} />
           {L.dev_title}
-          {data && <Tag style={{ marginLeft: 8, verticalAlign: "middle" }}>{data.total}</Tag>}
+          {data && (
+            <Tag style={{ marginLeft: 8, verticalAlign: "middle" }}>{data.total}</Tag>
+          )}
         </Title>
-        <Button icon={<ReloadOutlined />} onClick={load} loading={loading}
-          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", borderRadius: 10 }}>
+        <Button icon={<ReloadOutlined />} onClick={load} loading={loading} style={{ borderRadius: 10 }}>
           {L.btn_refresh}
         </Button>
       </div>
@@ -117,20 +62,56 @@ export default function DevicesTab() {
         <div style={{ textAlign: "center", padding: 60 }}><Spin size="large" /></div>
       ) : error ? (
         <Alert type="error" message={error} showIcon style={{ borderRadius: 12 }} />
+      ) : !data?.devices.length ? (
+        <div style={{
+          textAlign: "center",
+          padding: "48px 24px",
+          background: "rgba(255,255,255,0.04)",
+          borderRadius: 20,
+          border: "1px dashed rgba(255,255,255,0.10)",
+        }}>
+          <LaptopOutlined style={{ fontSize: 40, color: "rgba(255,255,255,0.2)", marginBottom: 12 }} />
+          <Text style={{ display: "block", color: "rgba(255,255,255,0.35)" }}>{L.no_devices}</Text>
+        </div>
       ) : (
-        <Card
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16 }}
-          styles={{ body: { padding: 0 } }}
-        >
-          <Table
-            dataSource={data?.devices || []}
-            columns={columns}
-            rowKey="hwid"
-            pagination={false}
-            locale={{ emptyText: <Empty description={<Text style={{ color: "rgba(255,255,255,0.35)" }}>{L.no_devices}</Text>} /> }}
-            style={{ borderRadius: 16 }}
-          />
-        </Card>
+        <div>
+          {data.devices.map((dev) => (
+            <div key={dev.hwid} className="device-card">
+              <div className="device-card__icon">
+                {platformIcon(dev.platform)}
+              </div>
+              <div className="device-card__body">
+                <div className="device-card__name">{dev.device_model || L.unknown_device}</div>
+                <div className="device-card__meta">
+                  {[dev.platform, dev.os_version].filter(Boolean).join(" · ")}
+                  {dev.created_at && (
+                    <span style={{ marginLeft: 8 }}>
+                      · {new Date(dev.created_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="device-card__actions">
+                <Popconfirm
+                  title={L.confirm_remove}
+                  description={L.confirm_remove_desc}
+                  onConfirm={() => handleRemove(dev.hwid)}
+                  okText={L.ok_remove}
+                  cancelText={L.cancel}
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    size="small"
+                    loading={removingHwid === dev.hwid}
+                    style={{ borderRadius: 8 }}
+                  />
+                </Popconfirm>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       <Text style={{ display: "block", marginTop: 12, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>

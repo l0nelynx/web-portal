@@ -44,26 +44,12 @@ export default function LoginPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#0B0B14",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
       }}
     >
-      {/* Background glow */}
-      <div
-        style={{
-          position: "fixed",
-          top: "30%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: 600,
-          height: 400,
-          background: "radial-gradient(ellipse, rgba(6,214,160,0.08) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
 
       {/* Language toggle */}
       <Button
@@ -176,7 +162,7 @@ export default function LoginPage() {
               block
               loading={loading}
               style={{
-                background: "linear-gradient(135deg, #06D6A0, #0096C7)",
+                background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
                 border: "none",
                 height: 48,
                 borderRadius: 12,
@@ -191,7 +177,7 @@ export default function LoginPage() {
           <div style={{ textAlign: "center", marginTop: 24 }}>
             <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
               {L.no_account}{" "}
-              <Link to="/register" style={{ color: "#06D6A0", fontWeight: 500 }}>
+              <Link to="/register" style={{ color: "#7C9CFF", fontWeight: 500 }}>
                 {L.btn_register}
               </Link>
             </Text>
