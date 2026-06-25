@@ -1,12 +1,218 @@
-import { Alert, App, Button, Card, Col, Descriptions, Divider, Form, Input, Modal, Row, Space, Tag, Typography } from "antd";
+import { Alert, App, Button, Card, Col, Descriptions, Divider, Form, Input, Modal, Row, Space, Steps, Tag, Typography } from "antd";
 import { CheckCircleOutlined, GiftOutlined, LinkOutlined, LockOutlined, LogoutOutlined, MailOutlined, SafetyCertificateOutlined, SendOutlined, WarningOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, email, password, promo, PromoState, sessions, tgLink } from "../../api/client";
+import { ApiError, email, password, promo, PromoState, sessions, setup, tgLink } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import { useLang } from "../../locale";
 
 const { Title, Text } = Typography;
+
+const inputStyle = {
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  color: "#fff",
+  borderRadius: 10,
+} as const;
+
+/** Case A: no email, no password — set both via 2-step email verification */
+function SetupEmailCard({ onSuccess }: { onSuccess: () => void }) {
+  const { message: msg } = App.useApp();
+  const { L } = useLang();
+  const [form] = Form.useForm();
+  const [step, setStep] = useState<0 | 1>(0);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onRequest(values: { email: string; password: string }) {
+    setLoading(true); setError(null);
+    try {
+      await setup.emailRequest(values.email, values.password);
+      setPendingEmail(values.email.trim().toLowerCase());
+      setStep(1);
+      form.resetFields(["code"]);
+    } catch (e) {
+      const map: Record<string, string> = {
+        email_taken: L.err_email_taken,
+        email_already_set: L.err_email_already_set,
+        email_send_failed: L.err_send_code,
+      };
+      setError(e instanceof ApiError ? (map[e.code] ?? L.err_setup_email) : L.err_setup_email);
+    } finally { setLoading(false); }
+  }
+
+  async function onConfirm(values: { code: string }) {
+    setLoading(true); setError(null);
+    try {
+      await setup.emailConfirm(values.code);
+      msg.success(L.setup_success_email);
+      onSuccess();
+    } catch (e) {
+      const map: Record<string, string> = {
+        code_invalid: L.err_code_invalid,
+        code_expired: L.err_code_expired,
+        code_exhausted: L.err_rate_limited,
+        email_taken: L.err_email_taken,
+        http_429: L.err_rate_limited,
+      };
+      setError(e instanceof ApiError ? (map[e.code] ?? L.err_setup_email) : L.err_setup_email);
+    } finally { setLoading(false); }
+  }
+
+  const cardTitle = <Text style={{ color: "#fff" }}><LockOutlined style={{ marginRight: 8 }} />{L.card_setup_email}</Text>;
+
+  return (
+    <Card title={cardTitle}
+      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16 }}
+      styles={{ header: { borderBottom: "1px solid rgba(255,255,255,0.07)" } }}>
+      <Steps size="small" current={step} style={{ marginBottom: 20 }}
+        items={[{ title: <Text style={{ color: "#fff", fontSize: 12 }}>{L.btn_setup_send_code}</Text> },
+                { title: <Text style={{ color: "#fff", fontSize: 12 }}>{L.btn_setup_confirm}</Text> }]} />
+      {error && <Alert type="error" message={error} style={{ marginBottom: 16, borderRadius: 10 }} showIcon closable onClose={() => setError(null)} />}
+      {step === 0 ? (
+        <Form form={form} layout="vertical" onFinish={onRequest}>
+          <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, display: "block", marginBottom: 16 }}>{L.setup_email_hint}</Text>
+          <Form.Item name="email" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.setup_email_label}</Text>}
+            rules={[{ required: true, message: L.val_email_req }, { type: "email", message: L.val_email_format }]}>
+            <Input style={inputStyle} autoComplete="email" />
+          </Form.Item>
+          <Form.Item name="password" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.setup_pwd_new_label}</Text>}
+            rules={[{ required: true, message: L.val_pwd_req }, { min: 8, message: L.val_pwd_min }]}>
+            <Input.Password style={inputStyle} autoComplete="new-password" />
+          </Form.Item>
+          <Form.Item name="confirm" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.setup_pwd_confirm_label}</Text>}
+            dependencies={["password"]}
+            rules={[{ required: true, message: L.val_confirm_req },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("password") === value) return Promise.resolve();
+                  return Promise.reject(new Error(L.val_confirm_match));
+                },
+              })]}>
+            <Input.Password style={inputStyle} autoComplete="new-password" />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" loading={loading}
+            style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}>
+            {L.btn_setup_send_code}
+          </Button>
+        </Form>
+      ) : (
+        <Form form={form} layout="vertical" onFinish={onConfirm}>
+          <Alert type="info" message={L.setup_code_sent_hint(pendingEmail)} style={{ marginBottom: 16, borderRadius: 10 }} showIcon />
+          <Form.Item name="code" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.setup_code_label}</Text>}
+            rules={[{ required: true, message: L.val_code_req }, { len: 6, message: L.val_code_len }]}>
+            <Input style={inputStyle} maxLength={6} autoComplete="one-time-code" />
+          </Form.Item>
+          <Space>
+            <Button type="primary" htmlType="submit" loading={loading}
+              style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}>
+              {L.btn_setup_confirm}
+            </Button>
+            <Button onClick={() => { setStep(0); setError(null); }}
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", borderRadius: 10 }}>
+              {L.btn_back}
+            </Button>
+          </Space>
+        </Form>
+      )}
+    </Card>
+  );
+}
+
+/** Case B: has email but no password — set password via email code */
+function SetupPasswordCard({ email: userEmail, onSuccess }: { email: string; onSuccess: () => void }) {
+  const { message: msg } = App.useApp();
+  const { L } = useLang();
+  const [form] = Form.useForm();
+  const [step, setStep] = useState<0 | 1>(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onRequest() {
+    setLoading(true); setError(null);
+    try {
+      await setup.passwordRequest();
+      setStep(1);
+      form.resetFields();
+    } catch (e) {
+      const map: Record<string, string> = {
+        password_already_set: L.err_password_already_set,
+        email_send_failed: L.err_send_code,
+      };
+      setError(e instanceof ApiError ? (map[e.code] ?? L.err_setup_password) : L.err_setup_password);
+    } finally { setLoading(false); }
+  }
+
+  async function onConfirm(values: { new_password: string; code: string }) {
+    setLoading(true); setError(null);
+    try {
+      await setup.passwordConfirm(values.new_password, values.code);
+      msg.success(L.setup_success_password);
+      onSuccess();
+    } catch (e) {
+      const map: Record<string, string> = {
+        code_invalid: L.err_code_invalid,
+        code_expired: L.err_code_expired,
+        code_exhausted: L.err_rate_limited,
+        http_429: L.err_rate_limited,
+      };
+      setError(e instanceof ApiError ? (map[e.code] ?? L.err_setup_password) : L.err_setup_password);
+    } finally { setLoading(false); }
+  }
+
+  const cardTitle = <Text style={{ color: "#fff" }}><LockOutlined style={{ marginRight: 8 }} />{L.card_setup_password}</Text>;
+
+  return (
+    <Card title={cardTitle}
+      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16 }}
+      styles={{ header: { borderBottom: "1px solid rgba(255,255,255,0.07)" } }}>
+      {error && <Alert type="error" message={error} style={{ marginBottom: 16, borderRadius: 10 }} showIcon closable onClose={() => setError(null)} />}
+      {step === 0 ? (
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>{L.setup_password_hint(userEmail)}</Text>
+          <Button type="primary" loading={loading} onClick={onRequest}
+            style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10, marginTop: 8 }}>
+            {L.btn_setup_pwd_send_code}
+          </Button>
+        </Space>
+      ) : (
+        <Form form={form} layout="vertical" onFinish={onConfirm}>
+          <Alert type="info" message={L.setup_pwd_code_sent_hint} style={{ marginBottom: 16, borderRadius: 10 }} showIcon />
+          <Form.Item name="code" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.setup_code_label}</Text>}
+            rules={[{ required: true, message: L.val_code_req }, { len: 6, message: L.val_code_len }]}>
+            <Input style={inputStyle} maxLength={6} autoComplete="one-time-code" />
+          </Form.Item>
+          <Form.Item name="new_password" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.pwd_new}</Text>}
+            rules={[{ required: true, message: L.val_pwd_new_req }, { min: 8, message: L.val_pwd_new_min }]}>
+            <Input.Password style={inputStyle} autoComplete="new-password" />
+          </Form.Item>
+          <Form.Item name="confirm" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.pwd_confirm_field}</Text>}
+            dependencies={["new_password"]}
+            rules={[{ required: true, message: L.val_pwd_confirm_req },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("new_password") === value) return Promise.resolve();
+                  return Promise.reject(new Error(L.val_pwd_confirm_match));
+                },
+              })]}>
+            <Input.Password style={inputStyle} autoComplete="new-password" />
+          </Form.Item>
+          <Space>
+            <Button type="primary" htmlType="submit" loading={loading}
+              style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}>
+              {L.btn_setup_confirm}
+            </Button>
+            <Button onClick={() => { setStep(0); setError(null); }}
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", borderRadius: 10 }}>
+              {L.btn_back}
+            </Button>
+          </Space>
+        </Form>
+      )}
+    </Card>
+  );
+}
 
 export default function SettingsTab() {
   const { message: msg } = App.useApp();
@@ -232,44 +438,53 @@ export default function SettingsTab() {
           </Card>
         </Col>
 
-        {/* Change password */}
+        {/* Password card — conditional on account state */}
         <Col xs={24} lg={12}>
-          <Card
-            title={<Text style={{ color: "#fff" }}><LockOutlined style={{ marginRight: 8 }} />{L.card_password}</Text>}
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16 }}
-            styles={{ header: { borderBottom: "1px solid rgba(255,255,255,0.07)" } }}
-          >
-            {pwdError && (
-              <Alert type="error" message={pwdError} style={{ marginBottom: 16, borderRadius: 10 }} showIcon closable onClose={() => setPwdError(null)} />
-            )}
-            <Form form={pwdForm} layout="vertical" onFinish={onPasswordChange}>
-              <Form.Item name="current" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.pwd_current}</Text>}
-                rules={[{ required: true, message: L.val_pwd_current_req }]}>
-                <Input.Password style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10 }} />
-              </Form.Item>
-              <Form.Item name="next" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.pwd_new}</Text>}
-                rules={[{ required: true, message: L.val_pwd_new_req }, { min: 8, message: L.val_pwd_new_min }]}>
-                <Input.Password style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10 }} />
-              </Form.Item>
-              <Form.Item name="confirm" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.pwd_confirm_field}</Text>}
-                dependencies={["next"]}
-                rules={[
-                  { required: true, message: L.val_pwd_confirm_req },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || getFieldValue("next") === value) return Promise.resolve();
-                      return Promise.reject(new Error(L.val_pwd_confirm_match));
-                    },
-                  }),
-                ]}>
-                <Input.Password style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10 }} />
-              </Form.Item>
-              <Button type="primary" htmlType="submit" loading={pwdLoading}
-                style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}>
-                {L.btn_change_pwd}
-              </Button>
-            </Form>
-          </Card>
+          {!user?.email ? (
+            // Case A: no email at all — set up email + password
+            <SetupEmailCard onSuccess={refreshProfile} />
+          ) : !user?.has_password ? (
+            // Case B: has email but no password
+            <SetupPasswordCard email={user.email} onSuccess={refreshProfile} />
+          ) : (
+            // Case C: normal change-password form
+            <Card
+              title={<Text style={{ color: "#fff" }}><LockOutlined style={{ marginRight: 8 }} />{L.card_password}</Text>}
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16 }}
+              styles={{ header: { borderBottom: "1px solid rgba(255,255,255,0.07)" } }}
+            >
+              {pwdError && (
+                <Alert type="error" message={pwdError} style={{ marginBottom: 16, borderRadius: 10 }} showIcon closable onClose={() => setPwdError(null)} />
+              )}
+              <Form form={pwdForm} layout="vertical" onFinish={onPasswordChange}>
+                <Form.Item name="current" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.pwd_current}</Text>}
+                  rules={[{ required: true, message: L.val_pwd_current_req }]}>
+                  <Input.Password style={inputStyle} />
+                </Form.Item>
+                <Form.Item name="next" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.pwd_new}</Text>}
+                  rules={[{ required: true, message: L.val_pwd_new_req }, { min: 8, message: L.val_pwd_new_min }]}>
+                  <Input.Password style={inputStyle} />
+                </Form.Item>
+                <Form.Item name="confirm" label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.pwd_confirm_field}</Text>}
+                  dependencies={["next"]}
+                  rules={[
+                    { required: true, message: L.val_pwd_confirm_req },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue("next") === value) return Promise.resolve();
+                        return Promise.reject(new Error(L.val_pwd_confirm_match));
+                      },
+                    }),
+                  ]}>
+                  <Input.Password style={inputStyle} />
+                </Form.Item>
+                <Button type="primary" htmlType="submit" loading={pwdLoading}
+                  style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}>
+                  {L.btn_change_pwd}
+                </Button>
+              </Form>
+            </Card>
+          )}
         </Col>
 
         {/* Promo code */}

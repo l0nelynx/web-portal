@@ -142,6 +142,7 @@ export interface AndroidUserSummary {
   email_verified: boolean;
   tg_id: number | null;
   language: string | null;
+  has_password: boolean;
 }
 
 export interface SubscriptionInfo {
@@ -321,6 +322,30 @@ export const password = {
       { email: emailAddr },
       false
     ),
+};
+
+// ---------------------------------------------------------------------------
+// Credential setup for users without email/password (Telegram-only accounts)
+// ---------------------------------------------------------------------------
+
+export const setup = {
+  // Case A: no email — set email + password (2-step: request code → confirm)
+  emailRequest: (emailAddr: string, new_password: string) =>
+    post<{ status: string }>("/web/auth/setup/email-request", {
+      email: emailAddr,
+      new_password,
+    }),
+  emailConfirm: (code: string) =>
+    post<{ status: string }>("/web/auth/setup/email-confirm", { code }),
+
+  // Case B: has email but no password (2-step: request code → confirm with new pwd)
+  passwordRequest: () =>
+    post<{ status: string }>("/web/auth/setup/password-request", {}),
+  passwordConfirm: (new_password: string, code: string) =>
+    post<{ status: string }>("/web/auth/setup/password-confirm", {
+      new_password,
+      code,
+    }),
 };
 
 // ---------------------------------------------------------------------------

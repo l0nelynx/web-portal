@@ -28,7 +28,7 @@ function summaryFromProfile(p: MeResponse): UserSummary {
     id: p.user.id,
     email: p.user.email,
     email_verified: p.user.email_verified,
-    has_password: true,
+    has_password: p.user.has_password,
     has_telegram: p.user.tg_id !== null,
   };
 }

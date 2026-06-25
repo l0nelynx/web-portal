@@ -208,6 +208,26 @@ export interface Translations {
   msg_code_sent: string;
   err_send_code: string;
   err_change_pwd: string;
+  // Credential setup (Telegram-only users)
+  card_setup_email: string;
+  setup_email_hint: string;
+  setup_email_label: string;
+  setup_pwd_new_label: string;
+  setup_pwd_confirm_label: string;
+  btn_setup_send_code: string;
+  setup_code_sent_hint: (email: string) => string;
+  setup_code_label: string;
+  btn_setup_confirm: string;
+  setup_success_email: string;
+  card_setup_password: string;
+  setup_password_hint: (email: string) => string;
+  btn_setup_pwd_send_code: string;
+  setup_pwd_code_sent_hint: string;
+  setup_success_password: string;
+  err_email_already_set: string;
+  err_password_already_set: string;
+  err_setup_email: string;
+  err_setup_password: string;
   // Telegram link
   btn_link_telegram: string;
   btn_unlink_telegram: string;
@@ -443,6 +463,26 @@ const en: Translations = {
   msg_code_sent: "Code sent to your email",
   err_send_code: "Failed to send code",
   err_change_pwd: "Failed to change password",
+  // Credential setup
+  card_setup_email: "Set Up Email & Password",
+  setup_email_hint: "Add email login to your account. A verification code will be sent to the address you enter.",
+  setup_email_label: "Email",
+  setup_pwd_new_label: "Password",
+  setup_pwd_confirm_label: "Confirm Password",
+  btn_setup_send_code: "Send Verification Code",
+  setup_code_sent_hint: (email) => `A 6-digit code was sent to ${email}. Check your inbox (including Spam).`,
+  setup_code_label: "Verification code (6 digits)",
+  btn_setup_confirm: "Confirm & Save",
+  setup_success_email: "Email and password set successfully!",
+  card_setup_password: "Set Password",
+  setup_password_hint: (email) => `Your account has email (${email}) but no password. To set one, confirm your email with a code.`,
+  btn_setup_pwd_send_code: "Send Code to Email",
+  setup_pwd_code_sent_hint: "Code sent. Enter it below along with your new password.",
+  setup_success_password: "Password set successfully!",
+  err_email_already_set: "Email is already set on this account",
+  err_password_already_set: "Password is already set on this account",
+  err_setup_email: "Failed to set email. Please try again.",
+  err_setup_password: "Failed to set password. Please try again.",
   btn_link_telegram: "Link Telegram",
   btn_unlink_telegram: "Unlink",
   tg_link_opened: "Telegram link opened — click Start in the bot, then refresh this page",
@@ -681,6 +721,26 @@ const ru: Translations = {
   msg_code_sent: "Код отправлен на ваш email",
   err_send_code: "Не удалось отправить код",
   err_change_pwd: "Ошибка смены пароля",
+  // Credential setup
+  card_setup_email: "Задать Email и пароль",
+  setup_email_hint: "Добавьте вход по email к вашему аккаунту. Код подтверждения будет отправлен на указанный адрес.",
+  setup_email_label: "Email",
+  setup_pwd_new_label: "Пароль",
+  setup_pwd_confirm_label: "Повтор пароля",
+  btn_setup_send_code: "Отправить код подтверждения",
+  setup_code_sent_hint: (email) => `Код отправлен на ${email}. Проверьте почту (и папку «Спам»).`,
+  setup_code_label: "Код подтверждения (6 цифр)",
+  btn_setup_confirm: "Подтвердить и сохранить",
+  setup_success_email: "Email и пароль успешно установлены!",
+  card_setup_password: "Задать пароль",
+  setup_password_hint: (email) => `На вашем аккаунте установлен email (${email}), но нет пароля. Для его установки подтвердите email кодом.`,
+  btn_setup_pwd_send_code: "Отправить код на email",
+  setup_pwd_code_sent_hint: "Код отправлен. Введите его ниже вместе с новым паролем.",
+  setup_success_password: "Пароль успешно установлен!",
+  err_email_already_set: "Email уже установлен для этого аккаунта",
+  err_password_already_set: "Пароль уже установлен для этого аккаунта",
+  err_setup_email: "Не удалось установить email. Попробуйте снова.",
+  err_setup_password: "Не удалось установить пароль. Попробуйте снова.",
   btn_link_telegram: "Привязать Telegram",
   btn_unlink_telegram: "Отвязать",
   tg_link_opened: "Ссылка открыта — нажмите Start в боте, затем обновите эту страницу",
