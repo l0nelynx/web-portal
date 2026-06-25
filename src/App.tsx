@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import DashboardPage from "./pages/DashboardPage";
+import TelegramCallbackPage from "./pages/TelegramCallbackPage";
 import { webThemeConfig } from "./theme/webTheme";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -72,6 +73,7 @@ export default function WebApp() {
             </RequireVerified>
           }
         />
+        <Route path="/auth/callback" element={<TelegramCallbackPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ConfigProvider>

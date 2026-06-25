@@ -3,8 +3,8 @@ import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import BrandLogo from "../components/BrandLogo";
 import TelegramLoginButton from "../components/TelegramLoginButton";
 import { BRAND_NAME } from "../branding";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
@@ -17,6 +17,17 @@ export default function LoginPage() {
   const { L, toggle } = useLang();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const tgError = searchParams.get("tg_error");
+    if (!tgError || tgError === "cancelled") return;
+    const map: Record<string, string> = {
+      tg_not_registered: L.err_tg_not_registered,
+      banned: L.err_banned,
+    };
+    setError(map[tgError] ?? L.err_tg_login);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function onFinish(values: { email: string; password: string }) {
     setLoading(true);

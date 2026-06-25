@@ -2,16 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "antd";
 import { auth, AuthResponse, ApiError } from "../api/client";
 
-export interface TelegramUser {
-  id: number | string;
-  first_name: string;
-  last_name?: string;
-  username?: string;
-  photo_url?: string;
-  auth_date: number;
-  hash: string;
-}
-
 interface Props {
   label: string;
   onSuccess: (resp: AuthResponse) => void;
@@ -39,55 +29,51 @@ export default function TelegramLoginButton({ label, onSuccess, onError }: Props
 
   useEffect(() => () => cleanup(), [cleanup]);
 
-  async function handleTgData(user: TelegramUser) {
+  async function openPopup() {
+    if (!BOT_ID || loading) return;
     setLoading(true);
+
+    let authUrl: string;
     try {
-      const resp = await auth.telegramLogin({
-        id: Number(user.id),
-        first_name: user.first_name,
-        last_name: user.last_name,
-        username: user.username,
-        photo_url: user.photo_url,
-        auth_date: user.auth_date,
-        hash: user.hash,
-      });
-      onSuccess(resp);
+      const redirectUri = `${window.location.origin}/auth/callback`;
+      const { auth_url } = await auth.telegramInit(redirectUri);
+      authUrl = auth_url;
     } catch (e) {
-      onError(e instanceof ApiError ? e.code : "unknown");
       setLoading(false);
+      onError(e instanceof ApiError ? e.code : "init_failed");
+      return;
     }
-  }
 
-  function openPopup() {
-    if (!BOT_ID) return;
-
-    const origin = encodeURIComponent(window.location.origin);
-    const url = `https://oauth.telegram.org/auth?bot_id=${BOT_ID}&origin=${origin}&request_access=write`;
     const w = 550, h = 470;
     const left = Math.round((screen.width - w) / 2);
     const top = Math.round((screen.height - h) / 2);
-    const popup = window.open(url, "tg_auth", `width=${w},height=${h},left=${left},top=${top}`);
-    if (!popup) return;
-
+    const popup = window.open(
+      authUrl,
+      "tg_auth",
+      `width=${w},height=${h},left=${left},top=${top}`
+    );
+    if (!popup) {
+      setLoading(false);
+      return;
+    }
     popupRef.current = popup;
-    setLoading(true);
 
     const onMessage = (e: MessageEvent) => {
-      if (e.source !== popup) return;
-      if (e.data?.event !== "auth_result") return;
+      if (e.data?.event !== "tg_auth") return;
       cleanup();
       popup.close();
-      const user = e.data?.result as TelegramUser | null;
-      if (user?.id) {
-        handleTgData(user);
-      } else {
+      if (e.data.error) {
+        onError(e.data.error as string);
         setLoading(false);
+      } else {
+        onSuccess(e.data.resp as AuthResponse);
       }
     };
 
     listenerRef.current = onMessage;
     window.addEventListener("message", onMessage);
 
+    // Detect manual popup close
     timerRef.current = setInterval(() => {
       if (popup.closed) {
         cleanup();
