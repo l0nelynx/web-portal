@@ -36,6 +36,7 @@ jobs:
           VITE_MIRRORS: ${{ vars.VITE_MIRRORS }}
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
           VITE_GA_ID: ${{ vars.VITE_GA_ID }}
+          VITE_TG_BOT_ID: ${{ vars.VITE_TG_BOT_ID }}
 
       - name: Write custom domain
         if: vars.PAGES_CNAME != ''
