@@ -71,6 +71,9 @@ export interface Translations {
   err_invalid_login: string;
   err_banned: string;
   err_login: string;
+  btn_tg_login: string;
+  err_tg_login: string;
+  err_tg_not_registered: string;
   // Verify email page
   verify_title: string;
   verify_send_to: string;
@@ -307,6 +310,9 @@ const en: Translations = {
   err_invalid_login: "Invalid email or password",
   err_banned: "Account is suspended",
   err_login: "Sign in failed. Please try again.",
+  btn_tg_login: "Sign in with Telegram",
+  err_tg_login: "Telegram login failed. Please try again.",
+  err_tg_not_registered: "No account linked to this Telegram. Please register first.",
   // Verify email page
   verify_title: "Email Verification",
   verify_send_to: "We'll send a confirmation code to",
@@ -538,6 +544,9 @@ const ru: Translations = {
   err_invalid_login: "Неверный email или пароль",
   err_banned: "Аккаунт заблокирован",
   err_login: "Ошибка входа. Попробуйте снова.",
+  btn_tg_login: "Войти через Telegram",
+  err_tg_login: "Ошибка входа через Telegram. Попробуйте снова.",
+  err_tg_not_registered: "Аккаунт с этим Telegram не найден. Пройдите регистрацию.",
   // Verify email page
   verify_title: "Подтверждение email",
   verify_send_to: "Отправим код подтверждения на",

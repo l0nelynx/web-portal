@@ -111,6 +111,16 @@ export const auth = {
 
   logout: (refresh_token: string) =>
     post<{ status: string }>("/android/auth/logout", { refresh_token }),
+
+  telegramLogin: (data: {
+    id: number;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+    auth_date: number;
+    hash: string;
+  }) => post<AuthResponse>("/web/auth/telegram", data, false),
 };
 
 // ---------------------------------------------------------------------------

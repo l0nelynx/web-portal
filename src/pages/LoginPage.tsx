@@ -1,6 +1,7 @@
 import { Alert, Button, Card, Form, Input, Typography } from "antd";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import BrandLogo from "../components/BrandLogo";
+import TelegramLoginButton from "../components/TelegramLoginButton";
 import { BRAND_NAME } from "../branding";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -11,7 +12,7 @@ import { useLang } from "../locale";
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, setUserAfterRegister } = useAuth();
   const navigate = useNavigate();
   const { L, toggle } = useLang();
   const [loading, setLoading] = useState(false);
@@ -174,7 +175,30 @@ export default function LoginPage() {
             </Button>
           </Form>
 
-          <div style={{ textAlign: "center", marginTop: 24 }}>
+          {/* Telegram login */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0 16px" }}>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+            <Text style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>or</Text>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+          </div>
+          <TelegramLoginButton
+            label={L.btn_tg_login}
+            onSuccess={(resp) => {
+              setUserAfterRegister(resp.user, resp.tokens);
+              navigate("/dashboard", { replace: true });
+            }}
+            onError={(code) => {
+              if (code === "tg_not_registered") {
+                setError(L.err_tg_not_registered);
+              } else if (code === "banned") {
+                setError(L.err_banned);
+              } else {
+                setError(L.err_tg_login);
+              }
+            }}
+          />
+
+          <div style={{ textAlign: "center", marginTop: 20 }}>
             <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
               {L.no_account}{" "}
               <Link to="/register" style={{ color: "#7C9CFF", fontWeight: 500 }}>
