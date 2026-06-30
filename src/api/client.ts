@@ -7,7 +7,10 @@
  * When unset (local dev) falls back to relative path, proxied by vite dev server.
  */
 
-const API_BASE: string = import.meta.env.VITE_API_URL ?? "/bot/miniapp/api";
+// Strip any trailing slash so `${API_BASE}${path}` (path starts with "/") never
+// produces a double slash — a VITE_API_URL set as ".../bot/miniapp/api/" would
+// otherwise hit ".../api//android/..." and 404.
+const API_BASE: string = (import.meta.env.VITE_API_URL ?? "/bot/miniapp/api").replace(/\/+$/, "");
 
 export class ApiError extends Error {
   status: number;
