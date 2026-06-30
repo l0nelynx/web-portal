@@ -59,6 +59,10 @@ async function request<T>(
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
+  // A real API call reached the backend on this origin → mark it healthy so the
+  // mirror failover in main.tsx never bounces away from a working mirror.
+  try { sessionStorage.setItem("_api_ok", "1"); } catch { /* ignore */ }
+
   if (!res.ok) {
     let code = `http_${res.status}`;
     try {
