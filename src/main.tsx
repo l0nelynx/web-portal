@@ -48,8 +48,12 @@ async function tryFailover() {
   if (candidates.length === 0) return;
 
   try {
-    await fetch(apiUrl, { method: "HEAD", signal: AbortSignal.timeout(2500) });
-    // Any HTTP response means network is reachable (401, 404 etc. are fine)
+    // Reachability probe, not a data call: use no-cors so an opaque response
+    // still resolves. This keeps cross-origin CORS quirks and trailing-slash
+    // 301s (the edge nginx 301s the bare /bot/miniapp/api -> /bot/miniapp/api/
+    // WITHOUT CORS headers) from being mis-read as "API down" and triggering a
+    // mirror redirect loop. Only a real network failure/timeout rejects here.
+    await fetch(apiUrl, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(2500) });
     sessionStorage.setItem("_api_ok", "1");
   } catch {
     // Network failure — API unreachable, go to next mirror
