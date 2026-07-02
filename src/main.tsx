@@ -37,6 +37,18 @@ async function tryFailover() {
   const apiUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
 
   if (!mirrorsRaw || !apiUrl) return;
+
+  // Loop guard: `_fo` marks a page we already failed over to. sessionStorage does
+  // not survive the cross-origin redirect, so the marker rides in the URL. Strip
+  // it on arrival (cosmetic) but remember it so a still-broken mirror can't bounce
+  // us again — that ping-pong is exactly the "reloads every few seconds" symptom.
+  const here = new URL(location.href);
+  const cameFromFailover = here.searchParams.has("_fo");
+  if (cameFromFailover) {
+    here.searchParams.delete("_fo");
+    window.history.replaceState(null, "", here.pathname + here.search + here.hash);
+  }
+
   if (sessionStorage.getItem("_api_ok")) return;
 
   // Build candidate list: all mirrors except the one we're currently on
@@ -48,16 +60,28 @@ async function tryFailover() {
   if (candidates.length === 0) return;
 
   try {
-    // Reachability probe, not a data call: use no-cors so an opaque response
-    // still resolves. This keeps cross-origin CORS quirks and trailing-slash
-    // 301s (the edge nginx 301s the bare /bot/miniapp/api -> /bot/miniapp/api/
-    // WITHOUT CORS headers) from being mis-read as "API down" and triggering a
-    // mirror redirect loop. Only a real network failure/timeout rejects here.
-    await fetch(apiUrl, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(2500) });
+    // Reachability probe, not a data call.
+    //  - `no-cors`: an opaque response still resolves (no CORS headers needed).
+    //  - `redirect: "manual"`: a 3xx resolves as an opaqueredirect INSTEAD of being
+    //    followed. The edge 301s the bare base (/bot/miniapp/api -> .../api/) with an
+    //    absolute Location carrying the backend's internal port (:8443), which the
+    //    browser can't reach directly; following it would make the probe throw and be
+    //    mis-read as "API down". A redirect is a response → the API is reachable.
+    // Only a genuine network failure/timeout rejects here.
+    await fetch(apiUrl, {
+      method: "HEAD",
+      mode: "no-cors",
+      redirect: "manual",
+      signal: AbortSignal.timeout(2500),
+    });
     sessionStorage.setItem("_api_ok", "1");
   } catch {
-    // Network failure — API unreachable, go to next mirror
-    location.replace(candidates[0] + location.pathname + location.search + location.hash);
+    // Already bounced once — don't ping-pong between mirrors.
+    if (cameFromFailover) return;
+    // Genuine network failure: fail over to the next mirror, tagged so it won't bounce back.
+    const dest = new URL(candidates[0] + location.pathname + location.search + location.hash);
+    dest.searchParams.set("_fo", "1");
+    location.replace(dest.toString());
   }
 }
 
