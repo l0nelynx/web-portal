@@ -275,6 +275,36 @@ export interface Translations {
   btn_back_to_tickets: string;
   lbl_you: string;
   lbl_support_agent: string;
+  // Landing — individuals section
+  ind_badge: string;
+  ind_title: string;
+  ind_desc: string;
+  ind_cta: string;
+  // Landing — business / partnership section
+  biz_badge: string;
+  biz_title: string;
+  biz_desc: string;
+  // Partnership form
+  partner_goal_label: string;
+  partner_goal_ph: string;
+  partner_desc_label: string;
+  partner_desc_ph: string;
+  partner_contact_label: string;
+  partner_contact_ph: string;
+  partner_submit: string;
+  partner_success: string;
+  partner_error: string;
+  val_partner_goal: string;
+  val_partner_desc: string;
+  val_partner_contact: string;
+  // Footer + legal
+  footer_disclaimer: string;
+  footer_legal_heading: string;
+  footer_policy: string;
+  footer_agreement: string;
+  footer_offer: string;
+  footer_telegram: string;
+  legal_back: string;
 }
 
 const en: Translations = {
@@ -289,10 +319,10 @@ const en: Translations = {
   nav_solutions: "Solutions",
   nav_platform: "Platform",
   // Landing — hero
-  hero_badge: "Enterprise Network Infrastructure",
-  hero_title_1: "Private Connectivity",
-  hero_title_2: "Built for Modern Teams",
-  hero_desc: "Secure, high-performance network access for distributed teams. Zero-trust architecture, global infrastructure, enterprise-grade reliability.",
+  hero_badge: "Private VPN · Secure by design",
+  hero_title_1: "Private, Secure",
+  hero_title_2: "VPN Access",
+  hero_desc: "Fast, encrypted VPN that keeps your connection private on any network — for individuals and businesses alike. No activity logs, no tracking, no fuss.",
   btn_get_started: "Get Started",
   // Landing — stats
   stat_uptime: "Uptime SLA",
@@ -300,19 +330,19 @@ const en: Translations = {
   stat_throughput: "Peak Throughput",
   stat_support: "Support",
   // Landing — features
-  features_title: "Everything your team needs",
-  features_subtitle: "A complete private network platform — from access control to compliance.",
-  feat_zero_trust_title: "Zero-Trust Access",
-  feat_zero_trust_desc: "Every connection authenticated, encrypted and isolated. No implicit trust, no perimeter exposure.",
-  feat_global_title: "Global Infrastructure",
-  feat_global_desc: "High-availability nodes across multiple regions. 99.9% SLA with automatic failover and load balancing.",
-  feat_team_title: "Team Connectivity",
-  feat_team_desc: "Centralised access policies, device management and role-based controls for organisations of any size.",
-  feat_throughput_title: "High Throughput",
-  feat_throughput_desc: "Optimised routing protocols deliver low-latency, high-bandwidth connections for demanding workloads.",
-  feat_compliance_title: "Compliance Ready",
-  feat_compliance_desc: "Traffic isolation, audit logging and data-residency controls built for regulated industries.",
-  feat_deploy_title: "Instant Deployment",
+  features_title: "Built for privacy and speed",
+  features_subtitle: "Everything you need for a private, reliable connection — nothing you don't.",
+  feat_zero_trust_title: "No-Logs Privacy",
+  feat_zero_trust_desc: "We don't record your browsing, traffic or IP address. What you do online stays yours.",
+  feat_global_title: "Global Network",
+  feat_global_desc: "High-availability servers across multiple regions for low-latency, reliable connections wherever you are.",
+  feat_team_title: "For You or Your Team",
+  feat_team_desc: "Use it solo for everyday privacy, or roll out secure access across your whole organisation.",
+  feat_throughput_title: "High Speed",
+  feat_throughput_desc: "Optimised routing delivers fast, high-bandwidth connections for streaming, calls and work.",
+  feat_compliance_title: "Strong Encryption",
+  feat_compliance_desc: "Modern encryption protocols protect every connection end to end.",
+  feat_deploy_title: "Instant Setup",
   feat_deploy_desc: "Connect in minutes. Cross-platform clients for Windows, macOS, Linux, iOS and Android.",
   // Landing — CTA + footer
   cta_title: "Ready to connect your team?",
@@ -529,6 +559,36 @@ const en: Translations = {
   btn_back_to_tickets: "Back to tickets",
   lbl_you: "You",
   lbl_support_agent: "Support",
+  // Landing — individuals section
+  ind_badge: "For individuals",
+  ind_title: "Your privacy, in one tap",
+  ind_desc: "Encrypted, high-speed access that keeps your connection private on any network. No activity logs, no tracking — just a secure tunnel for everyday browsing. Start free in Telegram, no card required.",
+  ind_cta: "Try free in Telegram",
+  // Landing — business / partnership section
+  biz_badge: "For business",
+  biz_title: "Partner with us",
+  biz_desc: "Looking to offer private connectivity to your team, resell access, or integrate our infrastructure? Tell us your goal and we'll get back to you.",
+  // Partnership form
+  partner_goal_label: "Goal",
+  partner_goal_ph: "e.g. reseller partnership, team access, integration",
+  partner_desc_label: "Description",
+  partner_desc_ph: "Tell us more about what you're looking for…",
+  partner_contact_label: "Contact",
+  partner_contact_ph: "Telegram, email or any way to reach you",
+  partner_submit: "Send inquiry",
+  partner_success: "Thanks! Your inquiry has been sent — we'll be in touch.",
+  partner_error: "Couldn't send your inquiry. Please try again later.",
+  val_partner_goal: "Please enter your goal",
+  val_partner_desc: "Please add a short description",
+  val_partner_contact: "Please leave a way to contact you",
+  // Footer + legal
+  footer_disclaimer: "This service is not intended for circumventing lawful restrictions.",
+  footer_legal_heading: "Legal",
+  footer_policy: "Privacy Policy",
+  footer_agreement: "User Agreement",
+  footer_offer: "Public Offer",
+  footer_telegram: "Telegram",
+  legal_back: "← Back to home",
 };
 
 const ru: Translations = {
@@ -543,10 +603,10 @@ const ru: Translations = {
   nav_solutions: "Возможности",
   nav_platform: "Платформа",
   // Landing — hero
-  hero_badge: "Корпоративная сетевая инфраструктура",
-  hero_title_1: "Приватное подключение",
-  hero_title_2: "Для современных команд",
-  hero_desc: "Защищённый высокоскоростной сетевой доступ для распределённых команд. Архитектура Zero-Trust, глобальная инфраструктура, надёжность корпоративного уровня.",
+  hero_badge: "Приватный VPN · Безопасность в основе",
+  hero_title_1: "Приватный и безопасный",
+  hero_title_2: "VPN-доступ",
+  hero_desc: "Быстрый зашифрованный VPN, который сохраняет ваше подключение приватным в любой сети — для частных лиц и бизнеса. Без логов активности и слежки.",
   btn_get_started: "Начать",
   // Landing — stats
   stat_uptime: "Гарантия работы",
@@ -554,19 +614,19 @@ const ru: Translations = {
   stat_throughput: "Пиковая скорость",
   stat_support: "Поддержка",
   // Landing — features
-  features_title: "Всё необходимое для вашей команды",
-  features_subtitle: "Полноценная платформа приватной сети — от управления доступом до соответствия требованиям.",
-  feat_zero_trust_title: "Zero-Trust Access",
-  feat_zero_trust_desc: "Каждое соединение аутентифицировано, зашифровано и изолировано. Никакого неявного доверия и уязвимых периметров.",
-  feat_global_title: "Глобальная инфраструктура",
-  feat_global_desc: "Высокодоступные узлы в нескольких регионах. Гарантия SLA 99.9% с автоматическим переключением и балансировкой нагрузки.",
-  feat_team_title: "Подключение команды",
-  feat_team_desc: "Централизованные политики доступа, управление устройствами и ролевые права для организаций любого размера.",
-  feat_throughput_title: "Высокая пропускная способность",
-  feat_throughput_desc: "Оптимизированные протоколы маршрутизации обеспечивают низкую задержку и высокую скорость для любых задач.",
-  feat_compliance_title: "Соответствие требованиям",
-  feat_compliance_desc: "Изоляция трафика, журналы аудита и контроль размещения данных для регулируемых отраслей.",
-  feat_deploy_title: "Быстрое подключение",
+  features_title: "Создан для приватности и скорости",
+  features_subtitle: "Всё необходимое для приватного и надёжного подключения — и ничего лишнего.",
+  feat_zero_trust_title: "Приватность без логов",
+  feat_zero_trust_desc: "Мы не храним историю посещений, трафик и IP-адрес. То, что вы делаете онлайн, остаётся вашим.",
+  feat_global_title: "Глобальная сеть",
+  feat_global_desc: "Высокодоступные серверы в нескольких регионах для быстрого и надёжного подключения где угодно.",
+  feat_team_title: "Вам или вашей команде",
+  feat_team_desc: "Используйте лично для повседневной приватности или разверните безопасный доступ для всей организации.",
+  feat_throughput_title: "Высокая скорость",
+  feat_throughput_desc: "Оптимизированная маршрутизация обеспечивает быстрое подключение для стриминга, звонков и работы.",
+  feat_compliance_title: "Надёжное шифрование",
+  feat_compliance_desc: "Современные протоколы шифрования защищают каждое соединение от начала до конца.",
+  feat_deploy_title: "Мгновенная настройка",
   feat_deploy_desc: "Подключитесь за минуты. Кросс-платформенные клиенты для Windows, macOS, Linux, iOS и Android.",
   // Landing — CTA + footer
   cta_title: "Готовы подключить вашу команду?",
@@ -787,6 +847,36 @@ const ru: Translations = {
   btn_back_to_tickets: "Назад к обращениям",
   lbl_you: "Вы",
   lbl_support_agent: "Поддержка",
+  // Landing — individuals section
+  ind_badge: "Частным лицам",
+  ind_title: "Ваша приватность в один тап",
+  ind_desc: "Зашифрованное скоростное подключение, которое сохраняет вашу связь приватной в любой сети. Без логов активности и слежки — просто защищённый туннель для повседневного интернета. Начните бесплатно в Telegram, без карты.",
+  ind_cta: "Попробовать бесплатно в Telegram",
+  // Landing — business / partnership section
+  biz_badge: "Бизнесу",
+  biz_title: "Сотрудничество",
+  biz_desc: "Хотите предоставить приватное подключение своей команде, перепродавать доступ или интегрировать нашу инфраструктуру? Опишите вашу цель — и мы свяжемся с вами.",
+  // Partnership form
+  partner_goal_label: "Цель",
+  partner_goal_ph: "напр. партнёрство-реселлер, доступ для команды, интеграция",
+  partner_desc_label: "Описание",
+  partner_desc_ph: "Расскажите подробнее, что вы ищете…",
+  partner_contact_label: "Контакты",
+  partner_contact_ph: "Telegram, email или любой способ связи",
+  partner_submit: "Отправить заявку",
+  partner_success: "Спасибо! Заявка отправлена — мы свяжемся с вами.",
+  partner_error: "Не удалось отправить заявку. Попробуйте позже.",
+  val_partner_goal: "Укажите вашу цель",
+  val_partner_desc: "Добавьте короткое описание",
+  val_partner_contact: "Оставьте способ связи с вами",
+  // Footer + legal
+  footer_disclaimer: "Данный ресурс не предназначен для обхода блокировок.",
+  footer_legal_heading: "Документы",
+  footer_policy: "Политика конфиденциальности",
+  footer_agreement: "Пользовательское соглашение",
+  footer_offer: "Публичная оферта",
+  footer_telegram: "Telegram",
+  legal_back: "← На главную",
 };
 
 const T: Record<Lang, Translations> = { en, ru };

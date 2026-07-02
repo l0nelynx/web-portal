@@ -36,6 +36,9 @@ jobs:
           VITE_MIRRORS: ${{ vars.VITE_MIRRORS }}
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
           VITE_GA_ID: ${{ vars.VITE_GA_ID }}
+          VITE_BOT_URL: ${{ vars.VITE_BOT_URL }}
+          VITE_SELLER_NAME: ${{ vars.VITE_SELLER_NAME }}
+          # scripts/prerender.mjs (postbuild) inherits VITE_BRAND_NAME from this env block
           VITE_TG_BOT_ID: ${{ vars.VITE_TG_BOT_ID }}
 
       - name: Write custom domain
@@ -72,6 +75,24 @@ jobs:
               <loc>${SITE_URL}/login</loc>
               <changefreq>monthly</changefreq>
               <priority>0.5</priority>
+            </url>
+            <url>
+              <loc>${SITE_URL}/policy</loc>
+              <changefreq>yearly</changefreq>
+              <priority>0.3</priority>
+              <lastmod>${DATE}</lastmod>
+            </url>
+            <url>
+              <loc>${SITE_URL}/agreement</loc>
+              <changefreq>yearly</changefreq>
+              <priority>0.3</priority>
+              <lastmod>${DATE}</lastmod>
+            </url>
+            <url>
+              <loc>${SITE_URL}/offer</loc>
+              <changefreq>yearly</changefreq>
+              <priority>0.3</priority>
+              <lastmod>${DATE}</lastmod>
             </url>
           </urlset>
           EOF

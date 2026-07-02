@@ -314,6 +314,21 @@ export const invite = {
 };
 
 // ---------------------------------------------------------------------------
+// Partnership inquiry (unauthenticated)
+// ---------------------------------------------------------------------------
+
+export interface PartnershipInquiry {
+  goal: string;
+  description: string;
+  contact: string;
+}
+
+export const partnership = {
+  submit: (body: PartnershipInquiry) =>
+    post<{ ok: boolean }>("/web/partnership-inquiry", body, false),
+};
+
+// ---------------------------------------------------------------------------
 // Password
 // ---------------------------------------------------------------------------
 

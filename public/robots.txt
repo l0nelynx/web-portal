@@ -2,6 +2,9 @@ User-agent: *
 Allow: /
 Allow: /login
 Allow: /register
+Allow: /policy
+Allow: /agreement
+Allow: /offer
 Disallow: /dashboard
 Disallow: /verify-email
 

@@ -7,9 +7,10 @@ import {
   SafetyCertificateOutlined,
   GlobalOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo";
-import { BRAND_NAME } from "../branding";
+import PartnershipForm from "../components/PartnershipForm";
+import { BRAND_NAME, BOT_URL } from "../branding";
 import { useLang } from "../locale";
 
 const { Title, Paragraph, Text } = Typography;
@@ -190,9 +191,13 @@ export default function LandingPage() {
                 fontWeight: 600,
                 borderRadius: 12,
               }}
-              onClick={() => navigate("/register")}
+              onClick={() =>
+                BOT_URL
+                  ? window.open(BOT_URL, "_blank", "noopener")
+                  : navigate("/register")
+              }
             >
-              {L.btn_get_started}
+              {BOT_URL ? L.ind_cta : L.btn_get_started}
             </Button>
             <Button
               size="large"
@@ -286,10 +291,11 @@ export default function LandingPage() {
         </Row>
       </section>
 
-      {/* ── CTA banner ─────────────────────────────────────────────────────── */}
+      {/* ── For individuals ────────────────────────────────────────────────── */}
       <section
+        id="individuals"
         style={{
-          margin: isMobile ? "0 16px 48px" : "0 48px 80px",
+          margin: isMobile ? "0 16px 40px" : "0 48px 64px",
           borderRadius: 20,
           background: "linear-gradient(135deg, rgba(6,214,160,0.12), rgba(0,150,199,0.12))",
           border: "1px solid rgba(6,214,160,0.2)",
@@ -297,11 +303,23 @@ export default function LandingPage() {
           textAlign: "center",
         }}
       >
-        <Title level={2} style={{ color: "#fff", marginBottom: 12, fontSize: isMobile ? 22 : 30 }}>
-          {L.cta_title}
+        <Text style={{ fontSize: 13, color: "#06D6A0", letterSpacing: "0.5px" }}>
+          {L.ind_badge}
+        </Text>
+        <Title level={2} style={{ color: "#fff", margin: "12px 0", fontSize: isMobile ? 22 : 30 }}>
+          {L.ind_title}
         </Title>
-        <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 16, marginBottom: 32 }}>
-          {L.cta_desc}
+        <Paragraph
+          style={{
+            color: "rgba(255,255,255,0.6)",
+            fontSize: 16,
+            marginBottom: 32,
+            maxWidth: 620,
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}
+        >
+          {L.ind_desc}
         </Paragraph>
         <Button
           type="primary"
@@ -315,32 +333,125 @@ export default function LandingPage() {
             fontWeight: 600,
             borderRadius: 12,
           }}
-          onClick={() => navigate("/register")}
+          onClick={() =>
+            BOT_URL ? window.open(BOT_URL, "_blank", "noopener") : navigate("/register")
+          }
         >
-          {L.btn_create_account}
+          {BOT_URL ? L.ind_cta : L.btn_create_account}
         </Button>
+      </section>
+
+      {/* ── For business / partnership ─────────────────────────────────────── */}
+      <section
+        id="business"
+        style={{
+          padding: isMobile ? "0 16px 56px" : "0 48px 96px",
+          maxWidth: 720,
+          margin: "0 auto",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <Text style={{ fontSize: 13, color: "#7C9CFF", letterSpacing: "0.5px" }}>
+            {L.biz_badge}
+          </Text>
+          <Title level={2} style={{ color: "#fff", margin: "12px 0", fontSize: isMobile ? 24 : 32 }}>
+            {L.biz_title}
+          </Title>
+          <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 16, margin: 0 }}>
+            {L.biz_desc}
+          </Paragraph>
+        </div>
+        <div
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.09)",
+            borderRadius: 18,
+            padding: isMobile ? 20 : 32,
+          }}
+        >
+          <PartnershipForm />
+        </div>
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
       <footer
         style={{
           borderTop: "1px solid rgba(255,255,255,0.07)",
-          padding: `24px ${px}`,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 12,
+          padding: `32px ${px}`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <BrandLogo size={26} />
+        {/* Links row */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: 20,
+            marginBottom: 24,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <BrandLogo size={26} />
+            <Text strong style={{ color: "#fff", fontSize: 15 }}>{BRAND_NAME}</Text>
+          </div>
+
+          <div style={{ display: "flex", gap: isMobile ? 16 : 28, flexWrap: "wrap" }}>
+            <Link to="/policy" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+              {L.footer_policy}
+            </Link>
+            <Link to="/agreement" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+              {L.footer_agreement}
+            </Link>
+            <Link to="/offer" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+              {L.footer_offer}
+            </Link>
+            {BOT_URL && (
+              <a
+                href={BOT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}
+              >
+                {L.footer_telegram}
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom row */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 8,
+            paddingTop: 16,
+            borderTop: "1px solid rgba(255,255,255,0.05)",
+          }}
+        >
           <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
             © {new Date().getFullYear()} {BRAND_NAME}. {L.footer_rights}
           </Text>
+          <Text style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
+            {L.footer_tagline}
+          </Text>
         </div>
-        <Text style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
-          {L.footer_tagline}
+
+        {/* Compliance disclaimer */}
+        <Text
+          style={{
+            display: "block",
+            marginTop: 16,
+            color: "rgba(255,255,255,0.3)",
+            fontSize: 12,
+            textAlign: "center",
+          }}
+        >
+          {L.footer_disclaimer}
         </Text>
       </footer>
     </div>

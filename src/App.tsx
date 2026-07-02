@@ -10,6 +10,9 @@ import RegisterPage from "./pages/RegisterPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import DashboardPage from "./pages/DashboardPage";
 import TelegramCallbackPage from "./pages/TelegramCallbackPage";
+import PolicyPage from "./pages/legal/PolicyPage";
+import AgreementPage from "./pages/legal/AgreementPage";
+import OfferPage from "./pages/legal/OfferPage";
 import { webThemeConfig } from "./theme/webTheme";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -74,6 +77,9 @@ export default function WebApp() {
           }
         />
         <Route path="/auth/callback" element={<TelegramCallbackPage />} />
+        <Route path="/policy" element={<PolicyPage />} />
+        <Route path="/agreement" element={<AgreementPage />} />
+        <Route path="/offer" element={<OfferPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ConfigProvider>
