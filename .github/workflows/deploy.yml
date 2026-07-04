@@ -100,6 +100,21 @@ jobs:
           # Append Sitemap directive to robots.txt
           echo "Sitemap: ${SITE_URL}/sitemap.xml" >> dist/robots.txt
 
+          # GitHub Pages has no server-side rewrite: any path other than "/" falls
+          # through to 404.html (real HTTP 404 + JS redirect), which is why Google
+          # reports /login and /register as "Discovered - currently not indexed".
+          # Serve real 200 responses for the routes in the sitemap by copying the
+          # built index.html into each route's own directory, with a self-referencing
+          # canonical/og:url (not the homepage's) so Google indexes them as distinct
+          # pages instead of canonicalizing them back to "/".
+          for route in login register policy agreement offer; do
+            mkdir -p "dist/${route}"
+            sed \
+              -e "s|<link rel=\"canonical\" href=\"${SITE_URL}/\" />|<link rel=\"canonical\" href=\"${SITE_URL}/${route}\" />|" \
+              -e "s|<meta property=\"og:url\" content=\"${SITE_URL}/\" />|<meta property=\"og:url\" content=\"${SITE_URL}/${route}\" />|" \
+              dist/index.html > "dist/${route}/index.html"
+          done
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

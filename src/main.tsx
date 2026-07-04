@@ -32,7 +32,16 @@ ReactDOM.createRoot(document.getElementById("web-root")!).render(
  * Current origin is excluded automatically so mirrors don't redirect to themselves.
  * Result is cached in sessionStorage — check runs once per tab session.
  */
+// Search-engine renderers (Google's Web Rendering Service, Bing, Yandex, ...) execute
+// this script when indexing. A client-side location.replace() here reads to them as a
+// page redirect and the prerendered content underneath never gets indexed. Crawlers
+// don't need live API connectivity to see the marketing/auth pages, so skip failover
+// entirely for known bot UAs.
+const CRAWLER_UA = /bot|crawl|spider|slurp|googlebot|bingbot|yandex|duckduckbot|baiduspider|facebookexternalhit|embedly|quora link preview|showyoubot|outbrain|pinterest|whatsapp|telegrambot/i;
+
 async function tryFailover() {
+  if (CRAWLER_UA.test(navigator.userAgent)) return;
+
   const mirrorsRaw = (import.meta.env.VITE_MIRRORS as string | undefined) ?? "";
   const apiUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
 
