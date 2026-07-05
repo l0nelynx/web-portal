@@ -82,6 +82,20 @@ export interface Translations {
   apps_row_trial: string;
   apps_row_manage: string;
   apps_row_opensource: string;
+  // Landing — architecture picker modal
+  arch_modal_title: string;
+  arch_modal_subtitle: string;
+  arch_arm64_label: string;
+  arch_arm64_badge: string;
+  arch_arm64_desc: string;
+  arch_universal_label: string;
+  arch_universal_badge: string;
+  arch_universal_desc: string;
+  arch_armv7_label: string;
+  arch_armv7_desc: string;
+  arch_x86_label: string;
+  arch_x86_desc: string;
+  arch_modal_all_releases: string;
   // Landing — CTA + footer
   cta_title: string;
   cta_desc: string;
@@ -403,6 +417,20 @@ const en: Translations = {
   apps_row_trial: "Free trial on sign-up",
   apps_row_manage: "Manage subscription in-app",
   apps_row_opensource: "Open source",
+  // Landing — architecture picker modal
+  arch_modal_title: "Choose your device",
+  arch_modal_subtitle: "Pick the version that matches your phone's processor. Not sure? Use Universal.",
+  arch_arm64_label: "ARM64 (arm64-v8a)",
+  arch_arm64_badge: "Recommended",
+  arch_arm64_desc: "The right choice for almost all Android phones released since 2019.",
+  arch_universal_label: "Universal",
+  arch_universal_badge: "Not sure? Choose this",
+  arch_universal_desc: "Works on any device — larger file, but always compatible if you don't know your phone's architecture.",
+  arch_armv7_label: "ARM (armeabi-v7a)",
+  arch_armv7_desc: "For older or budget Android devices (before 2019).",
+  arch_x86_label: "x86_64",
+  arch_x86_desc: "For Android on Intel/AMD hardware — emulators, some tablets and Chromebooks.",
+  arch_modal_all_releases: "See all versions on GitHub",
   // Landing — CTA + footer
   cta_title: "Ready to connect your team?",
   cta_desc: "Access requires an invitation code from an existing client or partner.",
@@ -719,6 +747,20 @@ const ru: Translations = {
   apps_row_trial: "Бесплатный пробный период при регистрации",
   apps_row_manage: "Управление подпиской в приложении",
   apps_row_opensource: "Открытый исходный код",
+  // Landing — architecture picker modal
+  arch_modal_title: "Выберите ваше устройство",
+  arch_modal_subtitle: "Выберите версию под процессор вашего телефона. Не уверены — используйте Universal.",
+  arch_arm64_label: "ARM64 (arm64-v8a)",
+  arch_arm64_badge: "Рекомендуется",
+  arch_arm64_desc: "Подходит почти всем Android-телефонам, выпущенным начиная примерно с 2019 года.",
+  arch_universal_label: "Universal",
+  arch_universal_badge: "Не уверены? Выберите это",
+  arch_universal_desc: "Работает на любом устройстве — файл больше, но точно подойдёт, если вы не знаете архитектуру телефона.",
+  arch_armv7_label: "ARM (armeabi-v7a)",
+  arch_armv7_desc: "Для старых или бюджетных Android-устройств (до 2019 года).",
+  arch_x86_label: "x86_64",
+  arch_x86_desc: "Для Android на Intel/AMD — эмуляторы, некоторые планшеты и Chromebook.",
+  arch_modal_all_releases: "Все версии на GitHub",
   // Landing — CTA + footer
   cta_title: "Готовы подключить вашу команду?",
   cta_desc: "Доступ возможен только по коду приглашения от действующего клиента или партнёра.",

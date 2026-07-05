@@ -1,4 +1,5 @@
-import { Button, Col, Grid, Row, Typography } from "antd";
+import { useState } from "react";
+import { Button, Col, Grid, Modal, Row, Typography } from "antd";
 import {
   TeamOutlined,
   GlobalOutlined,
@@ -20,6 +21,18 @@ const STATS_VALUES = ["99.9%", "50+", "10 Gbps", "24/7"];
 const CLASH_PROTOCOLS = ["VLESS", "VMess", "Trojan", "Shadowsocks", "Hysteria 2", "WireGuard"];
 const CLASH_RELEASES_URL = "https://github.com/l0nelynx/CheezyClash/releases";
 const CHEEZY_RELEASES_URL = "https://github.com/l0nelynx/CheezyVPN-Releases/releases";
+
+// GitHub's /releases/latest/download/<asset> URL always resolves to the current
+// release's asset with that exact name — no version number to keep in sync here.
+const APK_BUILDS: Record<"clash" | "cheezy", { repo: string; variant: string }> = {
+  clash: { repo: "CheezyClash", variant: "open" },
+  cheezy: { repo: "CheezyVPN-Releases", variant: "proprietary" },
+};
+
+function apkUrl(app: "clash" | "cheezy", arch: string): string {
+  const { repo, variant } = APK_BUILDS[app];
+  return `https://github.com/l0nelynx/${repo}/releases/latest/download/app-direct-${variant}-${arch}-release.apk`;
+}
 
 // Illustrative device frame — no real screenshots yet, drawn directly in CSS so it
 // always matches the brand theme and never goes stale as either app's UI changes.
@@ -73,8 +86,16 @@ export default function LandingPage() {
   const { L, toggle } = useLang();
   const screens = useBreakpoint();
   const isMobile = !screens.sm;
+  const [archApp, setArchApp] = useState<"clash" | "cheezy" | null>(null);
 
   const px = isMobile ? "16px" : "48px";
+
+  const ARCH_OPTIONS = [
+    { key: "arm64-v8a", label: L.arch_arm64_label, badge: L.arch_arm64_badge, desc: L.arch_arm64_desc, highlight: true },
+    { key: "universal", label: L.arch_universal_label, badge: L.arch_universal_badge, desc: L.arch_universal_desc, highlight: true },
+    { key: "armeabi-v7a", label: L.arch_armv7_label, desc: L.arch_armv7_desc },
+    { key: "x86_64", label: L.arch_x86_label, desc: L.arch_x86_desc },
+  ];
 
   const FEATURES = [
     { icon: <GlobalOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_infra_title, desc: L.feat_infra_desc },
@@ -448,7 +469,7 @@ export default function LandingPage() {
                     padding: "0 24px",
                     borderRadius: 12,
                   }}
-                  onClick={() => window.open(CLASH_RELEASES_URL, "_blank", "noopener")}
+                  onClick={() => setArchApp("clash")}
                 >
                   {L.apps_clash_cta}
                 </Button>
@@ -504,7 +525,7 @@ export default function LandingPage() {
                   fontWeight: 600,
                   borderRadius: 12,
                 }}
-                onClick={() => window.open(CHEEZY_RELEASES_URL, "_blank", "noopener")}
+                onClick={() => setArchApp("cheezy")}
               >
                 {L.apps_cheezy_cta}
               </Button>
@@ -734,6 +755,82 @@ export default function LandingPage() {
           {L.footer_disclaimer}
         </Text>
       </footer>
+
+      {/* ── Architecture picker (download modal) ─────────────────────────── */}
+      <Modal
+        open={archApp !== null}
+        onCancel={() => setArchApp(null)}
+        footer={null}
+        title={L.arch_modal_title}
+        centered
+      >
+        <Paragraph style={{ color: "rgba(255,255,255,0.55)", marginBottom: 20 }}>
+          {L.arch_modal_subtitle}
+        </Paragraph>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {ARCH_OPTIONS.map((opt) => (
+            <div
+              key={opt.key}
+              onClick={() => {
+                if (archApp) window.open(apkUrl(archApp, opt.key), "_blank", "noopener");
+                setArchApp(null);
+              }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+                padding: "14px 16px",
+                borderRadius: 12,
+                cursor: "pointer",
+                border: opt.highlight ? "1px solid rgba(6,214,160,0.35)" : "1px solid rgba(255,255,255,0.09)",
+                background: opt.highlight ? "rgba(6,214,160,0.06)" : "rgba(255,255,255,0.03)",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) =>
+                ((e.currentTarget as HTMLDivElement).style.background = opt.highlight
+                  ? "rgba(6,214,160,0.12)"
+                  : "rgba(255,255,255,0.06)")
+              }
+              onMouseLeave={(e) =>
+                ((e.currentTarget as HTMLDivElement).style.background = opt.highlight
+                  ? "rgba(6,214,160,0.06)"
+                  : "rgba(255,255,255,0.03)")
+              }
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Text strong style={{ color: "#fff", fontSize: 15 }}>
+                  {opt.label}
+                </Text>
+                {opt.badge && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      padding: "2px 8px",
+                      borderRadius: 10,
+                      background: "rgba(6,214,160,0.15)",
+                      color: "#06D6A0",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {opt.badge}
+                  </span>
+                )}
+              </div>
+              <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{opt.desc}</Text>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 18, textAlign: "center" }}>
+          <a
+            href={archApp === "clash" ? CLASH_RELEASES_URL : CHEEZY_RELEASES_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}
+          >
+            {L.arch_modal_all_releases}
+          </a>
+        </div>
+      </Modal>
     </div>
   );
 }
