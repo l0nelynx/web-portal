@@ -1,14 +1,34 @@
-import { Alert, App, Badge, Button, Card, Form, Input, Space, Spin, Tag, Typography } from "antd";
+import { Alert, App, Badge, Button, Card, Form, Image, Input, Space, Spin, Tag, Typography } from "antd";
 import {
   ArrowLeftOutlined,
   CustomerServiceOutlined,
+  PaperClipOutlined,
   PlusOutlined,
   SendOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { useEffect, useRef, useState } from "react";
-import { ApiError, support, TicketDetail, TicketSummary } from "../../api/client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AttachmentOut, ApiError, support, TicketDetail, TicketSummary } from "../../api/client";
+import { useAuthedImage } from "../../hooks/useAuthedImage";
 import { useLang } from "../../locale";
+
+const MAX_IMAGES = 3;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function AttachmentThumb({ attachment }: { attachment: AttachmentOut }) {
+  const objectUrl = useAuthedImage(attachment.url);
+  if (!objectUrl) {
+    return <div style={{ width: 88, height: 88, background: "rgba(255,255,255,0.06)", borderRadius: 8 }} />;
+  }
+  return (
+    <Image
+      src={objectUrl}
+      width={88}
+      height={88}
+      style={{ objectFit: "cover", borderRadius: 8 }}
+    />
+  );
+}
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -46,9 +66,40 @@ export default function SupportTab() {
   const [createLoading, setCreateLoading] = useState(false);
   const [replyLoading, setReplyLoading] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
 
   const [createForm] = Form.useForm();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const pendingPreviewUrls = useMemo(
+    () => pendingImages.map((f) => URL.createObjectURL(f)),
+    [pendingImages],
+  );
+  useEffect(() => {
+    return () => pendingPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
+  }, [pendingPreviewUrls]);
+
+  function onFilesSelected(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const incoming = Array.from(files);
+    const combined = [...pendingImages, ...incoming];
+    if (combined.length > MAX_IMAGES) {
+      msg.error(L.err_too_many_images);
+      return;
+    }
+    for (const f of incoming) {
+      if (f.size > MAX_IMAGE_BYTES) {
+        msg.error(L.err_image_too_large);
+        return;
+      }
+    }
+    setPendingImages(combined);
+  }
+
+  function removePendingImage(idx: number) {
+    setPendingImages((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   function statusLabel(s: string): string {
     if (s === "open") return L.ticket_status_open;
@@ -104,11 +155,12 @@ export default function SupportTab() {
 
   async function handleReply() {
     const text = replyText.trim();
-    if (!text || !ticket) return;
+    if (!ticket || (!text && pendingImages.length === 0)) return;
     setReplyLoading(true);
     try {
-      const newMsg = await support.addMessage(ticket.id, text);
+      const newMsg = await support.addMessage(ticket.id, text, pendingImages);
       setReplyText("");
+      setPendingImages([]);
       setTicket((prev) =>
         prev ? { ...prev, messages: [...prev.messages, newMsg] } : prev
       );
@@ -317,9 +369,20 @@ export default function SupportTab() {
                       padding: "8px 14px",
                       maxWidth: "80%",
                     }}>
-                      <Paragraph style={{ color: "#fff", margin: 0, whiteSpace: "pre-wrap", fontSize: 14 }}>
-                        {m.text}
-                      </Paragraph>
+                      {m.text && (
+                        <Paragraph style={{ color: "#fff", margin: 0, whiteSpace: "pre-wrap", fontSize: 14 }}>
+                          {m.text}
+                        </Paragraph>
+                      )}
+                      {m.attachments && m.attachments.length > 0 && (
+                        <Image.PreviewGroup>
+                          <Space size={8} wrap style={{ marginTop: m.text ? 8 : 0 }}>
+                            {m.attachments.map((a) => (
+                              <AttachmentThumb key={a.id} attachment={a} />
+                            ))}
+                          </Space>
+                        </Image.PreviewGroup>
+                      )}
                     </div>
                   </div>
                 );
@@ -330,39 +393,87 @@ export default function SupportTab() {
 
           {/* Reply input */}
           {ticket.status !== "closed" ? (
-            <Space.Compact style={{ width: "100%" }}>
-              <TextArea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder={L.reply_placeholder}
-                autoSize={{ minRows: 1, maxRows: 4 }}
-                maxLength={4000}
-                onPressEnter={(e) => { if (!e.shiftKey) { e.preventDefault(); handleReply(); } }}
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "10px 0 0 10px",
-                  color: "#fff",
-                  resize: "none",
+            <div>
+              {pendingImages.length > 0 && (
+                <Space size={8} wrap style={{ marginBottom: 8 }}>
+                  {pendingImages.map((_f, idx) => (
+                    <div key={idx} style={{ position: "relative" }}>
+                      <img
+                        src={pendingPreviewUrls[idx]}
+                        width={64}
+                        height={64}
+                        style={{ objectFit: "cover", borderRadius: 8 }}
+                      />
+                      <Button
+                        size="small"
+                        danger
+                        shape="circle"
+                        style={{ position: "absolute", top: -8, right: -8 }}
+                        onClick={() => removePendingImage(idx)}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </Space>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  onFilesSelected(e.target.files);
+                  e.target.value = "";
                 }}
-                disabled={replyLoading}
               />
-              <Button
-                type="primary"
-                loading={replyLoading}
-                onClick={handleReply}
-                icon={<SendOutlined />}
-                style={{
-                  background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-                  border: "none",
-                  borderRadius: "0 10px 10px 0",
-                  height: "auto",
-                  alignSelf: "stretch",
-                }}
-              >
-                {L.btn_send_reply}
-              </Button>
-            </Space.Compact>
+              <Space.Compact style={{ width: "100%" }}>
+                <Button
+                  icon={<PaperClipOutlined />}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={pendingImages.length >= MAX_IMAGES}
+                  title={L.btn_attach_image}
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: "10px 0 0 10px",
+                    color: "#fff",
+                  }}
+                />
+                <TextArea
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder={L.reply_placeholder}
+                  autoSize={{ minRows: 1, maxRows: 4 }}
+                  maxLength={4000}
+                  onPressEnter={(e) => { if (!e.shiftKey) { e.preventDefault(); handleReply(); } }}
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    color: "#fff",
+                    resize: "none",
+                  }}
+                  disabled={replyLoading}
+                />
+                <Button
+                  type="primary"
+                  loading={replyLoading}
+                  onClick={handleReply}
+                  disabled={!replyText.trim() && pendingImages.length === 0}
+                  icon={<SendOutlined />}
+                  style={{
+                    background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
+                    border: "none",
+                    borderRadius: "0 10px 10px 0",
+                    height: "auto",
+                    alignSelf: "stretch",
+                  }}
+                >
+                  {L.btn_send_reply}
+                </Button>
+              </Space.Compact>
+            </div>
           ) : (
             <Alert
               message={L.ticket_status_closed}

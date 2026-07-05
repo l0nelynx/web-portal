@@ -275,6 +275,11 @@ export interface Translations {
   btn_back_to_tickets: string;
   lbl_you: string;
   lbl_support_agent: string;
+  btn_attach_image: string;
+  err_too_many_images: string;
+  err_image_too_large: string;
+  err_unsupported_image_type: string;
+  val_attachment_limit: string;
   // Landing — individuals section
   ind_badge: string;
   ind_title: string;
@@ -559,6 +564,11 @@ const en: Translations = {
   btn_back_to_tickets: "Back to tickets",
   lbl_you: "You",
   lbl_support_agent: "Support",
+  btn_attach_image: "Attach image",
+  err_too_many_images: "Up to 3 images per message",
+  err_image_too_large: "File too large (max 5MB)",
+  err_unsupported_image_type: "Unsupported image type",
+  val_attachment_limit: "Up to 3 images, 5MB each",
   // Landing — individuals section
   ind_badge: "For individuals",
   ind_title: "Your privacy, in one tap",
@@ -847,6 +857,11 @@ const ru: Translations = {
   btn_back_to_tickets: "Назад к обращениям",
   lbl_you: "Вы",
   lbl_support_agent: "Поддержка",
+  btn_attach_image: "Прикрепить изображение",
+  err_too_many_images: "Можно прикрепить не более 3 изображений",
+  err_image_too_large: "Файл слишком большой (макс. 5MB)",
+  err_unsupported_image_type: "Неподдерживаемый тип изображения",
+  val_attachment_limit: "До 3 изображений, до 5MB каждое",
   // Landing — individuals section
   ind_badge: "Частным лицам",
   ind_title: "Ваша приватность в один тап",

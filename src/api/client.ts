@@ -83,6 +83,47 @@ const get = <T>(path: string, auth = true) => request<T>("GET", path, undefined,
 const post = <T>(path: string, body?: unknown, auth = true) => request<T>("POST", path, body, auth);
 const del = <T>(path: string) => request<T>("DELETE", path);
 
+async function postForm<T>(path: string, form: FormData): Promise<T> {
+  const headers: Record<string, string> = {};
+  const token = getAccessToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+
+  try { sessionStorage.setItem("_api_ok", "1"); } catch { /* ignore */ }
+
+  if (!res.ok) {
+    let code = `http_${res.status}`;
+    try {
+      const data = await res.json();
+      if (data?.detail?.code) code = data.detail.code;
+      else if (typeof data?.detail === "string") code = data.detail;
+    } catch {
+      /* ignore */
+    }
+    throw new ApiError(res.status, code);
+  }
+
+  if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
+}
+
+/** Fetches an attachment as a blob with the same Bearer-token auth — a plain
+ * <img src> can't carry Authorization headers, so callers build an object URL
+ * from this instead (see useAuthedImage). */
+export async function fetchAuthedBlob(url: string): Promise<Blob> {
+  const headers: Record<string, string> = {};
+  const token = getAccessToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}${url}`, { headers });
+  if (!res.ok) throw new ApiError(res.status, `http_${res.status}`);
+  return res.blob();
+}
+
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
@@ -406,11 +447,20 @@ export interface TicketSummary {
   last_message_preview: string;
 }
 
+export interface AttachmentOut {
+  id: number;
+  filename: string;
+  mime_type: string;
+  size_bytes: number;
+  url: string;
+}
+
 export interface MessageItem {
   id: number;
   sender: string;
   text: string;
   created_at: string;
+  attachments: AttachmentOut[];
 }
 
 export interface TicketDetail {
@@ -427,8 +477,12 @@ export const support = {
   getTicket: (id: number) => get<TicketDetail>(`/android/support/tickets/${id}`),
   createTicket: (subject: string, message: string) =>
     post<TicketDetail>("/android/support/tickets", { subject, message }),
-  addMessage: (ticket_id: number, text: string) =>
-    post<MessageItem>(`/android/support/tickets/${ticket_id}/messages`, { text }),
+  addMessage: (ticket_id: number, text: string, images: File[] = []) => {
+    const form = new FormData();
+    form.append("text", text);
+    for (const img of images) form.append("images", img);
+    return postForm<MessageItem>(`/android/support/tickets/${ticket_id}/messages`, form);
+  },
 };
 
 // ---------------------------------------------------------------------------
