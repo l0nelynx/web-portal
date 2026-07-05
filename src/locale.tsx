@@ -29,6 +29,8 @@ export interface Translations {
   // Landing — nav
   nav_solutions: string;
   nav_platform: string;
+  nav_individuals: string;
+  nav_business: string;
   // Landing — hero
   hero_badge: string;
   hero_title_1: string;
@@ -55,6 +57,31 @@ export interface Translations {
   feat_compliance_desc: string;
   feat_deploy_title: string;
   feat_deploy_desc: string;
+  feat_infra_title: string;
+  feat_infra_desc: string;
+  feat_audience_title: string;
+  feat_audience_desc: string;
+  feat_apps_title: string;
+  feat_apps_desc: string;
+  // Landing — apps comparison section
+  apps_title: string;
+  apps_subtitle: string;
+  apps_clash_badge: string;
+  apps_clash_title: string;
+  apps_clash_desc: string;
+  apps_clash_protocols_label: string;
+  apps_clash_cta: string;
+  apps_cheezy_badge: string;
+  apps_cheezy_title: string;
+  apps_cheezy_desc: string;
+  apps_cheezy_cta: string;
+  apps_trial_badge: string;
+  apps_compare_feature: string;
+  apps_row_import: string;
+  apps_row_thirdparty: string;
+  apps_row_trial: string;
+  apps_row_manage: string;
+  apps_row_opensource: string;
   // Landing — CTA + footer
   cta_title: string;
   cta_desc: string;
@@ -323,6 +350,8 @@ const en: Translations = {
   // Landing — nav
   nav_solutions: "Solutions",
   nav_platform: "Platform",
+  nav_individuals: "For Individuals",
+  nav_business: "For Business",
   // Landing — hero
   hero_badge: "Private VPN · Secure by design",
   hero_title_1: "Private, Secure",
@@ -349,6 +378,31 @@ const en: Translations = {
   feat_compliance_desc: "Modern encryption protocols protect every connection end to end.",
   feat_deploy_title: "Instant Setup",
   feat_deploy_desc: "Connect in minutes. Cross-platform clients for Windows, macOS, Linux, iOS and Android.",
+  feat_infra_title: "Geographically Distributed Infrastructure",
+  feat_infra_desc: "Servers spread across multiple regions so you connect to the nearest, fastest node — wherever you are.",
+  feat_audience_title: "For Individuals and Companies",
+  feat_audience_desc: "We provide VPN access both to individual users and to companies that need secure connectivity for their teams.",
+  feat_apps_title: "Two Apps Built by Us",
+  feat_apps_desc: "An open-source universal client for any provider, and a dedicated app tailored to CheezyVPN. See the comparison below.",
+  // Landing — apps comparison section
+  apps_title: "Choose Your App",
+  apps_subtitle: "One is a universal open-source client. The other is built specifically for CheezyVPN — pick what fits you.",
+  apps_clash_badge: "Open Source",
+  apps_clash_title: "CheezyClash",
+  apps_clash_desc: "An Android proxy client supporting VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, WireGuard and more. Rule-based routing, Reality fingerprinting, built natively in Kotlin — works with any compatible service, not just ours.",
+  apps_clash_protocols_label: "Supported protocols",
+  apps_clash_cta: "Download",
+  apps_cheezy_badge: "Made for CheezyVPN",
+  apps_cheezy_title: "CheezyVPN",
+  apps_cheezy_desc: "Our own app, built specifically for this service. No configs to import — register in the app and get a free trial instantly, then manage your subscription right from your phone.",
+  apps_cheezy_cta: "Start free — 14 days",
+  apps_trial_badge: "14 days free",
+  apps_compare_feature: "Feature",
+  apps_row_import: "Manual config import required",
+  apps_row_thirdparty: "Works with third-party providers",
+  apps_row_trial: "Free trial on sign-up",
+  apps_row_manage: "Manage subscription in-app",
+  apps_row_opensource: "Open source",
   // Landing — CTA + footer
   cta_title: "Ready to connect your team?",
   cta_desc: "Access requires an invitation code from an existing client or partner.",
@@ -612,6 +666,8 @@ const ru: Translations = {
   // Landing — nav
   nav_solutions: "Возможности",
   nav_platform: "Платформа",
+  nav_individuals: "Частным лицам",
+  nav_business: "Бизнесу",
   // Landing — hero
   hero_badge: "Приватный VPN · Безопасность в основе",
   hero_title_1: "Приватный и безопасный",
@@ -638,6 +694,31 @@ const ru: Translations = {
   feat_compliance_desc: "Современные протоколы шифрования защищают каждое соединение от начала до конца.",
   feat_deploy_title: "Мгновенная настройка",
   feat_deploy_desc: "Подключитесь за минуты. Кросс-платформенные клиенты для Windows, macOS, Linux, iOS и Android.",
+  feat_infra_title: "Географически распределённая инфраструктура",
+  feat_infra_desc: "Серверы в разных регионах — подключение к ближайшему и самому быстрому узлу, где бы вы ни находились.",
+  feat_audience_title: "Частным лицам и компаниям",
+  feat_audience_desc: "Предоставляем VPN-доступ как частным пользователям, так и компаниям, которым нужна защищённая связь для команды.",
+  feat_apps_title: "Два собственных приложения",
+  feat_apps_desc: "Open-source универсальный клиент для любого провайдера и отдельное приложение, заточенное под CheezyVPN. Сравнение — ниже.",
+  // Landing — apps comparison section
+  apps_title: "Выберите приложение",
+  apps_subtitle: "Одно — универсальный open-source клиент. Другое создано именно для CheezyVPN — выбирайте то, что подходит вам.",
+  apps_clash_badge: "Open Source",
+  apps_clash_title: "CheezyClash",
+  apps_clash_desc: "Прокси-клиент для Android с поддержкой VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, WireGuard и других протоколов. Rule-based маршрутизация, Reality fingerprinting, нативная разработка на Kotlin — работает с любым совместимым сервисом, не только с нашим.",
+  apps_clash_protocols_label: "Поддерживаемые протоколы",
+  apps_clash_cta: "Скачать",
+  apps_cheezy_badge: "Создано для CheezyVPN",
+  apps_cheezy_title: "CheezyVPN",
+  apps_cheezy_desc: "Наше собственное приложение, заточенное именно под этот сервис. Не нужно импортировать конфигурации — зарегистрируйтесь в приложении и сразу получите бесплатный пробный доступ, а подпиской можно управлять прямо с телефона.",
+  apps_cheezy_cta: "Начать бесплатно — 14 дней",
+  apps_trial_badge: "14 дней бесплатно",
+  apps_compare_feature: "Функция",
+  apps_row_import: "Нужен ручной импорт конфигурации",
+  apps_row_thirdparty: "Работает со сторонними провайдерами",
+  apps_row_trial: "Бесплатный пробный период при регистрации",
+  apps_row_manage: "Управление подпиской в приложении",
+  apps_row_opensource: "Открытый исходный код",
   // Landing — CTA + footer
   cta_title: "Готовы подключить вашу команду?",
   cta_desc: "Доступ возможен только по коду приглашения от действующего клиента или партнёра.",

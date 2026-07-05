@@ -1,11 +1,11 @@
 import { Button, Col, Grid, Row, Typography } from "antd";
 import {
-  LockOutlined,
-  RocketOutlined,
   TeamOutlined,
-  ThunderboltOutlined,
-  SafetyCertificateOutlined,
   GlobalOutlined,
+  MobileOutlined,
+  GithubOutlined,
+  CheckOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo";
@@ -17,6 +17,56 @@ const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
 
 const STATS_VALUES = ["99.9%", "50+", "10 Gbps", "24/7"];
+const CLASH_PROTOCOLS = ["VLESS", "VMess", "Trojan", "Shadowsocks", "Hysteria 2", "WireGuard"];
+const CLASH_RELEASES_URL = "https://github.com/l0nelynx/CheezyClash/releases";
+const CHEEZY_RELEASES_URL = "https://github.com/l0nelynx/CheezyVPN-Releases/releases";
+
+// Illustrative device frame — no real screenshots yet, drawn directly in CSS so it
+// always matches the brand theme and never goes stale as either app's UI changes.
+function PhoneMockup({ variant }: { variant: "clash" | "cheezy" }) {
+  return (
+    <div
+      style={{
+        width: 96,
+        height: 176,
+        borderRadius: 18,
+        border: "2px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))",
+        padding: 8,
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+      }}
+    >
+      <div style={{ width: 24, height: 4, borderRadius: 4, background: "rgba(255,255,255,0.15)", margin: "0 auto 4px" }} />
+      {variant === "clash" ? (
+        [1, 2, 3].map((i) => (
+          <div
+            key={i}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 6px", borderRadius: 6, background: "rgba(255,255,255,0.05)" }}
+          >
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: i === 1 ? "#06D6A0" : "rgba(255,255,255,0.25)" }} />
+            <div style={{ flex: 1, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
+          </div>
+        ))
+      ) : (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
+              boxShadow: "0 0 0 6px rgba(124,156,255,0.15)",
+            }}
+          />
+          <div style={{ width: 40, height: 4, borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -27,13 +77,33 @@ export default function LandingPage() {
   const px = isMobile ? "16px" : "48px";
 
   const FEATURES = [
-    { icon: <LockOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_zero_trust_title, desc: L.feat_zero_trust_desc },
-    { icon: <GlobalOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_global_title, desc: L.feat_global_desc },
-    { icon: <TeamOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_team_title, desc: L.feat_team_desc },
-    { icon: <ThunderboltOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_throughput_title, desc: L.feat_throughput_desc },
-    { icon: <SafetyCertificateOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_compliance_title, desc: L.feat_compliance_desc },
-    { icon: <RocketOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_deploy_title, desc: L.feat_deploy_desc },
+    { icon: <GlobalOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_infra_title, desc: L.feat_infra_desc },
+    { icon: <TeamOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_audience_title, desc: L.feat_audience_desc },
+    {
+      icon: <MobileOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />,
+      title: L.feat_apps_title,
+      desc: L.feat_apps_desc,
+      onClick: () => document.getElementById("apps")?.scrollIntoView({ behavior: "smooth" }),
+    },
   ];
+
+  const COMPARE_ROWS = [
+    { label: L.apps_row_import, clash: true, cheezy: false },
+    { label: L.apps_row_thirdparty, clash: true, cheezy: false },
+    { label: L.apps_row_trial, clash: false, cheezy: true },
+    { label: L.apps_row_manage, clash: false, cheezy: true },
+    { label: L.apps_row_opensource, clash: true, cheezy: false },
+  ];
+
+  const appCardStyle: React.CSSProperties = {
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.09)",
+    borderRadius: 20,
+    padding: isMobile ? 24 : 32,
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+  };
 
   const STATS = [
     { value: STATS_VALUES[0], label: L.stat_uptime },
@@ -86,6 +156,24 @@ export default function LandingPage() {
               onClick={() => document.getElementById("stats")?.scrollIntoView({ behavior: "smooth" })}
             >
               {L.nav_platform}
+            </Button>
+          )}
+          {!isMobile && (
+            <Button
+              type="text"
+              style={{ color: "rgba(255,255,255,0.65)" }}
+              onClick={() => document.getElementById("individuals")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              {L.nav_individuals}
+            </Button>
+          )}
+          {!isMobile && (
+            <Button
+              type="text"
+              style={{ color: "rgba(255,255,255,0.65)" }}
+              onClick={() => document.getElementById("business")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              {L.nav_business}
             </Button>
           )}
           {/* Language toggle */}
@@ -269,8 +357,10 @@ export default function LandingPage() {
                   borderRadius: 16,
                   padding: isMobile ? 20 : 28,
                   height: "100%",
+                  cursor: f.onClick ? "pointer" : "default",
                   transition: "border-color 0.2s",
                 }}
+                onClick={f.onClick}
                 onMouseEnter={(e) =>
                   ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(6,214,160,0.3)")
                 }
@@ -289,6 +379,196 @@ export default function LandingPage() {
             </Col>
           ))}
         </Row>
+      </section>
+
+      {/* ── Apps comparison ───────────────────────────────────────────────── */}
+      <section
+        id="apps"
+        style={{ padding: isMobile ? "56px 16px" : "100px 48px", maxWidth: 1100, margin: "0 auto" }}
+      >
+        <div style={{ textAlign: "center", marginBottom: isMobile ? 36 : 56 }}>
+          <Title
+            level={2}
+            style={{ color: "#fff", fontWeight: 700, fontSize: isMobile ? 26 : 36, marginBottom: 12 }}
+          >
+            {L.apps_title}
+          </Title>
+          <Paragraph
+            style={{ color: "rgba(255,255,255,0.55)", fontSize: 16, maxWidth: 560, margin: "0 auto" }}
+          >
+            {L.apps_subtitle}
+          </Paragraph>
+        </div>
+
+        <Row gutter={[24, 24]} align="stretch">
+          <Col xs={24} md={12}>
+            <div style={appCardStyle}>
+              <PhoneMockup variant="clash" />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, marginBottom: 8 }}>
+                <GithubOutlined style={{ fontSize: 18, color: "rgba(255,255,255,0.5)" }} />
+                <Text style={{ fontSize: 12, letterSpacing: "0.5px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>
+                  {L.apps_clash_badge}
+                </Text>
+              </div>
+              <Title level={3} style={{ color: "#fff", fontSize: 22, marginBottom: 10 }}>
+                {L.apps_clash_title}
+              </Title>
+              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
+                {L.apps_clash_desc}
+              </Paragraph>
+              <div style={{ marginTop: "auto" }}>
+                <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8 }}>
+                  {L.apps_clash_protocols_label}
+                </Text>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {CLASH_PROTOCOLS.map((p) => (
+                    <span
+                      key={p}
+                      style={{
+                        fontSize: 12,
+                        padding: "4px 10px",
+                        borderRadius: 20,
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        color: "rgba(255,255,255,0.7)",
+                      }}
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+                <Button
+                  size="large"
+                  style={{
+                    marginTop: 20,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.16)",
+                    color: "rgba(255,255,255,0.85)",
+                    height: 46,
+                    padding: "0 24px",
+                    borderRadius: 12,
+                  }}
+                  onClick={() => window.open(CLASH_RELEASES_URL, "_blank", "noopener")}
+                >
+                  {L.apps_clash_cta}
+                </Button>
+              </div>
+            </div>
+          </Col>
+
+          <Col xs={24} md={12}>
+            <div
+              style={{
+                ...appCardStyle,
+                border: "1px solid rgba(6,214,160,0.3)",
+                background: "linear-gradient(135deg, rgba(6,214,160,0.07), rgba(124,156,255,0.05))",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                  padding: "4px 12px",
+                  borderRadius: 20,
+                  background: "rgba(6,214,160,0.15)",
+                  border: "1px solid rgba(6,214,160,0.4)",
+                }}
+              >
+                <Text style={{ fontSize: 11, color: "#06D6A0", fontWeight: 600 }}>{L.apps_trial_badge}</Text>
+              </div>
+              <PhoneMockup variant="cheezy" />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, marginBottom: 8 }}>
+                <MobileOutlined style={{ fontSize: 18, color: "#7C9CFF" }} />
+                <Text style={{ fontSize: 12, letterSpacing: "0.5px", color: "#7C9CFF", textTransform: "uppercase" }}>
+                  {L.apps_cheezy_badge}
+                </Text>
+              </div>
+              <Title level={3} style={{ color: "#fff", fontSize: 22, marginBottom: 10 }}>
+                {L.apps_cheezy_title}
+              </Title>
+              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
+                {L.apps_cheezy_desc}
+              </Paragraph>
+              <Button
+                type="primary"
+                size="large"
+                style={{
+                  marginTop: "auto",
+                  alignSelf: "flex-start",
+                  background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
+                  border: "none",
+                  height: 46,
+                  padding: "0 24px",
+                  fontWeight: 600,
+                  borderRadius: 12,
+                }}
+                onClick={() => window.open(CHEEZY_RELEASES_URL, "_blank", "noopener")}
+              >
+                {L.apps_cheezy_cta}
+              </Button>
+            </div>
+          </Col>
+        </Row>
+
+        {/* Feature comparison table */}
+        <div
+          style={{
+            marginTop: 32,
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 16,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr 50px 50px" : "1fr 160px 160px",
+              padding: isMobile ? "12px 14px" : "14px 24px",
+              background: "rgba(255,255,255,0.02)",
+            }}
+          >
+            <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              {L.apps_compare_feature}
+            </Text>
+            <Text style={{ textAlign: "center", color: "#fff", fontWeight: 600, fontSize: isMobile ? 12 : 14 }}>
+              {L.apps_clash_title}
+            </Text>
+            <Text style={{ textAlign: "center", color: "#fff", fontWeight: 600, fontSize: isMobile ? 12 : 14 }}>
+              {L.apps_cheezy_title}
+            </Text>
+          </div>
+          {COMPARE_ROWS.map((row, i) => (
+            <div
+              key={row.label}
+              style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr 50px 50px" : "1fr 160px 160px",
+                alignItems: "center",
+                padding: isMobile ? "12px 14px" : "14px 24px",
+                borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: isMobile ? 13 : 14 }}>{row.label}</Text>
+              <div style={{ textAlign: "center" }}>
+                {row.clash ? (
+                  <CheckOutlined style={{ color: "#06D6A0" }} />
+                ) : (
+                  <CloseOutlined style={{ color: "rgba(255,255,255,0.25)" }} />
+                )}
+              </div>
+              <div style={{ textAlign: "center" }}>
+                {row.cheezy ? (
+                  <CheckOutlined style={{ color: "#06D6A0" }} />
+                ) : (
+                  <CloseOutlined style={{ color: "rgba(255,255,255,0.25)" }} />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ── For individuals ────────────────────────────────────────────────── */}
