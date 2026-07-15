@@ -282,6 +282,7 @@ export interface WebMenuInvoice {
   method: string | null;
   days: number;
   tariff_slug: string;
+  points_cost: number;
 }
 
 export interface WebMenuNode {
@@ -312,6 +313,8 @@ export interface WebInvoiceResponse {
 export interface WebPayCreditsResponse {
   ok: boolean;
   transaction_id?: string;
+  points_spent?: number;
+  points_cost?: number;
   credits_spent?: number;
   balance_after?: number;
   subscription_url?: string | null;

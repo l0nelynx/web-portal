@@ -184,8 +184,8 @@ export interface Translations {
   // Buy tab
   buy_title: string;
   bonus_balance: (n: number) => string;
-  credit_one_day_hint: string;
-  btn_pay_credits: (days: number) => string;
+  points_hint: string;
+  btn_pay_credits: (points: number) => string;
   msg_paid_with_credits: string;
   err_insufficient_credits: string;
   no_tariffs: string;
@@ -476,7 +476,7 @@ const en: Translations = {
   invite_invalid: "Invalid code",
   invite_valid: "Code accepted",
   discount_accepted: "Code accepted!",
-  credit_grant_text: (n) => `${n} bonus credits (1 credit = 1 day)`,
+  credit_grant_text: (n) => `${n} bonus points (₽)`,
   pwd_label: "Password",
   pwd_placeholder: "At least 8 characters",
   confirm_label: "Confirm Password",
@@ -517,11 +517,11 @@ const en: Translations = {
   status_disabled: "Disabled",
   status_limited: "Limited",
   buy_title: "Buy Subscription",
-  bonus_balance: (n) => `Bonus balance: ${n} credits`,
-  credit_one_day_hint: "1 credit = 1 subscription day",
-  btn_pay_credits: (days) => `Pay with credits · ${days} days`,
-  msg_paid_with_credits: "Subscription activated with bonus credits",
-  err_insufficient_credits: "Not enough bonus credits for this plan",
+  bonus_balance: (n) => `Bonus balance: ${n} ₽`,
+  points_hint: "1 point ≈ 1 ₽ of plan price",
+  btn_pay_credits: (points) => `Pay with points · ${points} ₽`,
+  msg_paid_with_credits: "Subscription activated with bonus points",
+  err_insufficient_credits: "Not enough bonus points for this plan",
   no_tariffs: "No plans configured",
   btn_pay: "Pay",
   err_load_plans: "Failed to load plans. Try again.",
@@ -623,7 +623,7 @@ const en: Translations = {
   err_promo_referral_only_one: "You have already used a referral code",
   err_promo_referral_not_new: "Referral codes are for new users only",
   err_promo_activate: "Failed to activate promo code",
-  msg_promo_activated: (grant, balance) => `+${grant} credits added (balance: ${balance})`,
+  msg_promo_activated: (grant, balance) => `+${grant} ₽ added (balance: ${balance} ₽)`,
   // Support tickets
   support_title: "Support",
   btn_new_ticket: "New Ticket",
@@ -807,7 +807,7 @@ const ru: Translations = {
   invite_invalid: "Недействительный код",
   invite_valid: "Код действителен",
   discount_accepted: "Код принят!",
-  credit_grant_text: (n) => `${n} бонусных кредитов (1 кредит = 1 день)`,
+  credit_grant_text: (n) => `${n} бонусных баллов (₽)`,
   pwd_label: "Пароль",
   pwd_placeholder: "Минимум 8 символов",
   confirm_label: "Повтор пароля",
@@ -848,11 +848,11 @@ const ru: Translations = {
   status_disabled: "Отключена",
   status_limited: "Ограничена",
   buy_title: "Купить подписку",
-  bonus_balance: (n) => `Бонусный баланс: ${n} кредитов`,
-  credit_one_day_hint: "1 кредит = 1 день подписки",
-  btn_pay_credits: (days) => `Оплатить кредитами · ${days} дн.`,
-  msg_paid_with_credits: "Подписка активирована за бонусные кредиты",
-  err_insufficient_credits: "Недостаточно бонусных кредитов для этого тарифа",
+  bonus_balance: (n) => `Бонусный баланс: ${n} ₽`,
+  points_hint: "1 балл ≈ 1 ₽ стоимости тарифа",
+  btn_pay_credits: (points) => `Оплатить баллами · ${points} ₽`,
+  msg_paid_with_credits: "Подписка активирована за бонусные баллы",
+  err_insufficient_credits: "Недостаточно баллов для этого тарифа",
   no_tariffs: "Тарифы не настроены",
   btn_pay: "Оплатить",
   err_load_plans: "Не удалось загрузить тарифы. Попробуйте позже.",

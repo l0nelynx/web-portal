@@ -74,8 +74,8 @@ export default function BuyTab() {
     [invoices, selectedInvoiceId]
   );
 
-  const creditDays = selectedInvoice?.invoice?.days ?? 0;
-  const canPayCredits = creditDays > 0 && balance >= creditDays;
+  const pointsCost = selectedInvoice?.invoice?.points_cost ?? 0;
+  const canPayCredits = pointsCost > 0 && balance >= pointsCost;
 
   function selectChip(depth: number, id: number) {
     setSelections((prev) => {
@@ -180,7 +180,7 @@ export default function BuyTab() {
           message={
             <Space wrap>
               <span>{L.bonus_balance(balance)}</span>
-              <Tag color="blue">{L.credit_one_day_hint}</Tag>
+              <Tag color="blue">{L.points_hint}</Tag>
             </Space>
           }
           style={{ borderRadius: 12, marginBottom: 20 }}
@@ -302,7 +302,7 @@ export default function BuyTab() {
                 onClick={handlePayCredits}
                 style={{ borderRadius: 12, fontWeight: 700, width: "100%" }}
               >
-                {L.btn_pay_credits(creditDays)}
+                {L.btn_pay_credits(pointsCost)}
               </Button>
             )}
             <Button
