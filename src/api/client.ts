@@ -295,8 +295,7 @@ export interface WebMenuNode {
 
 export interface WebMenuResponse {
   tree: WebMenuNode[];
-  discount_percent: number;
-  promo_code: string | null;
+  balance: number;
 }
 
 export interface WebInvoiceResponse {
@@ -305,16 +304,26 @@ export interface WebInvoiceResponse {
   url: string;
   amount: number;
   original_amount: number;
-  discount_percent: number;
   currency: string;
   transaction_id: string;
   payment_method: string;
+}
+
+export interface WebPayCreditsResponse {
+  ok: boolean;
+  transaction_id?: string;
+  credits_spent?: number;
+  balance_after?: number;
+  subscription_url?: string | null;
+  message?: string | null;
 }
 
 export const webPayments = {
   getMenu: () => get<WebMenuResponse>("/web/payments/menu"),
   createInvoice: (node_id: number, description?: string) =>
     post<WebInvoiceResponse>("/web/payments/invoice", { node_id, description }),
+  payWithCredits: (node_id: number) =>
+    post<WebPayCreditsResponse>("/web/payments/pay-credits", { node_id }),
 };
 
 // ---------------------------------------------------------------------------
@@ -345,7 +354,7 @@ export const transactions = {
 
 export interface ValidateInviteResponse {
   valid: boolean;
-  discount_percent: number | null;
+  credit_grant: number | null;
   promo_type: string | null;
 }
 
@@ -416,16 +425,16 @@ export const setup = {
 // ---------------------------------------------------------------------------
 
 export interface PromoState {
-  can_activate: boolean;
-  active_promo: string | null;
-  discount_percent: number;
-  default_discount_percent: number;
+  balance: number;
+  last_promo_code: string | null;
+  default_credit_grant: number;
 }
 
 export interface PromoActivateResponse {
   ok: boolean;
-  active_promo: string;
-  discount_percent: number;
+  promo_code: string;
+  credit_grant: number;
+  balance: number;
 }
 
 export const promo = {

@@ -1,5 +1,5 @@
 import { Alert, Button, Modal, Skeleton, Space, Tag, Typography } from "antd";
-import { CheckOutlined, GiftOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { CheckOutlined, ShoppingCartOutlined, WalletOutlined } from "@ant-design/icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, WebInvoiceResponse, WebMenuNode, webPayments } from "../../api/client";
 import { useLang } from "../../locale";
@@ -29,16 +29,15 @@ function buildView(nodes: WebMenuNode[], selections: (number | null)[], depth = 
 export default function BuyTab() {
   const { L } = useLang();
   const [tree, setTree] = useState<WebMenuNode[]>([]);
-  const [discountPct, setDiscountPct] = useState(0);
-  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selections, setSelections] = useState<(number | null)[]>([]);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
   const [buyingId, setBuyingId] = useState<number | null>(null);
+  const [payingCreditsId, setPayingCreditsId] = useState<number | null>(null);
   const [invoice, setInvoice] = useState<WebInvoiceResponse | null>(null);
 
-  // derive current language from the toggle label ("RU" = currently EN, "EN" = currently RU)
   const isRu = L.lang_toggle === "EN";
 
   const chipLabel = (depth: number) => {
@@ -48,7 +47,6 @@ export default function BuyTab() {
   const invoiceLabel = isRu ? "Метод оплаты" : "Payment method";
   const selectHint = isRu ? "Выберите категорию выше" : "Select a category above";
   const noTariffsHint = isRu ? "Тарифы не найдены" : "No tariffs found";
-  const payLabel = isRu ? "Оплатить" : "Pay";
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -56,14 +54,13 @@ export default function BuyTab() {
     try {
       const resp = await webPayments.getMenu();
       setTree(resp.tree);
-      setDiscountPct(resp.discount_percent);
-      setPromoCode(resp.promo_code);
+      setBalance(resp.balance);
     } catch {
       setError(L.err_load_plans);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [L.err_load_plans]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -76,6 +73,9 @@ export default function BuyTab() {
     () => invoices.find((n) => n.id === selectedInvoiceId) ?? null,
     [invoices, selectedInvoiceId]
   );
+
+  const creditDays = selectedInvoice?.invoice?.days ?? 0;
+  const canPayCredits = creditDays > 0 && balance >= creditDays;
 
   function selectChip(depth: number, id: number) {
     setSelections((prev) => {
@@ -91,7 +91,7 @@ export default function BuyTab() {
     setSelectedInvoiceId((prev) => (prev === id ? null : id));
   }
 
-  async function handleBuy() {
+  async function handleBuyFiat() {
     if (!selectedInvoiceId) return;
     setBuyingId(selectedInvoiceId);
     try {
@@ -107,6 +107,31 @@ export default function BuyTab() {
       Modal.error({ title: "Error", content: errMsg, centered: true });
     } finally {
       setBuyingId(null);
+    }
+  }
+
+  async function handlePayCredits() {
+    if (!selectedInvoiceId || !canPayCredits) return;
+    setPayingCreditsId(selectedInvoiceId);
+    try {
+      const resp = await webPayments.payWithCredits(selectedInvoiceId);
+      if (resp.ok) {
+        if (resp.balance_after != null) setBalance(resp.balance_after);
+        Modal.success({
+          title: L.msg_paid_with_credits,
+          centered: true,
+          okText: "OK",
+        });
+      }
+    } catch (e) {
+      let errMsg = L.err_invoice;
+      if (e instanceof ApiError) {
+        if (e.code === "insufficient_credits") errMsg = L.err_insufficient_credits;
+        else if (e.code === "email_not_verified") errMsg = L.err_not_verified;
+      }
+      Modal.error({ title: "Error", content: errMsg, centered: true });
+    } finally {
+      setPayingCreditsId(null);
     }
   }
 
@@ -137,44 +162,35 @@ export default function BuyTab() {
   }
 
   const payInvoice = selectedInvoice?.invoice;
-  const payOrig = payInvoice?.amount ?? 0;
-  const payDiscounted = discountPct > 0 && payInvoice
-    ? Math.round(payOrig * (1 - discountPct / 100) * 100) / 100
-    : null;
-  const payPrice = payDiscounted ?? payOrig;
+  const payPrice = payInvoice?.amount ?? 0;
   const payCurrency = payInvoice?.currency ?? "";
 
   return (
     <div>
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
         <ShoppingCartOutlined style={{ fontSize: 18, color: "rgba(255,255,255,0.5)" }} />
         <Title level={4} style={{ color: "#fff", margin: 0 }}>{L.buy_title}</Title>
       </div>
 
-      {/* Promo alert */}
-      {promoCode && discountPct > 0 && (
+      {balance > 0 && (
         <Alert
-          icon={<GiftOutlined />}
-          type="success"
+          icon={<WalletOutlined />}
+          type="info"
           showIcon
           message={
-            <Space>
-              <span>{L.promo_active}</span>
-              <Tag color="green">{promoCode}</Tag>
-              <span style={{ color: "rgba(255,255,255,0.7)" }}>{L.promo_applied(discountPct)}</span>
+            <Space wrap>
+              <span>{L.bonus_balance(balance)}</span>
+              <Tag color="blue">{L.credit_one_day_hint}</Tag>
             </Space>
           }
           style={{ borderRadius: 12, marginBottom: 20 }}
         />
       )}
 
-      {/* No tariffs */}
       {chipLevels.length === 0 && invoices.length === 0 && (
         <div className="tariff-hint">{noTariffsHint}</div>
       )}
 
-      {/* Chip selection rows */}
       {chipLevels.map((chips, depth) => (
         <div key={depth} style={{ marginBottom: 16 }}>
           <div style={{
@@ -203,12 +219,10 @@ export default function BuyTab() {
         </div>
       ))}
 
-      {/* Hint: need to select a category */}
       {chipLevels.length > 0 && invoices.length === 0 && (
         <div className="tariff-hint">{selectHint}</div>
       )}
 
-      {/* Invoice cards (payment method selection) */}
       {invoices.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <div style={{
@@ -225,8 +239,6 @@ export default function BuyTab() {
             <div className="tariff-scroll">
               {invoices.map((n) => {
                 const inv = n.invoice!;
-                const origAmt = inv.original_amount ?? inv.amount;
-                const hasDiscount = discountPct > 0 && origAmt > inv.amount;
                 const isSelected = selectedInvoiceId === n.id;
 
                 return (
@@ -237,14 +249,14 @@ export default function BuyTab() {
                   >
                     <div className="tariff-card__name">{n.text}</div>
                     <div className="tariff-card__price-row">
-                      {hasDiscount && (
-                        <div className="tariff-card__price-orig">
-                          {origAmt.toFixed(0)} {inv.currency}
-                        </div>
-                      )}
                       <div className="tariff-card__price">{inv.amount.toFixed(0)}</div>
                       <div className="tariff-card__currency">{inv.currency}</div>
                     </div>
+                    {(inv.days ?? 0) > 0 && (
+                      <div style={{ fontSize: 11, opacity: 0.5, marginTop: 4 }}>
+                        {L.days(inv.days ?? 0)}
+                      </div>
+                    )}
                     {isSelected && (
                       <div className="tariff-card__check">
                         <CheckOutlined />
@@ -258,14 +270,11 @@ export default function BuyTab() {
         </div>
       )}
 
-      {/* Inline pay section */}
       {selectedInvoice && (
         <div style={{
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
+          flexDirection: "column",
+          gap: 10,
           padding: "16px 20px",
           background: "rgba(124,156,255,0.08)",
           border: "1px solid rgba(124,156,255,0.25)",
@@ -282,26 +291,39 @@ export default function BuyTab() {
                 {payPrice.toFixed(0)}
               </span>
               <span style={{ fontSize: 14, color: "rgba(255,255,255,0.45)" }}>{payCurrency}</span>
-              {payDiscounted !== null && (
-                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.30)", textDecoration: "line-through" }}>
-                  {payOrig.toFixed(0)}
-                </span>
-              )}
             </div>
           </div>
-          <Button
-            type="primary"
-            size="large"
-            loading={!!buyingId}
-            onClick={handleBuy}
-            style={{ borderRadius: 12, fontWeight: 700, paddingLeft: 28, paddingRight: 28 }}
-          >
-            {payLabel}
-          </Button>
+          <Space direction="vertical" style={{ width: "100%" }} size={8}>
+            {canPayCredits && (
+              <Button
+                type="primary"
+                size="large"
+                loading={payingCreditsId === selectedInvoiceId}
+                onClick={handlePayCredits}
+                style={{ borderRadius: 12, fontWeight: 700, width: "100%" }}
+              >
+                {L.btn_pay_credits(creditDays)}
+              </Button>
+            )}
+            <Button
+              size="large"
+              loading={buyingId === selectedInvoiceId}
+              onClick={handleBuyFiat}
+              style={{
+                borderRadius: 12,
+                fontWeight: 700,
+                width: "100%",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#fff",
+              }}
+            >
+              {L.btn_pay} · {payPrice.toFixed(0)} {payCurrency}
+            </Button>
+          </Space>
         </div>
       )}
 
-      {/* Invoice confirm modal */}
       <Modal
         open={!!invoice}
         onCancel={() => setInvoice(null)}
@@ -311,15 +333,6 @@ export default function BuyTab() {
       >
         {invoice && (
           <Space direction="vertical" style={{ width: "100%" }} size={16}>
-            {invoice.discount_percent > 0 && (
-              <Alert
-                icon={<GiftOutlined />}
-                type="success"
-                message={L.discount_applied_msg(invoice.discount_percent)}
-                showIcon
-                style={{ borderRadius: 10 }}
-              />
-            )}
             <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px 20px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                 <Text style={{ color: "rgba(255,255,255,0.5)" }}>{L.to_pay}</Text>
@@ -327,14 +340,6 @@ export default function BuyTab() {
                   {invoice.amount.toFixed(0)} {invoice.currency}
                 </Text>
               </div>
-              {invoice.discount_percent > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <Text style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{L.without_discount}</Text>
-                  <Text delete style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
-                    {invoice.original_amount.toFixed(0)} {invoice.currency}
-                  </Text>
-                </div>
-              )}
             </div>
             <Button
               type="primary"

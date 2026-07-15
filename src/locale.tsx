@@ -140,7 +140,7 @@ export interface Translations {
   invite_invalid: string;
   invite_valid: string;
   discount_accepted: string;
-  discount_text: (pct: number) => string;
+  credit_grant_text: (n: number) => string;
   pwd_label: string;
   pwd_placeholder: string;
   confirm_label: string;
@@ -183,21 +183,22 @@ export interface Translations {
   status_limited: string;
   // Buy tab
   buy_title: string;
-  promo_active: string;
-  promo_applied: (pct: number) => string;
+  bonus_balance: (n: number) => string;
+  credit_one_day_hint: string;
+  btn_pay_credits: (days: number) => string;
+  msg_paid_with_credits: string;
+  err_insufficient_credits: string;
   no_tariffs: string;
   btn_pay: string;
   err_load_plans: string;
   invoice_title: string;
   to_pay: string;
-  without_discount: string;
   btn_proceed: string;
   err_rate_limited_inv: string;
   err_provider: string;
   err_not_verified: string;
   err_invoice: string;
   btn_back: string;
-  discount_applied_msg: (pct: number) => string;
   days: (n: number) => string;
   // Devices tab
   dev_title: string;
@@ -280,18 +281,18 @@ export interface Translations {
   // Promo codes (Settings tab)
   menu_support: string;
   promo_title: string;
-  promo_active_label: string;
+  promo_balance_label: string;
+  promo_last_code_label: string;
   promo_code_placeholder: string;
-  promo_cant_activate: string;
+  promo_balance_hint: string;
   btn_activate_promo: string;
   err_promo_invalid: string;
   err_promo_own: string;
   err_promo_already_used: string;
-  err_promo_active_exists: string;
   err_promo_referral_only_one: string;
   err_promo_referral_not_new: string;
   err_promo_activate: string;
-  msg_promo_activated: (pct: number) => string;
+  msg_promo_activated: (grant: number, balance: number) => string;
   // Support tickets tab
   support_title: string;
   btn_new_ticket: string;
@@ -475,7 +476,7 @@ const en: Translations = {
   invite_invalid: "Invalid code",
   invite_valid: "Code accepted",
   discount_accepted: "Code accepted!",
-  discount_text: (pct) => `${pct}% discount on first payment`,
+  credit_grant_text: (n) => `${n} bonus credits (1 credit = 1 day)`,
   pwd_label: "Password",
   pwd_placeholder: "At least 8 characters",
   confirm_label: "Confirm Password",
@@ -516,21 +517,22 @@ const en: Translations = {
   status_disabled: "Disabled",
   status_limited: "Limited",
   buy_title: "Buy Subscription",
-  promo_active: "Promo code active:",
-  promo_applied: (pct) => `${pct}% discount applied to prices`,
+  bonus_balance: (n) => `Bonus balance: ${n} credits`,
+  credit_one_day_hint: "1 credit = 1 subscription day",
+  btn_pay_credits: (days) => `Pay with credits · ${days} days`,
+  msg_paid_with_credits: "Subscription activated with bonus credits",
+  err_insufficient_credits: "Not enough bonus credits for this plan",
   no_tariffs: "No plans configured",
   btn_pay: "Pay",
   err_load_plans: "Failed to load plans. Try again.",
   invoice_title: "Payment Invoice",
   to_pay: "To pay:",
-  without_discount: "Without discount:",
   btn_proceed: "Proceed to Payment",
   err_rate_limited_inv: "Too many requests",
   err_provider: "Payment provider unavailable",
   err_not_verified: "Please verify your email first",
   err_invoice: "Failed to create invoice. Try again.",
   btn_back: "Back",
-  discount_applied_msg: (pct) => `${pct}% discount applied`,
   days: (n) => `${n} day${n !== 1 ? "s" : ""}`,
   dev_title: "Devices",
   err_load_dev: "Failed to load devices",
@@ -610,18 +612,18 @@ const en: Translations = {
   // Promo codes
   menu_support: "Support",
   promo_title: "Promo Code",
-  promo_active_label: "Active promo:",
+  promo_balance_label: "Bonus balance",
+  promo_last_code_label: "Last activated code",
   promo_code_placeholder: "Enter promo code",
-  promo_cant_activate: "Promo is active — will apply to your next payment.",
+  promo_balance_hint: "Credits are added immediately and can be spent in the Buy tab.",
   btn_activate_promo: "Activate",
   err_promo_invalid: "Invalid promo code",
   err_promo_own: "Cannot use your own promo code",
   err_promo_already_used: "You have already used this promo code",
-  err_promo_active_exists: "A promo is already active — use it first",
   err_promo_referral_only_one: "You have already used a referral code",
   err_promo_referral_not_new: "Referral codes are for new users only",
   err_promo_activate: "Failed to activate promo code",
-  msg_promo_activated: (pct) => `Promo activated — ${pct}% discount applied`,
+  msg_promo_activated: (grant, balance) => `+${grant} credits added (balance: ${balance})`,
   // Support tickets
   support_title: "Support",
   btn_new_ticket: "New Ticket",
@@ -805,7 +807,7 @@ const ru: Translations = {
   invite_invalid: "Недействительный код",
   invite_valid: "Код действителен",
   discount_accepted: "Код принят!",
-  discount_text: (pct) => `Скидка ${pct}% на первую оплату`,
+  credit_grant_text: (n) => `${n} бонусных кредитов (1 кредит = 1 день)`,
   pwd_label: "Пароль",
   pwd_placeholder: "Минимум 8 символов",
   confirm_label: "Повтор пароля",
@@ -846,21 +848,22 @@ const ru: Translations = {
   status_disabled: "Отключена",
   status_limited: "Ограничена",
   buy_title: "Купить подписку",
-  promo_active: "Промокод активен:",
-  promo_applied: (pct) => `Скидка ${pct}% применена к ценам`,
+  bonus_balance: (n) => `Бонусный баланс: ${n} кредитов`,
+  credit_one_day_hint: "1 кредит = 1 день подписки",
+  btn_pay_credits: (days) => `Оплатить кредитами · ${days} дн.`,
+  msg_paid_with_credits: "Подписка активирована за бонусные кредиты",
+  err_insufficient_credits: "Недостаточно бонусных кредитов для этого тарифа",
   no_tariffs: "Тарифы не настроены",
   btn_pay: "Оплатить",
   err_load_plans: "Не удалось загрузить тарифы. Попробуйте позже.",
   invoice_title: "Счёт на оплату",
   to_pay: "К оплате:",
-  without_discount: "Без скидки:",
   btn_proceed: "Перейти к оплате",
   err_rate_limited_inv: "Слишком много запросов",
   err_provider: "Платёжный провайдер недоступен",
   err_not_verified: "Сначала подтвердите email",
   err_invoice: "Ошибка создания счёта. Попробуйте позже.",
   btn_back: "Назад",
-  discount_applied_msg: (pct) => `Скидка ${pct}% применена`,
   days: (n) => {
     if (n === 1) return "1 день";
     if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `${n} дня`;
@@ -944,18 +947,18 @@ const ru: Translations = {
   // Promo codes
   menu_support: "Поддержка",
   promo_title: "Промокод",
-  promo_active_label: "Активный промокод:",
+  promo_balance_label: "Бонусный баланс",
+  promo_last_code_label: "Последний активированный код",
   promo_code_placeholder: "Введите промокод",
-  promo_cant_activate: "Промокод активен — будет применён к следующему платежу.",
+  promo_balance_hint: "Кредиты начисляются сразу и тратятся во вкладке «Покупка».",
   btn_activate_promo: "Применить",
   err_promo_invalid: "Неверный промокод",
   err_promo_own: "Нельзя использовать собственный промокод",
   err_promo_already_used: "Вы уже использовали этот промокод",
-  err_promo_active_exists: "Промокод уже активен — сначала используйте его",
   err_promo_referral_only_one: "Реферальный код уже был использован",
   err_promo_referral_not_new: "Реферальные коды доступны только новым пользователям",
   err_promo_activate: "Не удалось активировать промокод",
-  msg_promo_activated: (pct) => `Промокод активирован — скидка ${pct}%`,
+  msg_promo_activated: (grant, balance) => `+${grant} кредитов (баланс: ${balance})`,
   // Support tickets
   support_title: "Поддержка",
   btn_new_ticket: "Новое обращение",

@@ -120,14 +120,14 @@ export default function RegisterPage() {
             <Alert type="error" message={error} style={{ marginBottom: 20, borderRadius: 10 }} showIcon closable onClose={() => setError(null)} />
           )}
 
-          {inviteStatus.valid && inviteStatus.data?.discount_percent && (
+          {inviteStatus.valid && (inviteStatus.data?.credit_grant ?? 0) > 0 && (
             <Alert
               type="success"
               icon={<GiftOutlined />}
               message={
                 <Space>
                   <span>{L.discount_accepted}</span>
-                  <Tag color="green">{L.discount_text(inviteStatus.data.discount_percent)}</Tag>
+                  <Tag color="green">{L.credit_grant_text(inviteStatus.data!.credit_grant!)}</Tag>
                 </Space>
               }
               style={{ marginBottom: 20, borderRadius: 10 }}
