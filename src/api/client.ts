@@ -409,10 +409,10 @@ export const password = {
 // Subscription claim (shortID-first onboarding, unauthenticated)
 // ---------------------------------------------------------------------------
 
-export type ClaimStatus = "ready_login" | "needs_password" | "rw_only" | "no_email";
+export type ClaimStatus = "ready_login" | "needs_password" | "rw_only";
 
 export interface ClaimResolveResponse {
-  status: ClaimStatus;
+  status: ClaimStatus | "no_email"; // no_email kept for older servers; clients treat as rw_only
   email_hint: string | null;
   has_telegram: boolean;
   claim_token: string;
@@ -422,17 +422,23 @@ export interface ClaimResolveResponse {
 export const claim = {
   resolve: (url: string) =>
     post<ClaimResolveResponse>("/android/claim/resolve", { url }, false),
+  login: (claim_token: string, password: string) =>
+    post<AuthResponse>("/android/claim/login", { claim_token, password }, false),
   otpRequest: (claim_token: string) =>
     post<{ status: string }>("/android/claim/otp-request", { claim_token }, false),
   complete: (
     claim_token: string,
-    code: string,
     new_password: string,
-    acc_email?: string
+    opts?: { code?: string; acc_email?: string }
   ) =>
     post<AuthResponse>(
       "/android/claim/complete",
-      { claim_token, code, new_password, ...(acc_email ? { acc_email } : {}) },
+      {
+        claim_token,
+        new_password,
+        ...(opts?.code ? { code: opts.code } : {}),
+        ...(opts?.acc_email ? { acc_email: opts.acc_email } : {}),
+      },
       false
     ),
 };

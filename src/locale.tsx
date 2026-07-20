@@ -362,6 +362,7 @@ export interface Translations {
   claim_login_hint: (hint: string) => string;
   claim_setup_hint: (hint: string) => string;
   claim_register_hint: (hint: string) => string;
+  claim_register_bind_hint: string;
   claim_acc_email_label: string;
   claim_no_email_title: string;
   claim_no_email_text: string;
@@ -729,6 +730,7 @@ const en: Translations = {
   claim_setup_hint: (hint) => `We sent a code to ${hint}. Enter the code and set a password for sign-in.`,
   claim_register_hint: (hint) => `We sent a code to ${hint}. Enter the code and create an account for this subscription.`,
   claim_acc_email_label: "Sign-in email",
+  claim_register_bind_hint: "Create an account — this subscription will be linked to it.",
   claim_no_email_title: "No email on this subscription",
   claim_no_email_text: "We can't verify ownership by email. If the subscription was issued via Telegram, sign in with Telegram below, or claim it from the mobile app using your Remnawave email/username.",
   claim_done_title: "You're all set",
@@ -1099,6 +1101,7 @@ const ru: Translations = {
   claim_setup_hint: (hint) => `Мы отправили код на ${hint}. Введите код и задайте пароль для входа.`,
   claim_register_hint: (hint) => `Мы отправили код на ${hint}. Введите код и создайте учётную запись для этой подписки.`,
   claim_acc_email_label: "Email для входа",
+  claim_register_bind_hint: "Создайте учётную запись — эта подписка будет привязана к новому аккаунту.",
   claim_no_email_title: "У подписки нет email",
   claim_no_email_text: "Мы не можем подтвердить владение по email. Если подписка выдана через Telegram — войдите через Telegram ниже, либо привяжите её из мобильного приложения по email/username из Remnawave.",
   claim_done_title: "Готово",

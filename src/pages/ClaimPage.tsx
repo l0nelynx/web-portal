@@ -29,7 +29,6 @@ type Step =
   | "login"
   | "setup"
   | "register"
-  | "no_email"
   | "done"
   | "foreign";
 
@@ -81,7 +80,7 @@ const primaryBtnStyle = {
 } as const;
 
 export default function ClaimPage() {
-  const { user, profile, loading: authLoading, login, setUserAfterRegister } = useAuth();
+  const { user, profile, loading: authLoading, setUserAfterRegister } = useAuth();
   const navigate = useNavigate();
   const { L, toggle } = useLang();
   usePageMeta({ title: `${L.claim_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
@@ -89,6 +88,7 @@ export default function ClaimPage() {
   const [step, setStep] = useState<Step>("url");
   const [subUrl, setSubUrl] = useState("");
   const [resolved, setResolved] = useState<ClaimResolveResponse | null>(null);
+  const [needsOtp, setNeedsOtp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [appLinkPending, setAppLinkPending] = useState(false);
@@ -129,19 +129,28 @@ export default function ClaimPage() {
       setResolved(res);
       switch (res.status) {
         case "ready_login":
+          setNeedsOtp(false);
           setStep("login");
           break;
         case "needs_password":
         case "rw_only":
-          try {
-            await claim.otpRequest(res.claim_token);
-          } catch (e) {
-            setError(mapError(e));
+        case "no_email": {
+          const otp =
+            res.status === "needs_password" || Boolean(res.email_hint);
+          setNeedsOtp(otp);
+          if (otp) {
+            try {
+              await claim.otpRequest(res.claim_token);
+            } catch (e) {
+              setError(mapError(e));
+            }
           }
           setStep(res.status === "needs_password" ? "setup" : "register");
           break;
+        }
         default:
-          setStep("no_email");
+          setNeedsOtp(false);
+          setStep("register");
       }
     } catch (e) {
       setError(mapError(e));
@@ -168,11 +177,17 @@ export default function ClaimPage() {
     if (fromHash) void startClaim(fromHash);
   }, [authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function onLogin(values: { email: string; password: string }) {
+  async function onLogin(values: { password: string }) {
+    if (!resolved) return;
     setLoading(true);
     setError(null);
     try {
-      await login(values.email.trim().toLowerCase(), values.password);
+      const resp = await claim.login(resolved.claim_token, values.password);
+      setUserAfterRegister(resp.user, resp.tokens);
+      if (!resp.user.email_verified) {
+        navigate("/verify-email", { replace: true });
+        return;
+      }
       setStep("done");
     } catch (e) {
       setError(mapError(e));
@@ -181,17 +196,19 @@ export default function ClaimPage() {
     }
   }
 
-  async function onComplete(values: { code: string; password: string; acc_email?: string }) {
+  async function onComplete(values: {
+    code?: string;
+    password: string;
+    acc_email?: string;
+  }) {
     if (!resolved) return;
     setLoading(true);
     setError(null);
     try {
-      const resp = await claim.complete(
-        resolved.claim_token,
-        values.code.trim(),
-        values.password,
-        values.acc_email?.trim().toLowerCase()
-      );
+      const resp = await claim.complete(resolved.claim_token, values.password, {
+        code: needsOtp ? values.code?.trim() : undefined,
+        acc_email: values.acc_email?.trim().toLowerCase(),
+      });
       setUserAfterRegister(resp.user, resp.tokens);
       if (!resp.user.email_verified) {
         navigate("/verify-email", { replace: true });
@@ -339,20 +356,6 @@ export default function ClaimPage() {
                 showIcon
               />
               <Form layout="vertical" size="large" onFinish={onLogin}>
-                <Form.Item
-                  name="email"
-                  rules={[
-                    { required: true, message: L.val_email_req },
-                    { type: "email", message: L.val_email_format },
-                  ]}
-                >
-                  <Input
-                    prefix={<MailOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                    placeholder="Email"
-                    autoComplete="email"
-                    style={inputStyle}
-                  />
-                </Form.Item>
                 <Form.Item name="password" rules={[{ required: true, message: L.val_pwd_req }]}>
                   <Input.Password
                     prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
@@ -389,25 +392,33 @@ export default function ClaimPage() {
             <>
               <Alert
                 type="info"
-                message={step === "setup" ? L.claim_setup_hint(hint) : L.claim_register_hint(hint)}
+                message={
+                  step === "setup"
+                    ? L.claim_setup_hint(hint)
+                    : needsOtp
+                      ? L.claim_register_hint(hint)
+                      : L.claim_register_bind_hint
+                }
                 style={{ marginBottom: 20, borderRadius: 10 }}
                 showIcon
               />
               <Form layout="vertical" size="large" onFinish={onComplete}>
-                <Form.Item
-                  name="code"
-                  rules={[
-                    { required: true, message: L.val_code_req },
-                    { len: 6, message: L.val_code_len },
-                  ]}
-                >
-                  <Input
-                    prefix={<NumberOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                    placeholder={L.verify_code_label}
-                    maxLength={6}
-                    style={inputStyle}
-                  />
-                </Form.Item>
+                {needsOtp && (
+                  <Form.Item
+                    name="code"
+                    rules={[
+                      { required: true, message: L.val_code_req },
+                      { len: 6, message: L.val_code_len },
+                    ]}
+                  >
+                    <Input
+                      prefix={<NumberOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
+                      placeholder={L.verify_code_label}
+                      maxLength={6}
+                      style={inputStyle}
+                    />
+                  </Form.Item>
+                )}
                 {step === "register" && (
                   <Form.Item
                     name="acc_email"
@@ -462,45 +473,24 @@ export default function ClaimPage() {
                   {L.btn_confirm}
                 </Button>
               </Form>
-              <div style={{ textAlign: "center", marginTop: 16 }}>
-                <Button
-                  type="link"
-                  style={{ color: "#7C9CFF", fontSize: 13 }}
-                  onClick={async () => {
-                    try {
-                      await claim.otpRequest(resolved.claim_token);
-                      setError(null);
-                    } catch (e) {
-                      setError(mapError(e));
-                    }
-                  }}
-                >
-                  {L.btn_resend}
-                </Button>
-              </div>
-            </>
-          )}
-
-          {step === "no_email" && (
-            <>
-              <Alert
-                type="warning"
-                message={L.claim_no_email_title}
-                description={L.claim_no_email_text}
-                style={{ marginBottom: 20, borderRadius: 10 }}
-                showIcon
-              />
-              <TelegramLoginButton
-                label={L.btn_tg_login}
-                onSuccess={(resp) => {
-                  setUserAfterRegister(resp.user, resp.tokens);
-                  setStep("done");
-                }}
-                onError={() => setError(L.err_tg_login)}
-              />
-              <Button block style={{ ...primaryBtnStyle, marginTop: 12 }} onClick={importOnly}>
-                {L.btn_import_only}
-              </Button>
+              {needsOtp && (
+                <div style={{ textAlign: "center", marginTop: 16 }}>
+                  <Button
+                    type="link"
+                    style={{ color: "#7C9CFF", fontSize: 13 }}
+                    onClick={async () => {
+                      try {
+                        await claim.otpRequest(resolved.claim_token);
+                        setError(null);
+                      } catch (e) {
+                        setError(mapError(e));
+                      }
+                    }}
+                  >
+                    {L.btn_resend}
+                  </Button>
+                </div>
+              )}
             </>
           )}
 
