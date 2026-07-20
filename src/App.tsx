@@ -7,6 +7,8 @@ import { pageView } from "./analytics";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ClaimPage from "./pages/ClaimPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import DashboardPage from "./pages/DashboardPage";
 import TelegramCallbackPage from "./pages/TelegramCallbackPage";
@@ -60,6 +62,8 @@ export default function WebApp() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/claim" element={<ClaimPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route
           path="/verify-email"
           element={

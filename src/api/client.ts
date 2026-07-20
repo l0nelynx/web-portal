@@ -397,6 +397,57 @@ export const password = {
       { email: emailAddr },
       false
     ),
+  resetConfirm: (emailAddr: string, code: string, new_password: string) =>
+    post<{ status: string }>(
+      "/android/auth/password/reset-confirm",
+      { email: emailAddr, code, new_password },
+      false
+    ),
+};
+
+// ---------------------------------------------------------------------------
+// Subscription claim (shortID-first onboarding, unauthenticated)
+// ---------------------------------------------------------------------------
+
+export type ClaimStatus = "ready_login" | "needs_password" | "rw_only" | "no_email";
+
+export interface ClaimResolveResponse {
+  status: ClaimStatus;
+  email_hint: string | null;
+  has_telegram: boolean;
+  claim_token: string;
+  subscription_url: string | null;
+}
+
+export const claim = {
+  resolve: (url: string) =>
+    post<ClaimResolveResponse>("/android/claim/resolve", { url }, false),
+  otpRequest: (claim_token: string) =>
+    post<{ status: string }>("/android/claim/otp-request", { claim_token }, false),
+  complete: (
+    claim_token: string,
+    code: string,
+    new_password: string,
+    acc_email?: string
+  ) =>
+    post<AuthResponse>(
+      "/android/claim/complete",
+      { claim_token, code, new_password, ...(acc_email ? { acc_email } : {}) },
+      false
+    ),
+};
+
+// ---------------------------------------------------------------------------
+// One-time app login (web → installed app handoff via cheezy://login/<token>)
+// ---------------------------------------------------------------------------
+
+export interface AppLoginToken {
+  token: string;
+  expires_in: number;
+}
+
+export const appLogin = {
+  create: () => post<AppLoginToken>("/android/auth/app-login/create"),
 };
 
 // ---------------------------------------------------------------------------

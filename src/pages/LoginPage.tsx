@@ -8,6 +8,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
+import { usePageMeta } from "../seo";
 
 const { Title, Text } = Typography;
 
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
+  usePageMeta({ title: `${L.login_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
 
   useEffect(() => {
     const tgError = searchParams.get("tg_error");
@@ -185,6 +187,12 @@ export default function LoginPage() {
               {L.btn_login}
             </Button>
           </Form>
+
+          <div style={{ textAlign: "center", marginTop: 12 }}>
+            <Link to="/forgot-password" style={{ color: "#7C9CFF", fontSize: 13 }}>
+              {L.forgot_link}
+            </Link>
+          </div>
 
           {/* Telegram login */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0 16px" }}>

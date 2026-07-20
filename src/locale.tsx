@@ -352,6 +352,41 @@ export interface Translations {
   footer_offer: string;
   footer_telegram: string;
   legal_back: string;
+  // Claim page (subscription → account)
+  claim_title: string;
+  claim_subtitle: string;
+  claim_url_label: string;
+  claim_url_placeholder: string;
+  btn_claim_check: string;
+  claim_checking: string;
+  claim_login_hint: (hint: string) => string;
+  claim_setup_hint: (hint: string) => string;
+  claim_register_hint: (hint: string) => string;
+  claim_acc_email_label: string;
+  claim_no_email_title: string;
+  claim_no_email_text: string;
+  claim_done_title: string;
+  claim_done_text: string;
+  btn_open_in_app: string;
+  btn_import_only: string;
+  claim_open_app_hint: string;
+  btn_go_dashboard: string;
+  claim_foreign_title: string;
+  claim_foreign_text: string;
+  err_claim_not_found: string;
+  err_claim_bad_url: string;
+  err_claim_expired: string;
+  err_claim: string;
+  err_app_login: string;
+  // Forgot password
+  forgot_link: string;
+  forgot_title: string;
+  forgot_subtitle: string;
+  forgot_code_sent: string;
+  new_pwd_label: string;
+  btn_reset_password: string;
+  reset_success: string;
+  back_to_login: string;
 }
 
 const en: Translations = {
@@ -683,6 +718,41 @@ const en: Translations = {
   footer_offer: "Public Offer",
   footer_telegram: "Telegram",
   legal_back: "← Back to home",
+  // Claim page (subscription → account)
+  claim_title: "Connect your subscription",
+  claim_subtitle: "Sign in or create an account for your subscription link",
+  claim_url_label: "Subscription link",
+  claim_url_placeholder: "https://…",
+  btn_claim_check: "Continue",
+  claim_checking: "Checking your subscription…",
+  claim_login_hint: (hint) => `An account already exists for this subscription (${hint}). Sign in to continue.`,
+  claim_setup_hint: (hint) => `We sent a code to ${hint}. Enter the code and set a password for sign-in.`,
+  claim_register_hint: (hint) => `We sent a code to ${hint}. Enter the code and create an account for this subscription.`,
+  claim_acc_email_label: "Sign-in email",
+  claim_no_email_title: "No email on this subscription",
+  claim_no_email_text: "We can't verify ownership by email. If the subscription was issued via Telegram, sign in with Telegram below, or claim it from the mobile app using your Remnawave email/username.",
+  claim_done_title: "You're all set",
+  claim_done_text: "Your subscription is linked to your account.",
+  btn_open_in_app: "Open in app",
+  btn_import_only: "Import subscription only (no account)",
+  claim_open_app_hint: "The app will sign in automatically. The link is valid for 90 seconds and works once.",
+  btn_go_dashboard: "Go to dashboard",
+  claim_foreign_title: "Different subscription",
+  claim_foreign_text: "You are signed in, but this subscription link belongs to a different account. You can transfer it in Settings → Transfer subscription, or import it into the app without signing in.",
+  err_claim_not_found: "Subscription not found",
+  err_claim_bad_url: "Invalid subscription link",
+  err_claim_expired: "Session expired — start over",
+  err_claim: "Couldn't check the subscription",
+  err_app_login: "Couldn't create the app sign-in link",
+  // Forgot password
+  forgot_link: "Forgot password?",
+  forgot_title: "Password reset",
+  forgot_subtitle: "Enter your account email — we'll send a reset code.",
+  forgot_code_sent: "If the email is registered, a code has been sent.",
+  new_pwd_label: "New password",
+  btn_reset_password: "Reset password",
+  reset_success: "Password updated — sign in with the new password.",
+  back_to_login: "← Back to sign in",
 };
 
 const ru: Translations = {
@@ -1018,6 +1088,41 @@ const ru: Translations = {
   footer_offer: "Публичная оферта",
   footer_telegram: "Telegram",
   legal_back: "← На главную",
+  // Claim page (subscription → account)
+  claim_title: "Подключение подписки",
+  claim_subtitle: "Войдите или создайте аккаунт для вашей ссылки подписки",
+  claim_url_label: "Ссылка подписки",
+  claim_url_placeholder: "https://…",
+  btn_claim_check: "Продолжить",
+  claim_checking: "Проверяем вашу подписку…",
+  claim_login_hint: (hint) => `Для этой подписки уже есть аккаунт (${hint}). Войдите, чтобы продолжить.`,
+  claim_setup_hint: (hint) => `Мы отправили код на ${hint}. Введите код и задайте пароль для входа.`,
+  claim_register_hint: (hint) => `Мы отправили код на ${hint}. Введите код и создайте учётную запись для этой подписки.`,
+  claim_acc_email_label: "Email для входа",
+  claim_no_email_title: "У подписки нет email",
+  claim_no_email_text: "Мы не можем подтвердить владение по email. Если подписка выдана через Telegram — войдите через Telegram ниже, либо привяжите её из мобильного приложения по email/username из Remnawave.",
+  claim_done_title: "Готово",
+  claim_done_text: "Подписка привязана к вашему аккаунту.",
+  btn_open_in_app: "Открыть в приложении",
+  btn_import_only: "Только импортировать подписку (без аккаунта)",
+  claim_open_app_hint: "Приложение авторизуется автоматически. Ссылка действует 90 секунд и работает один раз.",
+  btn_go_dashboard: "Перейти в кабинет",
+  claim_foreign_title: "Другая подписка",
+  claim_foreign_text: "Вы вошли в аккаунт, но эта ссылка подписки принадлежит другому аккаунту. Перенести её можно в Настройках → Перенос подписки, либо импортируйте её в приложение без входа.",
+  err_claim_not_found: "Подписка не найдена",
+  err_claim_bad_url: "Неверная ссылка подписки",
+  err_claim_expired: "Сессия истекла — начните заново",
+  err_claim: "Не удалось проверить подписку",
+  err_app_login: "Не удалось создать ссылку входа для приложения",
+  // Forgot password
+  forgot_link: "Забыли пароль?",
+  forgot_title: "Сброс пароля",
+  forgot_subtitle: "Укажите email аккаунта — мы отправим код для сброса.",
+  forgot_code_sent: "Если email зарегистрирован, код отправлен.",
+  new_pwd_label: "Новый пароль",
+  btn_reset_password: "Сбросить пароль",
+  reset_success: "Пароль обновлён — войдите с новым паролем.",
+  back_to_login: "← Вернуться ко входу",
 };
 
 const T: Record<Lang, Translations> = { en, ru };
