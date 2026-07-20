@@ -360,6 +360,7 @@ export interface Translations {
   btn_claim_check: string;
   claim_checking: string;
   claim_login_hint: (hint: string) => string;
+  claim_use_other_email: string;
   claim_setup_hint: (hint: string) => string;
   claim_register_hint: (hint: string) => string;
   claim_register_bind_hint: string;
@@ -727,6 +728,7 @@ const en: Translations = {
   btn_claim_check: "Continue",
   claim_checking: "Checking your subscription…",
   claim_login_hint: (hint) => `An account already exists for this subscription (${hint}). Sign in to continue.`,
+  claim_use_other_email: "Wrong email? Use a different one",
   claim_setup_hint: (hint) => `We sent a code to ${hint}. Enter the code and set a password for sign-in.`,
   claim_register_hint: (hint) => `We sent a code to ${hint}. Enter the code and create an account for this subscription.`,
   claim_acc_email_label: "Sign-in email",
@@ -1098,6 +1100,7 @@ const ru: Translations = {
   btn_claim_check: "Продолжить",
   claim_checking: "Проверяем вашу подписку…",
   claim_login_hint: (hint) => `Для этой подписки уже есть аккаунт (${hint}). Войдите, чтобы продолжить.`,
+  claim_use_other_email: "Не тот email? Указать другой",
   claim_setup_hint: (hint) => `Мы отправили код на ${hint}. Введите код и задайте пароль для входа.`,
   claim_register_hint: (hint) => `Мы отправили код на ${hint}. Введите код и создайте учётную запись для этой подписки.`,
   claim_acc_email_label: "Email для входа",

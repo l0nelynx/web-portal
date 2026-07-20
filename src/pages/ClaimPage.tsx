@@ -32,9 +32,16 @@ type Step =
   | "done"
   | "foreign";
 
-/** Subscription URL arrives in the fragment (`/claim#url=...`) so it never
- * reaches server logs — same trick as the MiniApp connect-open redirector. */
-function urlFromFragment(): string | null {
+/** Subscription URL from `?url=` (Remnawave / catalog) or legacy `#url=`. */
+function urlFromLocation(): string | null {
+  const fromQuery = new URLSearchParams(window.location.search).get("url");
+  if (fromQuery) {
+    try {
+      return decodeURIComponent(fromQuery);
+    } catch {
+      return fromQuery;
+    }
+  }
   const hash = window.location.hash.replace(/^#/, "");
   if (!hash) return null;
   const params = new URLSearchParams(hash);
@@ -45,6 +52,11 @@ function urlFromFragment(): string | null {
   } catch {
     return raw;
   }
+}
+
+function stripClaimUrlFromLocation() {
+  if (!window.location.search && !window.location.hash) return;
+  window.history.replaceState(null, "", "/claim");
 }
 
 function shortUuidOf(url: string): string | null {
@@ -158,23 +170,26 @@ export default function ClaimPage() {
     }
   }
 
-  // Bootstrap: read the fragment once auth state is known.
+  // Bootstrap: read query/fragment once auth state is known.
   useEffect(() => {
     if (authLoading || bootstrapped.current) return;
     bootstrapped.current = true;
-    const fromHash = urlFromFragment();
-    if (fromHash) setSubUrl(fromHash);
+    const fromLoc = urlFromLocation();
+    if (fromLoc) {
+      setSubUrl(fromLoc);
+      stripClaimUrlFromLocation();
+    }
     if (user) {
       // Already signed in: same subscription → done, foreign → transfer notice.
       const own = profile?.subscription?.subscription_url ?? null;
-      if (!fromHash || (own && shortUuidOf(own) === shortUuidOf(fromHash))) {
+      if (!fromLoc || (own && shortUuidOf(own) === shortUuidOf(fromLoc))) {
         setStep("done");
       } else {
         setStep("foreign");
       }
       return;
     }
-    if (fromHash) void startClaim(fromHash);
+    if (fromLoc) void startClaim(fromLoc);
   }, [authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function onLogin(values: { password: string }) {
@@ -373,6 +388,21 @@ export default function ClaimPage() {
                   {L.forgot_link}
                 </Link>
               </div>
+              {resolved.email_verified === false && (
+                <div style={{ textAlign: "center", marginTop: 12 }}>
+                  <Button
+                    type="link"
+                    style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, padding: 0 }}
+                    onClick={() => {
+                      setNeedsOtp(false);
+                      setError(null);
+                      setStep("register");
+                    }}
+                  >
+                    {L.claim_use_other_email}
+                  </Button>
+                </div>
+              )}
               {resolved.has_telegram && (
                 <div style={{ marginTop: 16 }}>
                   <TelegramLoginButton

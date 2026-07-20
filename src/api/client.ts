@@ -417,6 +417,8 @@ export interface ClaimResolveResponse {
   has_telegram: boolean;
   claim_token: string;
   subscription_url: string | null;
+  /** Absent on older servers — treat as true when status is ready_login. */
+  email_verified?: boolean;
 }
 
 export const claim = {
