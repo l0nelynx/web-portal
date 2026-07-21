@@ -12,6 +12,7 @@ import {
   WindowsOutlined,
   DesktopOutlined,
   BookOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo";
@@ -280,8 +281,8 @@ export default function LandingPage() {
     transition: "background 0.15s",
   });
 
-  const onDownloadOptionHover = (e: React.MouseEvent<HTMLDivElement>, highlight?: boolean, enter?: boolean) => {
-    (e.currentTarget as HTMLDivElement).style.background = enter
+  const onDownloadOptionHover = (e: React.MouseEvent<HTMLElement>, highlight?: boolean, enter?: boolean) => {
+    (e.currentTarget as HTMLElement).style.background = enter
       ? highlight
         ? "rgba(6,214,160,0.12)"
         : "rgba(255,255,255,0.06)"
@@ -777,7 +778,9 @@ export default function LandingPage() {
                 {row.clash === true ? (
                   <CheckOutlined style={{ color: "#06D6A0" }} />
                 ) : row.clash ? (
-                  <Tooltip title={row.clash}><Text style={{ color: "#06D6A0", fontSize: 12, cursor: "help" }}>~*</Text></Tooltip>
+                  <Tooltip title={String(row.clash)}>
+                    <QuestionCircleOutlined style={{ color: "#06D6A0", fontSize: 16 }} aria-label="Footnote" />
+                  </Tooltip>
                 ) : (
                   <CloseOutlined style={{ color: "rgba(255,255,255,0.25)" }} />
                 )}
@@ -786,7 +789,9 @@ export default function LandingPage() {
                 {row.cheezy === true ? (
                   <CheckOutlined style={{ color: "#06D6A0" }} />
                 ) : row.cheezy ? (
-                  <Tooltip title={row.cheezy}><Text style={{ color: "#06D6A0", fontSize: 12, cursor: "help" }}>~*</Text></Tooltip>
+                  <Tooltip title={String(row.cheezy)}>
+                    <QuestionCircleOutlined style={{ color: "#06D6A0", fontSize: 16 }} aria-label="Footnote" />
+                  </Tooltip>
                 ) : (
                   <CloseOutlined style={{ color: "rgba(255,255,255,0.25)" }} />
                 )}
@@ -1036,10 +1041,12 @@ export default function LandingPage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {(desktopOptions?.[downloadPlatform] ?? []).map((opt) => (
-              <div
+              <a
                 key={opt.url}
+                href={opt.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => {
-                  window.open(opt.url, "_blank", "noopener");
                   setDownloadApp(null);
                 }}
                 style={downloadOptionStyle()}
@@ -1049,7 +1056,7 @@ export default function LandingPage() {
                 <Text strong style={{ color: "#fff", fontSize: 15 }}>
                   {opt.label}
                 </Text>
-              </div>
+              </a>
             ))}
           </div>
         )}
