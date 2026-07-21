@@ -49,13 +49,16 @@ jobs:
         if: vars.VITE_SITE_URL != ''
         env:
           SITE_URL: ${{ vars.VITE_SITE_URL }}
+          BRAND: ${{ vars.VITE_BRAND_NAME }}
         run: |
           DATE=$(date +%Y-%m-%d)
+          BRAND="${BRAND:-Cheeze Networks}"
 
           # Inject canonical + og:url into index.html (after <meta name="robots">)
           sed -i "s|<meta name=\"robots\" content=\"index, follow\" />|<meta name=\"robots\" content=\"index, follow\" />\n    <link rel=\"canonical\" href=\"${SITE_URL}/\" />\n    <meta property=\"og:url\" content=\"${SITE_URL}/\" />|" dist/index.html
 
-          # Generate sitemap.xml
+          # Sitemap: homepage only for brand SERP. Auth/legal routes are noindex
+          # (see shells below) so they must not appear here.
           cat > dist/sitemap.xml << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -65,55 +68,51 @@ jobs:
               <priority>1.0</priority>
               <lastmod>${DATE}</lastmod>
             </url>
-            <url>
-              <loc>${SITE_URL}/register</loc>
-              <changefreq>monthly</changefreq>
-              <priority>0.8</priority>
-              <lastmod>${DATE}</lastmod>
-            </url>
-            <url>
-              <loc>${SITE_URL}/login</loc>
-              <changefreq>monthly</changefreq>
-              <priority>0.5</priority>
-            </url>
-            <url>
-              <loc>${SITE_URL}/policy</loc>
-              <changefreq>yearly</changefreq>
-              <priority>0.3</priority>
-              <lastmod>${DATE}</lastmod>
-            </url>
-            <url>
-              <loc>${SITE_URL}/agreement</loc>
-              <changefreq>yearly</changefreq>
-              <priority>0.3</priority>
-              <lastmod>${DATE}</lastmod>
-            </url>
-            <url>
-              <loc>${SITE_URL}/offer</loc>
-              <changefreq>yearly</changefreq>
-              <priority>0.3</priority>
-              <lastmod>${DATE}</lastmod>
-            </url>
           </urlset>
           EOF
 
           # Append Sitemap directive to robots.txt
           echo "Sitemap: ${SITE_URL}/sitemap.xml" >> dist/robots.txt
 
-          # GitHub Pages has no server-side rewrite: any path other than "/" falls
-          # through to 404.html (real HTTP 404 + JS redirect), which is why Google
-          # reports /login and /register as "Discovered - currently not indexed".
-          # Serve real 200 responses for the routes in the sitemap by copying the
-          # built index.html into each route's own directory, with a self-referencing
-          # canonical/og:url (not the homepage's) so Google indexes them as distinct
-          # pages instead of canonicalizing them back to "/".
-          for route in login register policy agreement offer; do
+          # GitHub Pages has no server-side rewrite: paths other than "/" fall
+          # through to 404.html. Copy index.html into each public route folder so
+          # users get HTTP 200. Legal + auth shells get noindex + unique titles and
+          # the landing prerender stripped so they cannot outrank the homepage.
+          strip_prerender() {
+            # Empty #web-root so crawlers without JS do not see homepage HTML.
+            # Built assets live in <head>; web-root is followed by </body>.
+            node -e '
+              const fs = require("fs");
+              const p = process.argv[1];
+              let h = fs.readFileSync(p, "utf8");
+              h = h.replace(
+                /<div id="web-root">[\s\S]*<\/div>(\s*<\/body>)/,
+                "<div id=\"web-root\"></div>$1"
+              );
+              fs.writeFileSync(p, h);
+            ' "$1"
+          }
+
+          write_shell() {
+            local route="$1" title="$2" robots="$3"
             mkdir -p "dist/${route}"
+            # Use # as sed delimiter — titles contain "|" (e.g. "Sign In | Brand").
             sed \
-              -e "s|<link rel=\"canonical\" href=\"${SITE_URL}/\" />|<link rel=\"canonical\" href=\"${SITE_URL}/${route}\" />|" \
-              -e "s|<meta property=\"og:url\" content=\"${SITE_URL}/\" />|<meta property=\"og:url\" content=\"${SITE_URL}/${route}\" />|" \
+              -e "s#<meta name=\"robots\" content=\"index, follow\" />#<meta name=\"robots\" content=\"${robots}\" />#" \
+              -e "s#<link rel=\"canonical\" href=\"${SITE_URL}/\" />#<link rel=\"canonical\" href=\"${SITE_URL}/${route}/\" />#" \
+              -e "s#<meta property=\"og:url\" content=\"${SITE_URL}/\" />#<meta property=\"og:url\" content=\"${SITE_URL}/${route}/\" />#" \
+              -e "s#<title>[^<]*</title>#<title>${title}</title>#" \
+              -e "s#<meta property=\"og:title\" content=\"[^\"]*\" />#<meta property=\"og:title\" content=\"${title}\" />#" \
+              -e "s#<meta name=\"twitter:title\" content=\"[^\"]*\" />#<meta name=\"twitter:title\" content=\"${title}\" />#" \
               dist/index.html > "dist/${route}/index.html"
-          done
+            strip_prerender "dist/${route}/index.html"
+          }
+
+          write_shell login "Sign In | ${BRAND}" "noindex, follow"
+          write_shell register "Create Account | ${BRAND}" "noindex, follow"
+          write_shell policy "Privacy Policy | ${BRAND}" "noindex, follow"
+          write_shell agreement "User Agreement | ${BRAND}" "noindex, follow"
+          write_shell offer "Public Offer | ${BRAND}" "noindex, follow"
 
       - uses: actions/upload-pages-artifact@v3
         with:

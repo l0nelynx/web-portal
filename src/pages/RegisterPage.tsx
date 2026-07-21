@@ -14,6 +14,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
 import BrandLogo from "../components/BrandLogo";
 import { BRAND_NAME } from "../branding";
+import { usePageMeta } from "../seo";
 
 const { Title, Text } = Typography;
 
@@ -31,6 +32,7 @@ export default function RegisterPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  usePageMeta({ title: `${L.reg_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>({
     checked: false, valid: null, data: null, checking: false,
   });

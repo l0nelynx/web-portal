@@ -38,8 +38,11 @@ Post-build steps (only when VITE_SITE_URL is set):
   • sed injects into dist/index.html:
       <link rel="canonical" href="$VITE_SITE_URL/" />
       <meta property="og:url" content="$VITE_SITE_URL/" />
-  • Generates dist/sitemap.xml with /, /register, /login + today's lastmod date
+  • Generates dist/sitemap.xml with **homepage only** (`/`) — auth/legal routes are excluded
   • Appends "Sitemap: $VITE_SITE_URL/sitemap.xml" to dist/robots.txt
+  • Copies route shells under dist/{login,register,policy,agreement,offer}/ with
+    `noindex, follow`, unique titles, and landing prerender stripped (so they cannot
+    outrank the homepage in brand search)
 
 PAGES_CNAME step:
   • If set → writes dist/CNAME (GitHub Pages custom domain)
@@ -147,7 +150,12 @@ After the first deploy with `VITE_SITE_URL` set, submit the sitemap to Google Se
    `public/`, commit and push, then click **Verify**.
 4. **Sitemaps** → add `https://www.domain.com/sitemap.xml`.
 
-The sitemap is regenerated on every CI deploy with the current date as `lastmod`.
+The sitemap lists only the homepage. Auth and legal pages use `noindex, follow` so they
+stay reachable via footer links but do not compete for brand queries.
+
+If `/agreement` or `/offer` already appear in Search results, after deploy use
+**Search Console → Removals → Temporary removal** (or wait for the next crawl to honour
+`noindex`) to drop them faster.
 
 ---
 

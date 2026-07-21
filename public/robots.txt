@@ -1,11 +1,7 @@
 User-agent: *
 Allow: /
-Allow: /login
-Allow: /register
-Allow: /policy
-Allow: /agreement
-Allow: /offer
 Disallow: /dashboard
 Disallow: /verify-email
 
-# Sitemap URL is appended by CI (deploy.yml)
+# Legal and auth pages stay crawlable (so Google can see noindex) but are not
+# listed in the sitemap. Sitemap URL is appended by CI (deploy.yml).

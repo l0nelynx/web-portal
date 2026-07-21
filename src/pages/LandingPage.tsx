@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Col, Grid, Modal, Row, Typography } from "antd";
+import { Button, Col, Grid, Modal, Row, Tooltip, Typography } from "antd";
 import {
   TeamOutlined,
   GlobalOutlined,
@@ -7,12 +7,18 @@ import {
   GithubOutlined,
   CheckOutlined,
   CloseOutlined,
+  AndroidOutlined,
+  AppleOutlined,
+  WindowsOutlined,
+  DesktopOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo";
 import PartnershipForm from "../components/PartnershipForm";
 import { BRAND_NAME, BOT_URL } from "../branding";
 import { useLang } from "../locale";
+import { HOME_TITLE, usePageMeta } from "../seo";
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -21,40 +27,101 @@ const STATS_VALUES = ["99.9%", "50+", "10 Gbps", "24/7"];
 const CLASH_PROTOCOLS = ["VLESS", "VMess", "Trojan", "Shadowsocks", "Hysteria 2", "WireGuard"];
 const CLASH_RELEASES_URL = "https://github.com/l0nelynx/CheezyClash/releases";
 const CHEEZY_RELEASES_URL = "https://github.com/l0nelynx/CheezyVPN-Releases/releases";
+const CLASH_DOCS_URL = "https://l0nelynx.github.io/CheezyClash-docs/";
+
+type AppId = "clash" | "cheezy";
+type DownloadPlatform = "android" | "windows" | "macos" | "linux";
+
+const APP_REPOS: Record<AppId, string> = {
+  clash: "CheezyClash",
+  cheezy: "CheezyVPN-Releases",
+};
+
+const APP_PREFIX: Record<AppId, string> = {
+  clash: "CheezyClash",
+  cheezy: "CheezyVPN",
+};
 
 // GitHub's /releases/latest/download/<asset> URL always resolves to the current
 // release's asset with that exact name — no version number to keep in sync here.
-const APK_BUILDS: Record<"clash" | "cheezy", { repo: string; variant: string }> = {
-  clash: { repo: "CheezyClash", variant: "open" },
-  cheezy: { repo: "CheezyVPN-Releases", variant: "proprietary" },
+const APK_VARIANT: Record<AppId, string> = {
+  clash: "open",
+  cheezy: "proprietary",
 };
 
-function apkUrl(app: "clash" | "cheezy", arch: string): string {
-  const { repo, variant } = APK_BUILDS[app];
-  return `https://github.com/l0nelynx/${repo}/releases/latest/download/app-direct-${variant}-${arch}-release.apk`;
+function releaseAssetUrl(app: AppId, filename: string): string {
+  return `https://github.com/l0nelynx/${APP_REPOS[app]}/releases/latest/download/${filename}`;
 }
 
-// Illustrative device frame — no real screenshots yet, drawn directly in CSS so it
-// always matches the brand theme and never goes stale as either app's UI changes.
-function PhoneMockup({ variant }: { variant: "clash" | "cheezy" }) {
+function apkUrl(app: AppId, arch: string): string {
+  return releaseAssetUrl(app, `app-direct-${APK_VARIANT[app]}-${arch}-release.apk`);
+}
+
+function defaultPlatform(): DownloadPlatform {
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) return "android";
+  if (/Win/i.test(ua)) return "windows";
+  if (/Mac/i.test(ua)) return "macos";
+  if (/Linux/i.test(ua)) return "linux";
+  return "windows";
+}
+
+function desktopDownloads(app: AppId, L: ReturnType<typeof useLang>["L"]) {
+  const p = APP_PREFIX[app];
+  return {
+    windows: [
+      { label: L.download_win_installer, url: releaseAssetUrl(app, `${p}-win-x64.exe`) },
+      { label: L.download_win_portable, url: releaseAssetUrl(app, `${p}-win-x64.zip`) },
+    ],
+    macos: [
+      { label: L.download_mac_arm64, url: releaseAssetUrl(app, `${p}-mac-arm64.dmg`) },
+      { label: L.download_mac_x64, url: releaseAssetUrl(app, `${p}-mac-x64.dmg`) },
+    ],
+    linux: [
+      { label: L.download_linux_appimage, url: releaseAssetUrl(app, `${p}-linux-x86_64.AppImage`) },
+      { label: L.download_linux_deb, url: releaseAssetUrl(app, `${p}-linux-amd64.deb`) },
+    ],
+  };
+}
+
+const PLATFORM_BADGES: { key: DownloadPlatform; labelKey: "platform_windows" | "platform_macos" | "platform_linux" | "platform_android"; icon: React.ReactNode }[] = [
+  { key: "windows", labelKey: "platform_windows", icon: <WindowsOutlined /> },
+  { key: "macos", labelKey: "platform_macos", icon: <AppleOutlined /> },
+  { key: "linux", labelKey: "platform_linux", icon: <DesktopOutlined /> },
+  { key: "android", labelKey: "platform_android", icon: <AndroidOutlined /> },
+];
+
+function PlatformBadges({ L }: { L: ReturnType<typeof useLang>["L"] }) {
   return (
-    <div
-      style={{
-        width: 96,
-        height: 176,
-        borderRadius: 18,
-        border: "2px solid rgba(255,255,255,0.12)",
-        background: "linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))",
-        padding: 8,
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-        boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
-      }}
-    >
-      <div style={{ width: 24, height: 4, borderRadius: 4, background: "rgba(255,255,255,0.15)", margin: "0 auto 4px" }} />
-      {variant === "clash" ? (
-        [1, 2, 3].map((i) => (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+      {PLATFORM_BADGES.map(({ key, labelKey, icon }) => (
+        <span
+          key={key}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontSize: 12,
+            padding: "4px 10px",
+            borderRadius: 20,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "rgba(255,255,255,0.65)",
+          }}
+        >
+          {icon}
+          {L[labelKey]}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ScreenContent({ variant }: { variant: AppId }) {
+  if (variant === "clash") {
+    return (
+      <>
+        {[1, 2, 3].map((i) => (
           <div
             key={i}
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 6px", borderRadius: 6, background: "rgba(255,255,255,0.05)" }}
@@ -62,21 +129,96 @@ function PhoneMockup({ variant }: { variant: "clash" | "cheezy" }) {
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: i === 1 ? "#06D6A0" : "rgba(255,255,255,0.25)" }} />
             <div style={{ flex: 1, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
           </div>
-        ))
-      ) : (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-              boxShadow: "0 0 0 6px rgba(124,156,255,0.15)",
-            }}
-          />
-          <div style={{ width: 40, height: 4, borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
+        ))}
+      </>
+    );
+  }
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+      <div
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
+          boxShadow: "0 0 0 6px rgba(124,156,255,0.15)",
+        }}
+      />
+      <div style={{ width: 40, height: 4, borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
+    </div>
+  );
+}
+
+function DeviceMockup({ variant }: { variant: AppId }) {
+  return (
+    <div style={{ position: "relative", width: 180, height: 130, marginBottom: 8 }}>
+      {/* Laptop */}
+      <div style={{ position: "absolute", left: 0, top: 0 }}>
+        {/* Screen */}
+        <div
+          style={{
+            width: 140,
+            height: 90,
+            borderRadius: "8px 8px 0 0",
+            border: "2px solid rgba(255,255,255,0.12)",
+            borderBottom: "none",
+            background: "linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))",
+            padding: 8,
+            display: "flex",
+            flexDirection: "column",
+            gap: 5,
+            boxSizing: "border-box",
+          }}
+        >
+          <ScreenContent variant={variant} />
         </div>
-      )}
+        {/* Base */}
+        <div
+          style={{
+            width: 156,
+            height: 8,
+            marginLeft: -8,
+            borderRadius: "0 0 4px 4px",
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderTop: "1px solid rgba(255,255,255,0.15)",
+          }}
+        />
+      </div>
+
+      {/* Phone (overlapping bottom-right) */}
+      <div
+        style={{
+          position: "absolute",
+          right: 0,
+          bottom: 0,
+          width: 52,
+          height: 92,
+          borderRadius: 10,
+          border: "2px solid rgba(255,255,255,0.12)",
+          background: "linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
+          padding: 5,
+          display: "flex",
+          flexDirection: "column",
+          gap: 4,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ width: 14, height: 3, borderRadius: 3, background: "rgba(255,255,255,0.15)", margin: "0 auto 2px" }} />
+        {variant === "clash" ? (
+          [1, 2].map((i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 3, padding: "3px 4px", borderRadius: 4, background: "rgba(255,255,255,0.05)" }}>
+              <div style={{ width: 4, height: 4, borderRadius: "50%", background: i === 1 ? "#06D6A0" : "rgba(255,255,255,0.25)" }} />
+              <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.15)" }} />
+            </div>
+          ))
+        ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg, #7C9CFF, #B47CFF)" }} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -86,7 +228,9 @@ export default function LandingPage() {
   const { L, toggle } = useLang();
   const screens = useBreakpoint();
   const isMobile = !screens.sm;
-  const [archApp, setArchApp] = useState<"clash" | "cheezy" | null>(null);
+  const [downloadApp, setDownloadApp] = useState<AppId | null>(null);
+  const [downloadPlatform, setDownloadPlatform] = useState<DownloadPlatform>(() => defaultPlatform());
+  usePageMeta({ title: HOME_TITLE, robots: "index, follow" });
 
   const px = isMobile ? "16px" : "48px";
 
@@ -108,13 +252,43 @@ export default function LandingPage() {
     },
   ];
 
-  const COMPARE_ROWS = [
+  const COMPARE_ROWS: { label: string; clash: boolean | string; cheezy: boolean | string }[] = [
+    { label: L.apps_row_multiplatform, clash: true, cheezy: true },
     { label: L.apps_row_import, clash: true, cheezy: false },
     { label: L.apps_row_thirdparty, clash: true, cheezy: false },
     { label: L.apps_row_trial, clash: false, cheezy: true },
     { label: L.apps_row_manage, clash: false, cheezy: true },
-    { label: L.apps_row_opensource, clash: true, cheezy: false },
+    { label: L.apps_row_opensource, clash: true, cheezy: L.apps_opensource_footnote },
   ];
+
+  const openDownload = (app: AppId) => {
+    setDownloadPlatform(defaultPlatform());
+    setDownloadApp(app);
+  };
+
+  const desktopOptions = downloadApp ? desktopDownloads(downloadApp, L) : null;
+
+  const downloadOptionStyle = (highlight?: boolean): React.CSSProperties => ({
+    display: "flex",
+    flexDirection: "column",
+    gap: 4,
+    padding: "14px 16px",
+    borderRadius: 12,
+    cursor: "pointer",
+    border: highlight ? "1px solid rgba(6,214,160,0.35)" : "1px solid rgba(255,255,255,0.09)",
+    background: highlight ? "rgba(6,214,160,0.06)" : "rgba(255,255,255,0.03)",
+    transition: "background 0.15s",
+  });
+
+  const onDownloadOptionHover = (e: React.MouseEvent<HTMLDivElement>, highlight?: boolean, enter?: boolean) => {
+    (e.currentTarget as HTMLDivElement).style.background = enter
+      ? highlight
+        ? "rgba(6,214,160,0.12)"
+        : "rgba(255,255,255,0.06)"
+      : highlight
+        ? "rgba(6,214,160,0.06)"
+        : "rgba(255,255,255,0.03)";
+  };
 
   const appCardStyle: React.CSSProperties = {
     background: "rgba(255,255,255,0.04)",
@@ -424,7 +598,7 @@ export default function LandingPage() {
         <Row gutter={[24, 24]} align="stretch">
           <Col xs={24} md={12}>
             <div style={appCardStyle}>
-              <PhoneMockup variant="clash" />
+              <DeviceMockup variant="clash" />
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, marginBottom: 8 }}>
                 <GithubOutlined style={{ fontSize: 18, color: "rgba(255,255,255,0.5)" }} />
                 <Text style={{ fontSize: 12, letterSpacing: "0.5px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>
@@ -434,9 +608,13 @@ export default function LandingPage() {
               <Title level={3} style={{ color: "#fff", fontSize: 22, marginBottom: 10 }}>
                 {L.apps_clash_title}
               </Title>
-              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
+              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, marginBottom: 12 }}>
                 {L.apps_clash_desc}
               </Paragraph>
+              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8 }}>
+                {L.apps_platforms_label}
+              </Text>
+              <PlatformBadges L={L} />
               <div style={{ marginTop: "auto" }}>
                 <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8 }}>
                   {L.apps_clash_protocols_label}
@@ -458,21 +636,39 @@ export default function LandingPage() {
                     </span>
                   ))}
                 </div>
-                <Button
-                  size="large"
-                  style={{
-                    marginTop: 20,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.16)",
-                    color: "rgba(255,255,255,0.85)",
-                    height: 46,
-                    padding: "0 24px",
-                    borderRadius: 12,
-                  }}
-                  onClick={() => setArchApp("clash")}
-                >
-                  {L.apps_clash_cta}
-                </Button>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 20 }}>
+                  <Button
+                    size="large"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.16)",
+                      color: "rgba(255,255,255,0.85)",
+                      height: 46,
+                      padding: "0 24px",
+                      borderRadius: 12,
+                    }}
+                    onClick={() => openDownload("clash")}
+                  >
+                    {L.apps_clash_cta}
+                  </Button>
+                  <Button
+                    size="large"
+                    icon={<BookOutlined />}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      color: "rgba(255,255,255,0.65)",
+                      height: 46,
+                      padding: "0 20px",
+                      borderRadius: 12,
+                    }}
+                    href={CLASH_DOCS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {L.apps_clash_docs}
+                  </Button>
+                </div>
               </div>
             </div>
           </Col>
@@ -499,7 +695,7 @@ export default function LandingPage() {
               >
                 <Text style={{ fontSize: 11, color: "#06D6A0", fontWeight: 600 }}>{L.apps_trial_badge}</Text>
               </div>
-              <PhoneMockup variant="cheezy" />
+              <DeviceMockup variant="cheezy" />
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, marginBottom: 8 }}>
                 <MobileOutlined style={{ fontSize: 18, color: "#7C9CFF" }} />
                 <Text style={{ fontSize: 12, letterSpacing: "0.5px", color: "#7C9CFF", textTransform: "uppercase" }}>
@@ -509,9 +705,13 @@ export default function LandingPage() {
               <Title level={3} style={{ color: "#fff", fontSize: 22, marginBottom: 10 }}>
                 {L.apps_cheezy_title}
               </Title>
-              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
+              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, marginBottom: 12 }}>
                 {L.apps_cheezy_desc}
               </Paragraph>
+              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8 }}>
+                {L.apps_platforms_label}
+              </Text>
+              <PlatformBadges L={L} />
               <Button
                 type="primary"
                 size="large"
@@ -525,7 +725,7 @@ export default function LandingPage() {
                   fontWeight: 600,
                   borderRadius: 12,
                 }}
-                onClick={() => setArchApp("cheezy")}
+                onClick={() => openDownload("cheezy")}
               >
                 {L.apps_cheezy_cta}
               </Button>
@@ -574,15 +774,19 @@ export default function LandingPage() {
             >
               <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: isMobile ? 13 : 14 }}>{row.label}</Text>
               <div style={{ textAlign: "center" }}>
-                {row.clash ? (
+                {row.clash === true ? (
                   <CheckOutlined style={{ color: "#06D6A0" }} />
+                ) : row.clash ? (
+                  <Tooltip title={row.clash}><Text style={{ color: "#06D6A0", fontSize: 12, cursor: "help" }}>~*</Text></Tooltip>
                 ) : (
                   <CloseOutlined style={{ color: "rgba(255,255,255,0.25)" }} />
                 )}
               </div>
               <div style={{ textAlign: "center" }}>
-                {row.cheezy ? (
+                {row.cheezy === true ? (
                   <CheckOutlined style={{ color: "#06D6A0" }} />
+                ) : row.cheezy ? (
+                  <Tooltip title={row.cheezy}><Text style={{ color: "#06D6A0", fontSize: 12, cursor: "help" }}>~*</Text></Tooltip>
                 ) : (
                   <CloseOutlined style={{ color: "rgba(255,255,255,0.25)" }} />
                 )}
@@ -756,79 +960,119 @@ export default function LandingPage() {
         </Text>
       </footer>
 
-      {/* ── Architecture picker (download modal) ─────────────────────────── */}
+      {/* ── Download picker modal ────────────────────────────────────────── */}
       <Modal
-        open={archApp !== null}
-        onCancel={() => setArchApp(null)}
+        open={downloadApp !== null}
+        onCancel={() => setDownloadApp(null)}
         footer={null}
-        title={L.arch_modal_title}
+        title={downloadApp === "clash" ? L.apps_clash_title : L.apps_cheezy_title}
         centered
       >
-        <Paragraph style={{ color: "rgba(255,255,255,0.55)", marginBottom: 20 }}>
-          {L.arch_modal_subtitle}
+        <Paragraph style={{ color: "rgba(255,255,255,0.55)", marginBottom: 16 }}>
+          {L.download_modal_subtitle}
         </Paragraph>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {ARCH_OPTIONS.map((opt) => (
-            <div
-              key={opt.key}
-              onClick={() => {
-                if (archApp) window.open(apkUrl(archApp, opt.key), "_blank", "noopener");
-                setArchApp(null);
-              }}
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, marginBottom: 20 }}>
+          {PLATFORM_BADGES.map(({ key, labelKey, icon }) => (
+            <Button
+              key={key}
+              type={downloadPlatform === key ? "primary" : "default"}
+              icon={icon}
+              onClick={() => setDownloadPlatform(key)}
               style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 4,
-                padding: "14px 16px",
-                borderRadius: 12,
-                cursor: "pointer",
-                border: opt.highlight ? "1px solid rgba(6,214,160,0.35)" : "1px solid rgba(255,255,255,0.09)",
-                background: opt.highlight ? "rgba(6,214,160,0.06)" : "rgba(255,255,255,0.03)",
-                transition: "background 0.15s",
+                height: 44,
+                borderRadius: 10,
+                ...(downloadPlatform === key
+                  ? { background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none" }
+                  : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)" }),
               }}
-              onMouseEnter={(e) =>
-                ((e.currentTarget as HTMLDivElement).style.background = opt.highlight
-                  ? "rgba(6,214,160,0.12)"
-                  : "rgba(255,255,255,0.06)")
-              }
-              onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLDivElement).style.background = opt.highlight
-                  ? "rgba(6,214,160,0.06)"
-                  : "rgba(255,255,255,0.03)")
-              }
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {L[labelKey]}
+            </Button>
+          ))}
+        </div>
+
+        {downloadPlatform === "android" ? (
+          <>
+            <Paragraph style={{ color: "rgba(255,255,255,0.55)", marginBottom: 12, fontSize: 13 }}>
+              {L.arch_modal_subtitle}
+            </Paragraph>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {ARCH_OPTIONS.map((opt) => (
+                <div
+                  key={opt.key}
+                  onClick={() => {
+                    if (downloadApp) window.open(apkUrl(downloadApp, opt.key), "_blank", "noopener");
+                    setDownloadApp(null);
+                  }}
+                  style={downloadOptionStyle(opt.highlight)}
+                  onMouseEnter={(e) => onDownloadOptionHover(e, opt.highlight, true)}
+                  onMouseLeave={(e) => onDownloadOptionHover(e, opt.highlight, false)}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Text strong style={{ color: "#fff", fontSize: 15 }}>
+                      {opt.label}
+                    </Text>
+                    {opt.badge && (
+                      <span
+                        style={{
+                          fontSize: 11,
+                          padding: "2px 8px",
+                          borderRadius: 10,
+                          background: "rgba(6,214,160,0.15)",
+                          color: "#06D6A0",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {opt.badge}
+                      </span>
+                    )}
+                  </div>
+                  <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{opt.desc}</Text>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {(desktopOptions?.[downloadPlatform] ?? []).map((opt) => (
+              <div
+                key={opt.url}
+                onClick={() => {
+                  window.open(opt.url, "_blank", "noopener");
+                  setDownloadApp(null);
+                }}
+                style={downloadOptionStyle()}
+                onMouseEnter={(e) => onDownloadOptionHover(e, false, true)}
+                onMouseLeave={(e) => onDownloadOptionHover(e, false, false)}
+              >
                 <Text strong style={{ color: "#fff", fontSize: 15 }}>
                   {opt.label}
                 </Text>
-                {opt.badge && (
-                  <span
-                    style={{
-                      fontSize: 11,
-                      padding: "2px 8px",
-                      borderRadius: 10,
-                      background: "rgba(6,214,160,0.15)",
-                      color: "#06D6A0",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {opt.badge}
-                  </span>
-                )}
               </div>
-              <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{opt.desc}</Text>
-            </div>
-          ))}
-        </div>
-        <div style={{ marginTop: 18, textAlign: "center" }}>
+            ))}
+          </div>
+        )}
+
+        <div style={{ marginTop: 18, display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
           <a
-            href={archApp === "clash" ? CLASH_RELEASES_URL : CHEEZY_RELEASES_URL}
+            href={downloadApp === "clash" ? CLASH_RELEASES_URL : CHEEZY_RELEASES_URL}
             target="_blank"
             rel="noopener noreferrer"
             style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}
           >
             {L.arch_modal_all_releases}
           </a>
+          {downloadApp === "clash" && (
+            <a
+              href={CLASH_DOCS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}
+            >
+              {L.apps_clash_docs}
+            </a>
+          )}
         </div>
       </Modal>
     </div>

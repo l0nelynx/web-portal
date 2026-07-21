@@ -71,6 +71,8 @@ export interface Translations {
   apps_clash_desc: string;
   apps_clash_protocols_label: string;
   apps_clash_cta: string;
+  apps_clash_docs: string;
+  apps_platforms_label: string;
   apps_cheezy_badge: string;
   apps_cheezy_title: string;
   apps_cheezy_desc: string;
@@ -82,8 +84,20 @@ export interface Translations {
   apps_row_trial: string;
   apps_row_manage: string;
   apps_row_opensource: string;
-  // Landing — architecture picker modal
-  arch_modal_title: string;
+  apps_opensource_footnote: string;
+  apps_row_multiplatform: string;
+  // Landing — download picker modal
+  download_modal_subtitle: string;
+  platform_android: string;
+  platform_windows: string;
+  platform_macos: string;
+  platform_linux: string;
+  download_win_installer: string;
+  download_win_portable: string;
+  download_mac_arm64: string;
+  download_mac_x64: string;
+  download_linux_appimage: string;
+  download_linux_deb: string;
   arch_modal_subtitle: string;
   arch_arm64_label: string;
   arch_arm64_badge: string;
@@ -429,24 +443,26 @@ const en: Translations = {
   feat_compliance_title: "Strong Encryption",
   feat_compliance_desc: "Modern encryption protocols protect every connection end to end.",
   feat_deploy_title: "Instant Setup",
-  feat_deploy_desc: "Connect in minutes. Cross-platform clients for Windows, macOS, Linux, iOS and Android.",
+  feat_deploy_desc: "Connect in minutes. Native clients for Windows, macOS, Linux and Android.",
   feat_infra_title: "Geographically Distributed Infrastructure",
   feat_infra_desc: "Servers spread across multiple regions so you connect to the nearest, fastest node — wherever you are.",
   feat_audience_title: "For Individuals and Companies",
   feat_audience_desc: "We provide VPN access both to individual users and to companies that need secure connectivity for their teams.",
   feat_apps_title: "Two Apps Built by Us",
-  feat_apps_desc: "An open-source universal client for any provider, and a dedicated app tailored to CheezyVPN. See the comparison below.",
+  feat_apps_desc: "Two cross-platform apps — an open-source universal client and a dedicated CheezyVPN app for desktop and mobile. See the comparison below.",
   // Landing — apps comparison section
   apps_title: "Choose Your App",
-  apps_subtitle: "One is a universal open-source client. The other is built specifically for CheezyVPN — pick what fits you.",
+  apps_subtitle: "Both run on Windows, macOS, Linux and Android. One is a universal open-source client; the other is built specifically for CheezyVPN.",
   apps_clash_badge: "Open Source",
   apps_clash_title: "CheezyClash",
-  apps_clash_desc: "An Android proxy client supporting VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, WireGuard and more. Rule-based routing, Reality fingerprinting, built natively in Kotlin — works with any compatible service, not just ours.",
+  apps_clash_desc: "Cross-platform Mihomo (Clash.Meta) client for Windows, macOS, Linux and Android. Supports VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, WireGuard and more — rule-based routing, Proxy/TUN modes, works with any compatible service.",
   apps_clash_protocols_label: "Supported protocols",
   apps_clash_cta: "Download",
+  apps_clash_docs: "Documentation",
+  apps_platforms_label: "Available on",
   apps_cheezy_badge: "Made for CheezyVPN",
   apps_cheezy_title: "CheezyVPN",
-  apps_cheezy_desc: "Our own app, built specifically for this service. No configs to import — register in the app and get a free trial instantly, then manage your subscription right from your phone.",
+  apps_cheezy_desc: "Our dedicated app for Windows, macOS, Linux and Android. No configs to import — register in the app, get a free 14-day trial instantly, and manage your subscription from any device.",
   apps_cheezy_cta: "Start free — 14 days",
   apps_trial_badge: "14 days free",
   apps_compare_feature: "Feature",
@@ -455,9 +471,21 @@ const en: Translations = {
   apps_row_trial: "Free trial on sign-up",
   apps_row_manage: "Manage subscription in-app",
   apps_row_opensource: "Open source",
-  // Landing — architecture picker modal
-  arch_modal_title: "Choose your device",
-  arch_modal_subtitle: "Pick the version that matches your phone's processor. Not sure? Use Universal.",
+  apps_opensource_footnote: "Built on the open-source CheezyClash codebase",
+  apps_row_multiplatform: "Windows, macOS, Linux & Android",
+  // Landing — download picker modal
+  download_modal_subtitle: "Choose your platform and version.",
+  platform_android: "Android",
+  platform_windows: "Windows",
+  platform_macos: "macOS",
+  platform_linux: "Linux",
+  download_win_installer: "Installer (.exe)",
+  download_win_portable: "Portable (.zip)",
+  download_mac_arm64: "Apple Silicon (.dmg)",
+  download_mac_x64: "Intel Mac (.dmg)",
+  download_linux_appimage: "AppImage (x64)",
+  download_linux_deb: "Debian package (.deb)",
+  arch_modal_subtitle: "Pick the APK that matches your phone's processor. Not sure? Use Universal.",
   arch_arm64_label: "ARM64 (arm64-v8a)",
   arch_arm64_badge: "Recommended",
   arch_arm64_desc: "The right choice for almost all Android phones released since 2019.",
@@ -797,24 +825,26 @@ const ru: Translations = {
   feat_compliance_title: "Надёжное шифрование",
   feat_compliance_desc: "Современные протоколы шифрования защищают каждое соединение от начала до конца.",
   feat_deploy_title: "Мгновенная настройка",
-  feat_deploy_desc: "Подключитесь за минуты. Кросс-платформенные клиенты для Windows, macOS, Linux, iOS и Android.",
+  feat_deploy_desc: "Подключитесь за минуты. Нативные клиенты для Windows, macOS, Linux и Android.",
   feat_infra_title: "Географически распределённая инфраструктура",
   feat_infra_desc: "Серверы в разных регионах — подключение к ближайшему и самому быстрому узлу, где бы вы ни находились.",
   feat_audience_title: "Частным лицам и компаниям",
   feat_audience_desc: "Предоставляем VPN-доступ как частным пользователям, так и компаниям, которым нужна защищённая связь для команды.",
   feat_apps_title: "Два собственных приложения",
-  feat_apps_desc: "Open-source универсальный клиент для любого провайдера и отдельное приложение, заточенное под CheezyVPN. Сравнение — ниже.",
+  feat_apps_desc: "Два кросс-платформенных приложения — open-source универсальный клиент и отдельное приложение CheezyVPN для компьютера и телефона. Сравнение — ниже.",
   // Landing — apps comparison section
   apps_title: "Выберите приложение",
-  apps_subtitle: "Одно — универсальный open-source клиент. Другое создано именно для CheezyVPN — выбирайте то, что подходит вам.",
+  apps_subtitle: "Оба работают на Windows, macOS, Linux и Android. Одно — универсальный open-source клиент, другое создано именно для CheezyVPN.",
   apps_clash_badge: "Open Source",
   apps_clash_title: "CheezyClash",
-  apps_clash_desc: "Прокси-клиент для Android с поддержкой VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, WireGuard и других протоколов. Rule-based маршрутизация, Reality fingerprinting, нативная разработка на Kotlin — работает с любым совместимым сервисом, не только с нашим.",
+  apps_clash_desc: "Кросс-платформенный Mihomo (Clash.Meta) клиент для Windows, macOS, Linux и Android. Поддержка VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, WireGuard и других протоколов — rule-based маршрутизация, режимы Proxy/TUN, работает с любым совместимым сервисом.",
   apps_clash_protocols_label: "Поддерживаемые протоколы",
   apps_clash_cta: "Скачать",
+  apps_clash_docs: "Документация",
+  apps_platforms_label: "Доступно на",
   apps_cheezy_badge: "Создано для CheezyVPN",
   apps_cheezy_title: "CheezyVPN",
-  apps_cheezy_desc: "Наше собственное приложение, заточенное именно под этот сервис. Не нужно импортировать конфигурации — зарегистрируйтесь в приложении и сразу получите бесплатный пробный доступ, а подпиской можно управлять прямо с телефона.",
+  apps_cheezy_desc: "Наше приложение для Windows, macOS, Linux и Android. Не нужно импортировать конфигурации — зарегистрируйтесь в приложении, сразу получите 14 дней бесплатно и управляйте подпиской с любого устройства.",
   apps_cheezy_cta: "Начать бесплатно — 14 дней",
   apps_trial_badge: "14 дней бесплатно",
   apps_compare_feature: "Функция",
@@ -823,9 +853,21 @@ const ru: Translations = {
   apps_row_trial: "Бесплатный пробный период при регистрации",
   apps_row_manage: "Управление подпиской в приложении",
   apps_row_opensource: "Открытый исходный код",
-  // Landing — architecture picker modal
-  arch_modal_title: "Выберите ваше устройство",
-  arch_modal_subtitle: "Выберите версию под процессор вашего телефона. Не уверены — используйте Universal.",
+  apps_opensource_footnote: "Основано на open-source кодовой базе CheezyClash",
+  apps_row_multiplatform: "Windows, macOS, Linux и Android",
+  // Landing — download picker modal
+  download_modal_subtitle: "Выберите платформу и версию.",
+  platform_android: "Android",
+  platform_windows: "Windows",
+  platform_macos: "macOS",
+  platform_linux: "Linux",
+  download_win_installer: "Установщик (.exe)",
+  download_win_portable: "Портативная (.zip)",
+  download_mac_arm64: "Apple Silicon (.dmg)",
+  download_mac_x64: "Intel Mac (.dmg)",
+  download_linux_appimage: "AppImage (x64)",
+  download_linux_deb: "Пакет Debian (.deb)",
+  arch_modal_subtitle: "Выберите APK под процессор телефона. Не уверены — используйте Universal.",
   arch_arm64_label: "ARM64 (arm64-v8a)",
   arch_arm64_badge: "Рекомендуется",
   arch_arm64_desc: "Подходит почти всем Android-телефонам, выпущенным начиная примерно с 2019 года.",

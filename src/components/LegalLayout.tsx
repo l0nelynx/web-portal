@@ -4,6 +4,7 @@ import BrandLogo from "./BrandLogo";
 import { BRAND_NAME, BOT_URL } from "../branding";
 import { useLang } from "../locale";
 import { LegalDoc } from "../pages/legal/content";
+import { usePageMeta } from "../seo";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -13,6 +14,8 @@ interface Props {
 
 export default function LegalLayout({ doc }: Props) {
   const { L, toggle } = useLang();
+  // Keep legal docs out of brand SERP competition; users still reach them via footer links.
+  usePageMeta({ title: `${doc.title} | ${BRAND_NAME}`, robots: "noindex, follow" });
 
   return (
     <div style={{ minHeight: "100vh", background: "#0B0B14", color: "rgba(255,255,255,0.9)" }}>
