@@ -406,7 +406,7 @@ export interface Translations {
 }
 
 const en: Translations = {
-  lang_toggle: "RU",
+  lang_toggle: "EN",
   menu_subscription: "Subscription",
   menu_buy: "Buy",
   menu_devices: "Devices",
@@ -788,7 +788,7 @@ const en: Translations = {
 };
 
 const ru: Translations = {
-  lang_toggle: "EN",
+  lang_toggle: "RU",
   menu_subscription: "Подписка",
   menu_buy: "Купить",
   menu_devices: "Устройства",

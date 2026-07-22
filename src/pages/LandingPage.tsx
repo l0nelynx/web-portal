@@ -1,28 +1,28 @@
+import type { ReactNode } from "react";
 import { useState } from "react";
-import { Button, Col, Grid, Modal, Row, Tooltip, Typography } from "antd";
 import {
-  TeamOutlined,
-  GlobalOutlined,
-  MobileOutlined,
-  GithubOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  AndroidOutlined,
-  AppleOutlined,
-  WindowsOutlined,
-  DesktopOutlined,
-  BookOutlined,
-  QuestionCircleOutlined,
-} from "@ant-design/icons";
-import { Link, useNavigate } from "react-router-dom";
+  Users,
+  Globe,
+  Smartphone,
+  Github,
+  Check,
+  X,
+  Apple,
+  Laptop,
+  Terminal,
+  BookOpen,
+  HelpCircle,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import BrandLogo from "../components/BrandLogo";
 import PartnershipForm from "../components/PartnershipForm";
 import { BRAND_NAME, BOT_URL } from "../branding";
 import { useLang } from "../locale";
 import { HOME_TITLE, usePageMeta } from "../seo";
-
-const { Title, Paragraph, Text } = Typography;
-const { useBreakpoint } = Grid;
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 const STATS_VALUES = ["99.9%", "50+", "10 Gbps", "24/7"];
 const CLASH_PROTOCOLS = ["VLESS", "VMess", "Trojan", "Shadowsocks", "Hysteria 2", "WireGuard"];
@@ -85,30 +85,20 @@ function desktopDownloads(app: AppId, L: ReturnType<typeof useLang>["L"]) {
   };
 }
 
-const PLATFORM_BADGES: { key: DownloadPlatform; labelKey: "platform_windows" | "platform_macos" | "platform_linux" | "platform_android"; icon: React.ReactNode }[] = [
-  { key: "windows", labelKey: "platform_windows", icon: <WindowsOutlined /> },
-  { key: "macos", labelKey: "platform_macos", icon: <AppleOutlined /> },
-  { key: "linux", labelKey: "platform_linux", icon: <DesktopOutlined /> },
-  { key: "android", labelKey: "platform_android", icon: <AndroidOutlined /> },
+const PLATFORM_BADGES: { key: DownloadPlatform; labelKey: "platform_windows" | "platform_macos" | "platform_linux" | "platform_android"; icon: ReactNode }[] = [
+  { key: "windows", labelKey: "platform_windows", icon: <Laptop size={14} /> },
+  { key: "macos", labelKey: "platform_macos", icon: <Apple size={14} /> },
+  { key: "linux", labelKey: "platform_linux", icon: <Terminal size={14} /> },
+  { key: "android", labelKey: "platform_android", icon: <Smartphone size={14} /> },
 ];
 
 function PlatformBadges({ L }: { L: ReturnType<typeof useLang>["L"] }) {
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+    <div className="mb-4 flex flex-wrap gap-1.5">
       {PLATFORM_BADGES.map(({ key, labelKey, icon }) => (
         <span
           key={key}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 5,
-            fontSize: 12,
-            padding: "4px 10px",
-            borderRadius: 20,
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "rgba(255,255,255,0.65)",
-          }}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground"
         >
           {icon}
           {L[labelKey]}
@@ -123,100 +113,48 @@ function ScreenContent({ variant }: { variant: AppId }) {
     return (
       <>
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 6px", borderRadius: 6, background: "rgba(255,255,255,0.05)" }}
-          >
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: i === 1 ? "#06D6A0" : "rgba(255,255,255,0.25)" }} />
-            <div style={{ flex: 1, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
+          <div key={i} className="flex items-center gap-1.5 rounded-md bg-muted/60 px-1.5 py-1">
+            <div className={`h-1.5 w-1.5 rounded-full ${i === 1 ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
+            <div className="h-[5px] flex-1 rounded-sm bg-foreground/15" />
           </div>
         ))}
       </>
     );
   }
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-      <div
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: "50%",
-          background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-          boxShadow: "0 0 0 6px rgba(124,156,255,0.15)",
-        }}
-      />
-      <div style={{ width: 40, height: 4, borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
+    <div className="flex flex-1 flex-col items-center justify-center gap-2">
+      <div className="h-11 w-11 rounded-full bg-primary/90 ring-[6px] ring-primary/15" />
+      <div className="h-1 w-10 rounded-sm bg-foreground/15" />
     </div>
   );
 }
 
 function DeviceMockup({ variant }: { variant: AppId }) {
   return (
-    <div style={{ position: "relative", width: 180, height: 130, marginBottom: 8 }}>
+    <div className="relative mb-2 h-[130px] w-[180px]">
       {/* Laptop */}
-      <div style={{ position: "absolute", left: 0, top: 0 }}>
+      <div className="absolute left-0 top-0">
         {/* Screen */}
-        <div
-          style={{
-            width: 140,
-            height: 90,
-            borderRadius: "8px 8px 0 0",
-            border: "2px solid rgba(255,255,255,0.12)",
-            borderBottom: "none",
-            background: "linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))",
-            padding: 8,
-            display: "flex",
-            flexDirection: "column",
-            gap: 5,
-            boxSizing: "border-box",
-          }}
-        >
+        <div className="box-border flex w-[140px] flex-col gap-1.5 rounded-t-lg border border-b-0 border-border/70 bg-muted/10 p-2">
           <ScreenContent variant={variant} />
         </div>
         {/* Base */}
-        <div
-          style={{
-            width: 156,
-            height: 8,
-            marginLeft: -8,
-            borderRadius: "0 0 4px 4px",
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderTop: "1px solid rgba(255,255,255,0.15)",
-          }}
-        />
+        <div className="-ml-2 h-2 w-[156px] rounded-b-md border border-t-border/80 border-border/60 bg-muted/30" />
       </div>
 
       {/* Phone (overlapping bottom-right) */}
-      <div
-        style={{
-          position: "absolute",
-          right: 0,
-          bottom: 0,
-          width: 52,
-          height: 92,
-          borderRadius: 10,
-          border: "2px solid rgba(255,255,255,0.12)",
-          background: "linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
-          padding: 5,
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ width: 14, height: 3, borderRadius: 3, background: "rgba(255,255,255,0.15)", margin: "0 auto 2px" }} />
+      <div className="absolute bottom-0 right-0 box-border flex h-[92px] w-[52px] flex-col gap-1 rounded-[10px] border border-border/70 bg-muted/10 p-1.5 shadow-lg">
+        <div className="mx-auto mb-0.5 h-[3px] w-3.5 rounded-sm bg-foreground/15" />
         {variant === "clash" ? (
           [1, 2].map((i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 3, padding: "3px 4px", borderRadius: 4, background: "rgba(255,255,255,0.05)" }}>
-              <div style={{ width: 4, height: 4, borderRadius: "50%", background: i === 1 ? "#06D6A0" : "rgba(255,255,255,0.25)" }} />
-              <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.15)" }} />
+            <div key={i} className="flex items-center gap-1 rounded bg-muted/60 px-1 py-0.5">
+              <div className={`h-1 w-1 rounded-full ${i === 1 ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
+              <div className="h-[3px] flex-1 rounded-sm bg-foreground/15" />
             </div>
           ))
         ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg, #7C9CFF, #B47CFF)" }} />
+          <div className="flex flex-1 items-center justify-center">
+            <div className="h-5 w-5 rounded-full bg-primary/80" />
           </div>
         )}
       </div>
@@ -227,13 +165,12 @@ function DeviceMockup({ variant }: { variant: AppId }) {
 export default function LandingPage() {
   const navigate = useNavigate();
   const { L, toggle } = useLang();
-  const screens = useBreakpoint();
-  const isMobile = !screens.sm;
+  const isMobile = !useMediaQuery("(min-width: 576px)");
   const [downloadApp, setDownloadApp] = useState<AppId | null>(null);
   const [downloadPlatform, setDownloadPlatform] = useState<DownloadPlatform>(() => defaultPlatform());
   usePageMeta({ title: HOME_TITLE, robots: "index, follow" });
 
-  const px = isMobile ? "16px" : "48px";
+  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   const ARCH_OPTIONS = [
     { key: "arm64-v8a", label: L.arch_arm64_label, badge: L.arch_arm64_badge, desc: L.arch_arm64_desc, highlight: true },
@@ -243,13 +180,13 @@ export default function LandingPage() {
   ];
 
   const FEATURES = [
-    { icon: <GlobalOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_infra_title, desc: L.feat_infra_desc },
-    { icon: <TeamOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />, title: L.feat_audience_title, desc: L.feat_audience_desc },
+    { icon: <Globe size={28} className="text-foreground" />, title: L.feat_infra_title, desc: L.feat_infra_desc },
+    { icon: <Users size={28} className="text-foreground" />, title: L.feat_audience_title, desc: L.feat_audience_desc },
     {
-      icon: <MobileOutlined style={{ fontSize: 28, color: "#7C9CFF" }} />,
+      icon: <Smartphone size={28} className="text-foreground" />,
       title: L.feat_apps_title,
       desc: L.feat_apps_desc,
-      onClick: () => document.getElementById("apps")?.scrollIntoView({ behavior: "smooth" }),
+      onClick: () => scrollTo("apps"),
     },
   ];
 
@@ -269,38 +206,6 @@ export default function LandingPage() {
 
   const desktopOptions = downloadApp ? desktopDownloads(downloadApp, L) : null;
 
-  const downloadOptionStyle = (highlight?: boolean): React.CSSProperties => ({
-    display: "flex",
-    flexDirection: "column",
-    gap: 4,
-    padding: "14px 16px",
-    borderRadius: 12,
-    cursor: "pointer",
-    border: highlight ? "1px solid rgba(6,214,160,0.35)" : "1px solid rgba(255,255,255,0.09)",
-    background: highlight ? "rgba(6,214,160,0.06)" : "rgba(255,255,255,0.03)",
-    transition: "background 0.15s",
-  });
-
-  const onDownloadOptionHover = (e: React.MouseEvent<HTMLElement>, highlight?: boolean, enter?: boolean) => {
-    (e.currentTarget as HTMLElement).style.background = enter
-      ? highlight
-        ? "rgba(6,214,160,0.12)"
-        : "rgba(255,255,255,0.06)"
-      : highlight
-        ? "rgba(6,214,160,0.06)"
-        : "rgba(255,255,255,0.03)";
-  };
-
-  const appCardStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.09)",
-    borderRadius: 20,
-    padding: isMobile ? 24 : 32,
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-  };
-
   const STATS = [
     { value: STATS_VALUES[0], label: L.stat_uptime },
     { value: STATS_VALUES[1], label: L.stat_nodes },
@@ -309,172 +214,71 @@ export default function LandingPage() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", color: "rgba(255,255,255,0.92)", overflowX: "hidden" }}>
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
 
       {/* ── Navigation ─────────────────────────────────────────────────────── */}
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: isMobile ? "14px 16px" : "18px 48px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          background: "rgba(11,11,20,0.75)",
-          backdropFilter: "blur(20px)",
-          width: "100%",
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <nav className="sticky top-0 z-[100] flex w-full items-center justify-between border-b border-border bg-background/95 px-4 py-3.5 backdrop-blur-xl sm:px-12 sm:py-[18px]">
+        <div className="flex items-center gap-2.5">
           <BrandLogo size={isMobile ? 28 : 34} />
-          <Text strong style={{ fontSize: isMobile ? 15 : 18, color: "#fff", letterSpacing: "-0.3px" }}>
+          <span className="text-[15px] font-semibold tracking-tight text-foreground sm:text-lg">
             {BRAND_NAME}
-          </Text>
+          </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
-          {!isMobile && (
-            <Button
-              type="text"
-              style={{ color: "rgba(255,255,255,0.65)" }}
-              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-            >
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="hidden items-center sm:flex">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => scrollTo("features")}>
               {L.nav_solutions}
             </Button>
-          )}
-          {!isMobile && (
-            <Button
-              type="text"
-              style={{ color: "rgba(255,255,255,0.65)" }}
-              onClick={() => document.getElementById("stats")?.scrollIntoView({ behavior: "smooth" })}
-            >
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => scrollTo("stats")}>
               {L.nav_platform}
             </Button>
-          )}
-          {!isMobile && (
-            <Button
-              type="text"
-              style={{ color: "rgba(255,255,255,0.65)" }}
-              onClick={() => document.getElementById("individuals")?.scrollIntoView({ behavior: "smooth" })}
-            >
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => scrollTo("individuals")}>
               {L.nav_individuals}
             </Button>
-          )}
-          {!isMobile && (
-            <Button
-              type="text"
-              style={{ color: "rgba(255,255,255,0.65)" }}
-              onClick={() => document.getElementById("business")?.scrollIntoView({ behavior: "smooth" })}
-            >
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => scrollTo("business")}>
               {L.nav_business}
             </Button>
-          )}
+          </div>
+
           {/* Language toggle */}
           <Button
-            size={isMobile ? "small" : "middle"}
+            variant="outline"
+            size="sm"
+            className="min-w-[34px] text-muted-foreground"
             onClick={toggle}
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.6)",
-              borderRadius: 6,
-              fontSize: 12,
-              minWidth: 34,
-            }}
           >
             {L.lang_toggle}
           </Button>
-          <Button
-            size={isMobile ? "small" : "middle"}
-            style={{
-              background: "rgba(6,214,160,0.15)",
-              borderColor: "rgba(6,214,160,0.4)",
-              color: "#7C9CFF",
-            }}
-            onClick={() => navigate("/login")}
-          >
+          <Button size="sm" onClick={() => navigate("/login")}>
             {isMobile ? L.btn_login : L.header_portal}
           </Button>
         </div>
       </nav>
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section
-        style={{
-          textAlign: "center",
-          padding: isMobile ? "64px 20px 56px" : "120px 24px 100px",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ position: "relative", maxWidth: 800, margin: "0 auto" }}>
-          <div
-            style={{
-              display: "inline-block",
-              padding: "4px 14px",
-              borderRadius: 20,
-              border: "1px solid rgba(6,214,160,0.35)",
-              background: "rgba(6,214,160,0.08)",
-              marginBottom: 24,
-            }}
-          >
-            <Text style={{ fontSize: 13, color: "#7C9CFF", letterSpacing: "0.5px" }}>
+      <section className="relative overflow-hidden px-5 py-16 text-center sm:px-6 sm:py-[100px]">
+        <div className="relative mx-auto max-w-[800px]">
+          <div className="mb-6 inline-block rounded-full border border-border bg-muted/40 px-3.5 py-1">
+            <span className="text-[13px] tracking-wide text-muted-foreground">
               {L.hero_badge}
-            </Text>
+            </span>
           </div>
 
-          <Title
-            level={1}
-            style={{
-              color: "#fff",
-              fontSize: "clamp(28px, 8vw, 64px)",
-              fontWeight: 700,
-              lineHeight: 1.15,
-              margin: "0 0 20px",
-              letterSpacing: "-1px",
-            }}
-          >
+          <h1 className="mb-5 text-[28px] font-bold leading-[1.15] tracking-tight text-foreground sm:text-6xl">
             {L.hero_title_1}
             <br />
-            <span
-              style={{
-                background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              {L.hero_title_2}
-            </span>
-          </Title>
+            <span className="text-foreground/90">{L.hero_title_2}</span>
+          </h1>
 
-          <Paragraph
-            style={{
-              fontSize: isMobile ? 16 : 18,
-              color: "rgba(255,255,255,0.6)",
-              maxWidth: 560,
-              margin: "0 auto 40px",
-              lineHeight: 1.7,
-            }}
-          >
+          <p className="mx-auto mb-10 max-w-[560px] text-base leading-[1.7] text-muted-foreground sm:text-lg">
             {L.hero_desc}
-          </Paragraph>
+          </p>
 
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="flex flex-wrap justify-center gap-3">
             <Button
-              type="primary"
-              size="large"
-              style={{
-                background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-                border: "none",
-                height: isMobile ? 44 : 50,
-                padding: "0 28px",
-                fontSize: isMobile ? 15 : 16,
-                fontWeight: 600,
-                borderRadius: 12,
-              }}
+              size="lg"
+              className="h-11 px-7 text-[15px] sm:h-[50px] sm:text-base"
               onClick={() =>
                 BOT_URL
                   ? window.open(BOT_URL, "_blank", "noopener")
@@ -484,16 +288,9 @@ export default function LandingPage() {
               {BOT_URL ? L.ind_cta : L.btn_get_started}
             </Button>
             <Button
-              size="large"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.16)",
-                color: "rgba(255,255,255,0.85)",
-                height: isMobile ? 44 : 50,
-                padding: "0 28px",
-                fontSize: isMobile ? 15 : 16,
-                borderRadius: 12,
-              }}
+              variant="outline"
+              size="lg"
+              className="h-11 px-7 text-[15px] sm:h-[50px] sm:text-base"
               onClick={() => navigate("/login")}
             >
               {L.btn_login}
@@ -503,346 +300,202 @@ export default function LandingPage() {
       </section>
 
       {/* ── Stats bar ──────────────────────────────────────────────────────── */}
-      <section
-        id="stats"
-        style={{
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          padding: isMobile ? "28px 16px" : "40px 48px",
-          background: "rgba(255,255,255,0.02)",
-        }}
-      >
-        <Row justify="center" gutter={[isMobile ? 24 : 48, 20]}>
+      <section id="stats" className="border-y border-border bg-muted/20 px-4 py-7 sm:px-12 sm:py-10">
+        <div className="flex flex-wrap justify-center gap-6 sm:gap-12">
           {STATS.map((s) => (
-            <Col key={s.label} style={{ textAlign: "center", minWidth: isMobile ? 80 : 140 }}>
-              <div style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, color: "#7C9CFF", lineHeight: 1 }}>
+            <div key={s.label} className="min-w-[80px] text-center sm:min-w-[140px]">
+              <div className="text-2xl font-bold leading-none text-foreground sm:text-[32px]">
                 {s.value}
               </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>
+              <div className="mt-1.5 text-xs text-muted-foreground">
                 {s.label}
               </div>
-            </Col>
+            </div>
           ))}
-        </Row>
+        </div>
       </section>
 
       {/* ── Features ───────────────────────────────────────────────────────── */}
-      <section
-        id="features"
-        style={{ padding: isMobile ? "56px 16px" : "100px 48px", maxWidth: 1200, margin: "0 auto" }}
-      >
-        <div style={{ textAlign: "center", marginBottom: isMobile ? 36 : 64 }}>
-          <Title
-            level={2}
-            style={{ color: "#fff", fontWeight: 700, fontSize: isMobile ? 26 : 36, marginBottom: 12 }}
-          >
+      <section id="features" className="mx-auto max-w-[1200px] px-4 py-14 sm:px-12 sm:py-24">
+        <div className="mb-9 text-center sm:mb-16">
+          <h2 className="mb-3 text-[26px] font-bold text-foreground sm:text-4xl">
             {L.features_title}
-          </Title>
-          <Paragraph style={{ color: "rgba(255,255,255,0.55)", fontSize: 16 }}>
+          </h2>
+          <p className="text-base text-muted-foreground">
             {L.features_subtitle}
-          </Paragraph>
+          </p>
         </div>
 
-        <Row gutter={[20, 20]}>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
           {FEATURES.map((f) => (
-            <Col key={f.title} xs={24} sm={12} lg={8}>
-              <div
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  borderRadius: 16,
-                  padding: isMobile ? 20 : 28,
-                  height: "100%",
-                  cursor: f.onClick ? "pointer" : "default",
-                  transition: "border-color 0.2s",
-                }}
-                onClick={f.onClick}
-                onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(6,214,160,0.3)")
-                }
-                onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.09)")
-                }
-              >
-                <div style={{ marginBottom: 14 }}>{f.icon}</div>
-                <Title level={4} style={{ color: "#fff", marginBottom: 8, fontSize: 17 }}>
-                  {f.title}
-                </Title>
-                <Paragraph style={{ color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.6 }}>
-                  {f.desc}
-                </Paragraph>
-              </div>
-            </Col>
+            <Card
+              key={f.title}
+              className={`h-full p-5 transition-colors sm:p-7 ${f.onClick ? "cursor-pointer hover:border-emerald-500/40" : ""}`}
+              onClick={f.onClick}
+            >
+              <div className="mb-3.5">{f.icon}</div>
+              <h4 className="mb-2 text-[17px] font-bold text-foreground">
+                {f.title}
+              </h4>
+              <p className="m-0 leading-relaxed text-muted-foreground">
+                {f.desc}
+              </p>
+            </Card>
           ))}
-        </Row>
+        </div>
       </section>
 
       {/* ── Apps comparison ───────────────────────────────────────────────── */}
-      <section
-        id="apps"
-        style={{ padding: isMobile ? "56px 16px" : "100px 48px", maxWidth: 1100, margin: "0 auto" }}
-      >
-        <div style={{ textAlign: "center", marginBottom: isMobile ? 36 : 56 }}>
-          <Title
-            level={2}
-            style={{ color: "#fff", fontWeight: 700, fontSize: isMobile ? 26 : 36, marginBottom: 12 }}
-          >
+      <section id="apps" className="mx-auto max-w-[1100px] px-4 py-14 sm:px-12 sm:py-24">
+        <div className="mb-9 text-center sm:mb-14">
+          <h2 className="mb-3 text-[26px] font-bold text-foreground sm:text-4xl">
             {L.apps_title}
-          </Title>
-          <Paragraph
-            style={{ color: "rgba(255,255,255,0.55)", fontSize: 16, maxWidth: 560, margin: "0 auto" }}
-          >
+          </h2>
+          <p className="mx-auto max-w-[560px] text-base text-muted-foreground">
             {L.apps_subtitle}
-          </Paragraph>
+          </p>
         </div>
 
-        <Row gutter={[24, 24]} align="stretch">
-          <Col xs={24} md={12}>
-            <div style={appCardStyle}>
-              <DeviceMockup variant="clash" />
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, marginBottom: 8 }}>
-                <GithubOutlined style={{ fontSize: 18, color: "rgba(255,255,255,0.5)" }} />
-                <Text style={{ fontSize: 12, letterSpacing: "0.5px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>
-                  {L.apps_clash_badge}
-                </Text>
+        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2">
+          <Card className="flex h-full flex-col p-6 sm:p-8">
+            <DeviceMockup variant="clash" />
+            <div className="mb-2 mt-5 flex items-center gap-2">
+              <Github size={18} className="text-muted-foreground" />
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                {L.apps_clash_badge}
+              </span>
+            </div>
+            <h3 className="mb-2.5 text-[22px] font-bold text-foreground">
+              {L.apps_clash_title}
+            </h3>
+            <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+              {L.apps_clash_desc}
+            </p>
+            <span className="mb-2 block text-xs text-muted-foreground/80">
+              {L.apps_platforms_label}
+            </span>
+            <PlatformBadges L={L} />
+            <div className="mt-auto">
+              <span className="mb-2 block text-xs text-muted-foreground/80">
+                {L.apps_clash_protocols_label}
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {CLASH_PROTOCOLS.map((p) => (
+                  <span
+                    key={p}
+                    className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground"
+                  >
+                    {p}
+                  </span>
+                ))}
               </div>
-              <Title level={3} style={{ color: "#fff", fontSize: 22, marginBottom: 10 }}>
-                {L.apps_clash_title}
-              </Title>
-              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, marginBottom: 12 }}>
-                {L.apps_clash_desc}
-              </Paragraph>
-              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8 }}>
-                {L.apps_platforms_label}
-              </Text>
-              <PlatformBadges L={L} />
-              <div style={{ marginTop: "auto" }}>
-                <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8 }}>
-                  {L.apps_clash_protocols_label}
-                </Text>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {CLASH_PROTOCOLS.map((p) => (
-                    <span
-                      key={p}
-                      style={{
-                        fontSize: 12,
-                        padding: "4px 10px",
-                        borderRadius: 20,
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "rgba(255,255,255,0.7)",
-                      }}
-                    >
-                      {p}
-                    </span>
-                  ))}
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 20 }}>
-                  <Button
-                    size="large"
-                    style={{
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.16)",
-                      color: "rgba(255,255,255,0.85)",
-                      height: 46,
-                      padding: "0 24px",
-                      borderRadius: 12,
-                    }}
-                    onClick={() => openDownload("clash")}
-                  >
-                    {L.apps_clash_cta}
-                  </Button>
-                  <Button
-                    size="large"
-                    icon={<BookOutlined />}
-                    style={{
-                      background: "transparent",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      color: "rgba(255,255,255,0.65)",
-                      height: 46,
-                      padding: "0 20px",
-                      borderRadius: 12,
-                    }}
-                    href={CLASH_DOCS_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+              <div className="mt-5 flex flex-wrap gap-2.5">
+                <Button variant="outline" className="h-[46px] px-6" onClick={() => openDownload("clash")}>
+                  {L.apps_clash_cta}
+                </Button>
+                <Button variant="outline" className="h-[46px] px-5 text-muted-foreground" asChild>
+                  <a href={CLASH_DOCS_URL} target="_blank" rel="noopener noreferrer">
+                    <BookOpen size={16} />
                     {L.apps_clash_docs}
-                  </Button>
-                </div>
+                  </a>
+                </Button>
               </div>
             </div>
-          </Col>
+          </Card>
 
-          <Col xs={24} md={12}>
-            <div
-              style={{
-                ...appCardStyle,
-                border: "1px solid rgba(6,214,160,0.3)",
-                background: "linear-gradient(135deg, rgba(6,214,160,0.07), rgba(124,156,255,0.05))",
-                position: "relative",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  top: 16,
-                  right: 16,
-                  padding: "4px 12px",
-                  borderRadius: 20,
-                  background: "rgba(6,214,160,0.15)",
-                  border: "1px solid rgba(6,214,160,0.4)",
-                }}
-              >
-                <Text style={{ fontSize: 11, color: "#06D6A0", fontWeight: 600 }}>{L.apps_trial_badge}</Text>
-              </div>
-              <DeviceMockup variant="cheezy" />
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, marginBottom: 8 }}>
-                <MobileOutlined style={{ fontSize: 18, color: "#7C9CFF" }} />
-                <Text style={{ fontSize: 12, letterSpacing: "0.5px", color: "#7C9CFF", textTransform: "uppercase" }}>
-                  {L.apps_cheezy_badge}
-                </Text>
-              </div>
-              <Title level={3} style={{ color: "#fff", fontSize: 22, marginBottom: 10 }}>
-                {L.apps_cheezy_title}
-              </Title>
-              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, marginBottom: 12 }}>
-                {L.apps_cheezy_desc}
-              </Paragraph>
-              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8 }}>
-                {L.apps_platforms_label}
-              </Text>
-              <PlatformBadges L={L} />
-              <Button
-                type="primary"
-                size="large"
-                style={{
-                  marginTop: "auto",
-                  alignSelf: "flex-start",
-                  background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-                  border: "none",
-                  height: 46,
-                  padding: "0 24px",
-                  fontWeight: 600,
-                  borderRadius: 12,
-                }}
-                onClick={() => openDownload("cheezy")}
-              >
-                {L.apps_cheezy_cta}
-              </Button>
+          <Card className="relative flex h-full flex-col border-emerald-500/30 bg-emerald-500/5 p-6 sm:p-8">
+            <div className="absolute right-4 top-4 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1">
+              <span className="text-[11px] font-semibold text-emerald-500">{L.apps_trial_badge}</span>
             </div>
-          </Col>
-        </Row>
+            <DeviceMockup variant="cheezy" />
+            <div className="mb-2 mt-5 flex items-center gap-2">
+              <Smartphone size={18} className="text-foreground" />
+              <span className="text-xs uppercase tracking-wide text-foreground">
+                {L.apps_cheezy_badge}
+              </span>
+            </div>
+            <h3 className="mb-2.5 text-[22px] font-bold text-foreground">
+              {L.apps_cheezy_title}
+            </h3>
+            <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+              {L.apps_cheezy_desc}
+            </p>
+            <span className="mb-2 block text-xs text-muted-foreground/80">
+              {L.apps_platforms_label}
+            </span>
+            <PlatformBadges L={L} />
+            <Button
+              className="mt-auto h-[46px] self-start px-6 font-semibold"
+              onClick={() => openDownload("cheezy")}
+            >
+              {L.apps_cheezy_cta}
+            </Button>
+          </Card>
+        </div>
 
         {/* Feature comparison table */}
-        <div
-          style={{
-            marginTop: 32,
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 16,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr 50px 50px" : "1fr 160px 160px",
-              padding: isMobile ? "12px 14px" : "14px 24px",
-              background: "rgba(255,255,255,0.02)",
-            }}
-          >
-            <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+        <Card className="mt-8 overflow-hidden p-0">
+          <div className="grid grid-cols-[1fr_50px_50px] bg-muted/20 px-3.5 py-3 sm:grid-cols-[1fr_160px_160px] sm:px-6">
+            <span className="text-xs uppercase tracking-wide text-muted-foreground/70">
               {L.apps_compare_feature}
-            </Text>
-            <Text style={{ textAlign: "center", color: "#fff", fontWeight: 600, fontSize: isMobile ? 12 : 14 }}>
+            </span>
+            <span className="text-center text-xs font-semibold text-foreground sm:text-sm">
               {L.apps_clash_title}
-            </Text>
-            <Text style={{ textAlign: "center", color: "#fff", fontWeight: 600, fontSize: isMobile ? 12 : 14 }}>
+            </span>
+            <span className="text-center text-xs font-semibold text-foreground sm:text-sm">
               {L.apps_cheezy_title}
-            </Text>
+            </span>
           </div>
           {COMPARE_ROWS.map((row, i) => (
             <div
               key={row.label}
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr 50px 50px" : "1fr 160px 160px",
-                alignItems: "center",
-                padding: isMobile ? "12px 14px" : "14px 24px",
-                borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.06)",
-              }}
+              className={`grid grid-cols-[1fr_50px_50px] items-center px-3.5 py-3 sm:grid-cols-[1fr_160px_160px] sm:px-6 ${i === 0 ? "" : "border-t border-border"}`}
             >
-              <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: isMobile ? 13 : 14 }}>{row.label}</Text>
-              <div style={{ textAlign: "center" }}>
+              <span className="text-[13px] text-foreground/85 sm:text-sm">{row.label}</span>
+              <div className="text-center">
                 {row.clash === true ? (
-                  <CheckOutlined style={{ color: "#06D6A0" }} />
+                  <Check size={16} className="inline-block text-emerald-500" />
                 ) : row.clash ? (
-                  <Tooltip title={String(row.clash)}>
-                    <QuestionCircleOutlined style={{ color: "#06D6A0", fontSize: 16 }} aria-label="Footnote" />
-                  </Tooltip>
+                  <span title={String(row.clash)} className="inline-block">
+                    <HelpCircle size={16} className="text-emerald-500" aria-label="Footnote" />
+                  </span>
                 ) : (
-                  <CloseOutlined style={{ color: "rgba(255,255,255,0.25)" }} />
+                  <X size={16} className="inline-block text-muted-foreground/40" />
                 )}
               </div>
-              <div style={{ textAlign: "center" }}>
+              <div className="text-center">
                 {row.cheezy === true ? (
-                  <CheckOutlined style={{ color: "#06D6A0" }} />
+                  <Check size={16} className="inline-block text-emerald-500" />
                 ) : row.cheezy ? (
-                  <Tooltip title={String(row.cheezy)}>
-                    <QuestionCircleOutlined style={{ color: "#06D6A0", fontSize: 16 }} aria-label="Footnote" />
-                  </Tooltip>
+                  <span title={String(row.cheezy)} className="inline-block">
+                    <HelpCircle size={16} className="text-emerald-500" aria-label="Footnote" />
+                  </span>
                 ) : (
-                  <CloseOutlined style={{ color: "rgba(255,255,255,0.25)" }} />
+                  <X size={16} className="inline-block text-muted-foreground/40" />
                 )}
               </div>
             </div>
           ))}
-        </div>
+        </Card>
       </section>
 
       {/* ── For individuals ────────────────────────────────────────────────── */}
       <section
         id="individuals"
-        style={{
-          margin: isMobile ? "0 16px 40px" : "0 48px 64px",
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(6,214,160,0.12), rgba(0,150,199,0.12))",
-          border: "1px solid rgba(6,214,160,0.2)",
-          padding: isMobile ? "40px 24px" : "60px 40px",
-          textAlign: "center",
-        }}
+        className="mx-4 mb-10 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-6 py-10 text-center sm:mx-12 sm:mb-16 sm:px-10 sm:py-16"
       >
-        <Text style={{ fontSize: 13, color: "#06D6A0", letterSpacing: "0.5px" }}>
+        <span className="text-[13px] tracking-wide text-emerald-500">
           {L.ind_badge}
-        </Text>
-        <Title level={2} style={{ color: "#fff", margin: "12px 0", fontSize: isMobile ? 22 : 30 }}>
+        </span>
+        <h2 className="my-3 text-[22px] font-bold text-foreground sm:text-[30px]">
           {L.ind_title}
-        </Title>
-        <Paragraph
-          style={{
-            color: "rgba(255,255,255,0.6)",
-            fontSize: 16,
-            marginBottom: 32,
-            maxWidth: 620,
-            marginLeft: "auto",
-            marginRight: "auto",
-          }}
-        >
+        </h2>
+        <p className="mx-auto mb-8 max-w-[620px] text-base text-muted-foreground">
           {L.ind_desc}
-        </Paragraph>
+        </p>
         <Button
-          type="primary"
-          size="large"
-          style={{
-            background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-            border: "none",
-            height: 50,
-            padding: "0 40px",
-            fontSize: 16,
-            fontWeight: 600,
-            borderRadius: 12,
-          }}
+          size="lg"
+          className="h-[50px] px-10 text-base font-semibold"
           onClick={() =>
             BOT_URL ? window.open(BOT_URL, "_blank", "noopener") : navigate("/register")
           }
@@ -852,70 +505,40 @@ export default function LandingPage() {
       </section>
 
       {/* ── For business / partnership ─────────────────────────────────────── */}
-      <section
-        id="business"
-        style={{
-          padding: isMobile ? "0 16px 56px" : "0 48px 96px",
-          maxWidth: 720,
-          margin: "0 auto",
-          width: "100%",
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <Text style={{ fontSize: 13, color: "#7C9CFF", letterSpacing: "0.5px" }}>
+      <section id="business" className="mx-auto w-full max-w-[720px] px-4 pb-14 sm:px-12 sm:pb-24">
+        <div className="mb-7 text-center">
+          <span className="text-[13px] tracking-wide text-muted-foreground">
             {L.biz_badge}
-          </Text>
-          <Title level={2} style={{ color: "#fff", margin: "12px 0", fontSize: isMobile ? 24 : 32 }}>
+          </span>
+          <h2 className="my-3 text-2xl font-bold text-foreground sm:text-[32px]">
             {L.biz_title}
-          </Title>
-          <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 16, margin: 0 }}>
+          </h2>
+          <p className="m-0 text-base text-muted-foreground">
             {L.biz_desc}
-          </Paragraph>
+          </p>
         </div>
-        <div
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.09)",
-            borderRadius: 18,
-            padding: isMobile ? 20 : 32,
-          }}
-        >
+        <Card className="p-5 sm:p-8">
           <PartnershipForm />
-        </div>
+        </Card>
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <footer
-        style={{
-          borderTop: "1px solid rgba(255,255,255,0.07)",
-          padding: `32px ${px}`,
-        }}
-      >
+      <footer className="border-t border-border px-4 py-8 sm:px-12">
         {/* Links row */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            flexWrap: "wrap",
-            gap: 20,
-            marginBottom: 24,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-5">
+          <div className="flex items-center gap-2">
             <BrandLogo size={26} />
-            <Text strong style={{ color: "#fff", fontSize: 15 }}>{BRAND_NAME}</Text>
+            <span className="text-[15px] font-semibold text-foreground">{BRAND_NAME}</span>
           </div>
 
-          <div style={{ display: "flex", gap: isMobile ? 16 : 28, flexWrap: "wrap" }}>
-            <Link to="/policy" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+          <div className="flex flex-wrap gap-4 sm:gap-7">
+            <Link to="/policy" className="text-[13px] text-muted-foreground hover:text-foreground">
               {L.footer_policy}
             </Link>
-            <Link to="/agreement" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+            <Link to="/agreement" className="text-[13px] text-muted-foreground hover:text-foreground">
               {L.footer_agreement}
             </Link>
-            <Link to="/offer" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+            <Link to="/offer" className="text-[13px] text-muted-foreground hover:text-foreground">
               {L.footer_offer}
             </Link>
             {BOT_URL && (
@@ -923,7 +546,7 @@ export default function LandingPage() {
                 href={BOT_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}
+                className="text-[13px] text-muted-foreground hover:text-foreground"
               >
                 {L.footer_telegram}
               </a>
@@ -932,156 +555,123 @@ export default function LandingPage() {
         </div>
 
         {/* Bottom row */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 8,
-            paddingTop: 16,
-            borderTop: "1px solid rgba(255,255,255,0.05)",
-          }}
-        >
-          <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-4">
+          <span className="text-[13px] text-muted-foreground/70">
             © {new Date().getFullYear()} {BRAND_NAME}. {L.footer_rights}
-          </Text>
-          <Text style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
+          </span>
+          <span className="text-xs text-muted-foreground/50">
             {L.footer_tagline}
-          </Text>
+          </span>
         </div>
 
         {/* Compliance disclaimer */}
-        <Text
-          style={{
-            display: "block",
-            marginTop: 16,
-            color: "rgba(255,255,255,0.3)",
-            fontSize: 12,
-            textAlign: "center",
-          }}
-        >
+        <span className="mt-4 block text-center text-xs text-muted-foreground/40">
           {L.footer_disclaimer}
-        </Text>
+        </span>
       </footer>
 
       {/* ── Download picker modal ────────────────────────────────────────── */}
-      <Modal
-        open={downloadApp !== null}
-        onCancel={() => setDownloadApp(null)}
-        footer={null}
-        title={downloadApp === "clash" ? L.apps_clash_title : L.apps_cheezy_title}
-        centered
-      >
-        <Paragraph style={{ color: "rgba(255,255,255,0.55)", marginBottom: 16 }}>
-          {L.download_modal_subtitle}
-        </Paragraph>
+      <Dialog open={downloadApp !== null} onOpenChange={(open) => !open && setDownloadApp(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {downloadApp === "clash" ? L.apps_clash_title : L.apps_cheezy_title}
+            </DialogTitle>
+          </DialogHeader>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, marginBottom: 20 }}>
-          {PLATFORM_BADGES.map(({ key, labelKey, icon }) => (
-            <Button
-              key={key}
-              type={downloadPlatform === key ? "primary" : "default"}
-              icon={icon}
-              onClick={() => setDownloadPlatform(key)}
-              style={{
-                height: 44,
-                borderRadius: 10,
-                ...(downloadPlatform === key
-                  ? { background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none" }
-                  : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)" }),
-              }}
-            >
-              {L[labelKey]}
-            </Button>
-          ))}
-        </div>
+          <p className="mb-2 text-muted-foreground">
+            {L.download_modal_subtitle}
+          </p>
 
-        {downloadPlatform === "android" ? (
-          <>
-            <Paragraph style={{ color: "rgba(255,255,255,0.55)", marginBottom: 12, fontSize: 13 }}>
-              {L.arch_modal_subtitle}
-            </Paragraph>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {ARCH_OPTIONS.map((opt) => (
-                <div
-                  key={opt.key}
-                  onClick={() => {
-                    if (downloadApp) window.open(apkUrl(downloadApp, opt.key), "_blank", "noopener");
-                    setDownloadApp(null);
-                  }}
-                  style={downloadOptionStyle(opt.highlight)}
-                  onMouseEnter={(e) => onDownloadOptionHover(e, opt.highlight, true)}
-                  onMouseLeave={(e) => onDownloadOptionHover(e, opt.highlight, false)}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Text strong style={{ color: "#fff", fontSize: 15 }}>
-                      {opt.label}
-                    </Text>
-                    {opt.badge && (
-                      <span
-                        style={{
-                          fontSize: 11,
-                          padding: "2px 8px",
-                          borderRadius: 10,
-                          background: "rgba(6,214,160,0.15)",
-                          color: "#06D6A0",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {opt.badge}
-                      </span>
-                    )}
-                  </div>
-                  <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{opt.desc}</Text>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {(desktopOptions?.[downloadPlatform] ?? []).map((opt) => (
-              <a
-                key={opt.url}
-                href={opt.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => {
-                  setDownloadApp(null);
-                }}
-                style={downloadOptionStyle()}
-                onMouseEnter={(e) => onDownloadOptionHover(e, false, true)}
-                onMouseLeave={(e) => onDownloadOptionHover(e, false, false)}
+          <div className="mb-2 grid grid-cols-2 gap-2">
+            {PLATFORM_BADGES.map(({ key, labelKey, icon }) => (
+              <Button
+                key={key}
+                variant={downloadPlatform === key ? "default" : "outline"}
+                className="h-11 gap-2"
+                onClick={() => setDownloadPlatform(key)}
               >
-                <Text strong style={{ color: "#fff", fontSize: 15 }}>
-                  {opt.label}
-                </Text>
-              </a>
+                {icon}
+                {L[labelKey]}
+              </Button>
             ))}
           </div>
-        )}
 
-        <div style={{ marginTop: 18, display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
-          <a
-            href={downloadApp === "clash" ? CLASH_RELEASES_URL : CHEEZY_RELEASES_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}
-          >
-            {L.arch_modal_all_releases}
-          </a>
-          {downloadApp === "clash" && (
+          {downloadPlatform === "android" ? (
+            <>
+              <p className="mb-3 text-[13px] text-muted-foreground">
+                {L.arch_modal_subtitle}
+              </p>
+              <div className="flex flex-col gap-2.5">
+                {ARCH_OPTIONS.map((opt) => (
+                  <div
+                    key={opt.key}
+                    onClick={() => {
+                      if (downloadApp) window.open(apkUrl(downloadApp, opt.key), "_blank", "noopener");
+                      setDownloadApp(null);
+                    }}
+                    className={`flex cursor-pointer flex-col gap-1 rounded-xl border p-4 transition-colors hover:bg-accent/50 ${
+                      opt.highlight ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-muted/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-[15px] font-semibold text-foreground">
+                        {opt.label}
+                      </span>
+                      {opt.badge && (
+                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-500">
+                          {opt.badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[13px] text-muted-foreground">{opt.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {(desktopOptions?.[downloadPlatform] ?? []).map((opt) => (
+                <a
+                  key={opt.url}
+                  href={opt.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    setDownloadApp(null);
+                  }}
+                  className="rounded-xl border border-border bg-muted/20 p-4 no-underline transition-colors hover:bg-accent/50"
+                >
+                  <span className="text-[15px] font-semibold text-foreground">
+                    {opt.label}
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-4 flex flex-wrap justify-center gap-4">
             <a
-              href={CLASH_DOCS_URL}
+              href={downloadApp === "clash" ? CLASH_RELEASES_URL : CHEEZY_RELEASES_URL}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}
+              className="text-[13px] text-muted-foreground/60 hover:text-muted-foreground"
             >
-              {L.apps_clash_docs}
+              {L.arch_modal_all_releases}
             </a>
-          )}
-        </div>
-      </Modal>
+            {downloadApp === "clash" && (
+              <a
+                href={CLASH_DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[13px] text-muted-foreground/60 hover:text-muted-foreground"
+              >
+                {L.apps_clash_docs}
+              </a>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

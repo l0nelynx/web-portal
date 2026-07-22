@@ -8,12 +8,14 @@ Backend API lives in the `xray-vpn-bot` repo (`miniapp` service, port 8001).
 
 | Layer | Tech |
 |---|---|
-| UI framework | React 18 + TypeScript |
-| Component library | Ant Design v6 |
-| Router | React Router v6 (`BrowserRouter`, `basename="/"`) |
-| Build tool | Vite 6 (`base: "/"`) |
+| UI framework | React 19 + TypeScript |
+| Component library | shadcn/ui (New York, Tailwind 4, dark by default) |
+| Router | React Router 7 (`BrowserRouter`, `basename="/"`) |
+| Build tool | Vite 8 (`base: "/"`) |
 | i18n | Custom `LangContext` (`src/locale.tsx`) |
 | Auth | JWT in `localStorage` (`web_access_token` / `web_refresh_token`) |
+
+Stack sync with the bot monorepo: see [docs/frontend-stack.md](docs/frontend-stack.md).
 
 ## Project structure
 
@@ -27,23 +29,25 @@ vercel.json           Vercel SPA rewrite rule
 src/
   main.tsx            Entry: GH Pages redirect restore + mirror failover + render
   App.tsx             Routes + RequireAuth / RequireVerified guards
+  index.css           Tailwind + shadcn CSS variables (dark)
   locale.tsx          Translations (EN/RU) + browser language detection
   branding.ts         BRAND_NAME / BRAND_LOGO from VITE_* env vars
   api/client.ts       JWT API client (all /android/* and /web/* endpoints)
   auth/AuthContext.tsx Token lifecycle, auto-refresh, profile state
-  components/         BrandLogo, CheezyLogo (default SVG logo)
+  components/         BrandLogo, CheezyLogo, LegalLayout, …
+  components/ui/      Local shadcn primitives (mirrored from @xray/ui)
   pages/
     LandingPage.tsx   Public marketing page — fully i18n
     LoginPage.tsx     Login form — fully i18n, lang toggle button
     RegisterPage.tsx  Invite-code registration — fully i18n
     VerifyEmailPage.tsx  6-digit email code verification — fully i18n
-    DashboardPage.tsx    Authenticated shell: Sider (desktop) / Drawer (mobile)
+    DashboardPage.tsx    Authenticated shell: sidebar (desktop) / Sheet (mobile)
     dashboard/
       SubscriptionTab.tsx
       BuyTab.tsx        Tree-nav identical to MiniApp BuyMenuPage
       DevicesTab.tsx
       SettingsTab.tsx   Includes Telegram link/unlink flow
-  theme/webTheme.ts   Ant Design dark theme config
+      SupportTab.tsx
 ```
 
 ## API endpoints used
@@ -81,9 +85,9 @@ Add new keys to the `Translations` interface **and both** `en` and `ru` objects 
 
 ## Mobile breakpoints
 
-`Grid.useBreakpoint()` from antd — `isMobile = !screens.md` (< 768px) used in
-`DashboardPage` and `LandingPage`. Dashboard uses antd `Drawer` for mobile nav.
-LandingPage collapses nav links on mobile, keeps only lang toggle + portal button.
+Use CSS / Tailwind breakpoints (`md:`) or a small media-query hook. Dashboard
+uses a shadcn `Sheet` for mobile nav. LandingPage collapses nav links on mobile,
+keeps only lang toggle + portal button.
 
 ## Mirror failover
 
@@ -93,7 +97,7 @@ Result cached in `sessionStorage["_api_ok"]` — runs once per tab session.
 
 ## Conventions
 
-- antd v6: use `App.useApp()` for `message`; `styles={{ body }}` not `bodyStyle`.
+- UI: shadcn/ui + Tailwind; toasts via `sonner`; icons via `lucide-react`.
 - BuyTab tree navigation: `path: number[]` stack + `findNode()` recursive search.
   Don't flatten the tariff tree — structure mirrors `xray-vpn-bot` MiniApp.
 - `public/` files are copied as-is (no Vite env replacement). Use CI steps for
@@ -106,8 +110,8 @@ Result cached in `sessionStorage["_api_ok"]` — runs once per tab session.
 npm install
 # Copy and fill in at least VITE_API_URL if running against a remote backend:
 cp .env.example .env
-npm run dev        # http://localhost:5173
-npm run build      # type-check + vite build → dist/
+npm run dev # http://localhost:5173
+npm run build # type-check + vite build → dist/
 ```
 
 See `docs/deployment.md` for GitHub Actions variables, hosting setup, and CORS config.

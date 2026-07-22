@@ -1,25 +1,44 @@
-import { Alert, Button, Card, Form, Input, Typography } from "antd";
-import { LockOutlined, MailOutlined } from "@ant-design/icons";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Mail, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import BrandLogo from "../components/BrandLogo";
 import TelegramLoginButton from "../components/TelegramLoginButton";
 import { BRAND_NAME } from "../branding";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
 import { usePageMeta } from "../seo";
 
-const { Title, Text } = Typography;
+function buildSchema(L: ReturnType<typeof useLang>["L"]) {
+  return z.object({
+    email: z.string().min(1, L.val_email_req).email(L.val_email_format),
+    password: z.string().min(1, L.val_pwd_req),
+  });
+}
+
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 export default function LoginPage() {
   const { login, setUserAfterRegister } = useAuth();
   const navigate = useNavigate();
   const { L, toggle } = useLang();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   usePageMeta({ title: `${L.login_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
+
+  const schema = buildSchema(L);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   useEffect(() => {
     const tgError = searchParams.get("tg_error");
@@ -31,8 +50,7 @@ export default function LoginPage() {
     setError(map[tgError] ?? L.err_tg_login);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function onFinish(values: { email: string; password: string }) {
-    setLoading(true);
+  async function onFinish(values: FormValues) {
     setError(null);
     try {
       await login(values.email.trim().toLowerCase(), values.password);
@@ -49,156 +67,88 @@ export default function LoginPage() {
       } else {
         setError(L.err_network);
       }
-    } finally {
-      setLoading(false);
     }
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
-
-      {/* Language toggle */}
+    <div className="flex min-h-screen items-center justify-center p-6">
       <Button
-        size="small"
+        size="sm"
+        variant="outline"
+        className="fixed right-4 top-4 z-10 min-w-[34px] rounded-md border-border bg-secondary text-xs text-muted-foreground"
         onClick={toggle}
-        style={{
-          position: "fixed",
-          top: 16,
-          right: 16,
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.6)",
-          borderRadius: 6,
-          fontSize: 12,
-          minWidth: 34,
-          zIndex: 10,
-        }}
       >
         {L.lang_toggle}
       </Button>
 
-      <div style={{ width: "100%", maxWidth: 420, position: "relative" }}>
-        {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <Link to="/" style={{ textDecoration: "none" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+      <div className="relative w-full max-w-[420px]">
+        <div className="mb-8 text-center">
+          <Link to="/" className="no-underline">
+            <div className="inline-flex items-center gap-2.5">
               <BrandLogo size={38} />
-              <Text strong style={{ fontSize: 20, color: "#fff" }}>
-                {BRAND_NAME}
-              </Text>
+              <span className="text-xl font-bold text-foreground">{BRAND_NAME}</span>
             </div>
           </Link>
         </div>
 
-        <Card
-          style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 20,
-          }}
-          styles={{ body: { padding: 36 } }}
-        >
-          <Title level={3} style={{ color: "#fff", margin: "0 0 8px", textAlign: "center" }}>
-            {L.login_title}
-          </Title>
-          <Text
-            style={{
-              color: "rgba(255,255,255,0.5)",
-              display: "block",
-              textAlign: "center",
-              marginBottom: 28,
-            }}
-          >
-            {L.login_subtitle}
-          </Text>
+        <Card className="p-9">
+          <h3 className="mb-2 text-center text-2xl font-semibold text-foreground">{L.login_title}</h3>
+          <p className="mb-7 block text-center text-muted-foreground">{L.login_subtitle}</p>
 
           {error && (
-            <Alert
-              type="error"
-              message={error}
-              style={{ marginBottom: 20, borderRadius: 10 }}
-              showIcon
-              closable
-              onClose={() => setError(null)}
-            />
+            <Alert variant="destructive" className="mb-5 rounded-lg">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
-          <Form layout="vertical" onFinish={onFinish} size="large">
-            <Form.Item
-              name="email"
-              rules={[
-                { required: true, message: L.val_email_req },
-                { type: "email", message: L.val_email_format },
-              ]}
-            >
-              <Input
-                prefix={<MailOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                placeholder="Email"
-                autoComplete="email"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "#fff",
-                  borderRadius: 12,
-                }}
-              />
-            </Form.Item>
+          <form onSubmit={handleSubmit(onFinish)} className="flex flex-col gap-4">
+            <div>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Email"
+                  autoComplete="email"
+                  className="h-12 rounded-xl pl-9"
+                  {...register("email")}
+                />
+              </div>
+              {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
+            </div>
 
-            <Form.Item
-              name="password"
-              rules={[{ required: true, message: L.val_pwd_req }]}
-              style={{ marginBottom: 24 }}
-            >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                placeholder={L.pwd_label}
-                autoComplete="current-password"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "#fff",
-                  borderRadius: 12,
-                }}
-              />
-            </Form.Item>
+            <div>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="password"
+                  placeholder={L.pwd_label}
+                  autoComplete="current-password"
+                  className="h-12 rounded-xl pl-9"
+                  {...register("password")}
+                />
+              </div>
+              {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
+            </div>
 
             <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={loading}
-              style={{
-                background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-                border: "none",
-                height: 48,
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 600,
-              }}
+              type="submit"
+              disabled={isSubmitting}
+              className="h-12 rounded-xl text-base font-semibold"
             >
               {L.btn_login}
             </Button>
-          </Form>
+          </form>
 
-          <div style={{ textAlign: "center", marginTop: 12 }}>
-            <Link to="/forgot-password" style={{ color: "#7C9CFF", fontSize: 13 }}>
+          <div className="mt-3 text-center">
+            <Link to="/forgot-password" className="text-[13px] text-primary underline-offset-4 hover:underline">
               {L.forgot_link}
             </Link>
           </div>
 
           {/* Telegram login */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0 16px" }}>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-            <Text style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>or</Text>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="h-px flex-1 bg-border" />
           </div>
           <TelegramLoginButton
             label={L.btn_tg_login}
@@ -217,20 +167,18 @@ export default function LoginPage() {
             }}
           />
 
-          <div style={{ textAlign: "center", marginTop: 20 }}>
-            <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+          <div className="mt-5 text-center">
+            <span className="text-[13px] text-muted-foreground">
               {L.no_account}{" "}
-              <Link to="/register" style={{ color: "#7C9CFF", fontWeight: 500 }}>
+              <Link to="/register" className="font-medium text-primary underline-offset-4 hover:underline">
                 {L.btn_register}
               </Link>
-            </Text>
+            </span>
           </div>
         </Card>
 
-        <div style={{ textAlign: "center", marginTop: 16 }}>
-          <Text style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>
-            {L.login_invite_hint}
-          </Text>
+        <div className="mt-4 text-center">
+          <span className="text-xs text-muted-foreground">{L.login_invite_hint}</span>
         </div>
       </div>
     </div>

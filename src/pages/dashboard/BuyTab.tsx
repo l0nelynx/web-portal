@@ -1,10 +1,13 @@
-import { Alert, Button, Modal, Skeleton, Space, Tag, Typography } from "antd";
-import { CheckOutlined, ShoppingCartOutlined, WalletOutlined } from "@ant-design/icons";
+import { Check, ShoppingCart, Wallet } from "lucide-react";
+import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ApiError, WebInvoiceResponse, WebMenuNode, webPayments } from "../../api/client";
 import { useLang } from "../../locale";
-
-const { Title, Text } = Typography;
 
 interface ViewResult {
   chipLevels: WebMenuNode[][];
@@ -27,7 +30,7 @@ function buildView(nodes: WebMenuNode[], selections: (number | null)[], depth = 
 }
 
 export default function BuyTab() {
-  const { L } = useLang();
+  const { L, lang } = useLang();
   const [tree, setTree] = useState<WebMenuNode[]>([]);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -38,7 +41,7 @@ export default function BuyTab() {
   const [payingCreditsId, setPayingCreditsId] = useState<number | null>(null);
   const [invoice, setInvoice] = useState<WebInvoiceResponse | null>(null);
 
-  const isRu = L.lang_toggle === "EN";
+  const isRu = lang === "ru";
 
   const chipLabel = (depth: number) => {
     if (isRu) return depth === 0 ? "Тариф" : depth === 1 ? "Период" : "Подкатегория";
@@ -104,7 +107,7 @@ export default function BuyTab() {
         else if (e.code === "provider_unavailable") errMsg = L.err_provider;
         else if (e.code === "email_not_verified") errMsg = L.err_not_verified;
       }
-      Modal.error({ title: "Error", content: errMsg, centered: true });
+      toast.error(errMsg);
     } finally {
       setBuyingId(null);
     }
@@ -117,11 +120,7 @@ export default function BuyTab() {
       const resp = await webPayments.payWithCredits(selectedInvoiceId);
       if (resp.ok) {
         if (resp.balance_after != null) setBalance(resp.balance_after);
-        Modal.success({
-          title: L.msg_paid_with_credits,
-          centered: true,
-          okText: "OK",
-        });
+        toast.success(L.msg_paid_with_credits);
       }
     } catch (e) {
       let errMsg = L.err_invoice;
@@ -129,7 +128,7 @@ export default function BuyTab() {
         if (e.code === "insufficient_credits") errMsg = L.err_insufficient_credits;
         else if (e.code === "email_not_verified") errMsg = L.err_not_verified;
       }
-      Modal.error({ title: "Error", content: errMsg, centered: true });
+      toast.error(errMsg);
     } finally {
       setPayingCreditsId(null);
     }
@@ -138,13 +137,18 @@ export default function BuyTab() {
   if (loading) {
     return (
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-          <ShoppingCartOutlined style={{ fontSize: 18, color: "rgba(255,255,255,0.5)" }} />
-          <Title level={4} style={{ color: "#fff", margin: 0 }}>{L.buy_title}</Title>
+        <div className="mb-6 flex items-center gap-2">
+          <ShoppingCart size={18} className="text-muted-foreground" />
+          <h4 className="m-0 text-lg font-semibold text-foreground">{L.buy_title}</h4>
         </div>
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
-          {[1, 2].map((i) => <Skeleton key={i} active paragraph={{ rows: 2 }} />)}
-        </Space>
+        <div className="flex flex-col gap-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -152,11 +156,13 @@ export default function BuyTab() {
   if (error) {
     return (
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-          <ShoppingCartOutlined style={{ fontSize: 18, color: "rgba(255,255,255,0.5)" }} />
-          <Title level={4} style={{ color: "#fff", margin: 0 }}>{L.buy_title}</Title>
+        <div className="mb-6 flex items-center gap-2">
+          <ShoppingCart size={18} className="text-muted-foreground" />
+          <h4 className="m-0 text-lg font-semibold text-foreground">{L.buy_title}</h4>
         </div>
-        <Alert type="error" message={error} showIcon style={{ borderRadius: 12 }} />
+        <Alert variant="destructive" className="rounded-xl">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -167,24 +173,19 @@ export default function BuyTab() {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <ShoppingCartOutlined style={{ fontSize: 18, color: "rgba(255,255,255,0.5)" }} />
-        <Title level={4} style={{ color: "#fff", margin: 0 }}>{L.buy_title}</Title>
+      <div className="mb-5 flex items-center gap-2">
+        <ShoppingCart size={18} className="text-muted-foreground" />
+        <h4 className="m-0 text-lg font-semibold text-foreground">{L.buy_title}</h4>
       </div>
 
       {balance > 0 && (
-        <Alert
-          icon={<WalletOutlined />}
-          type="info"
-          showIcon
-          message={
-            <Space wrap>
-              <span>{L.bonus_balance(balance)}</span>
-              <Tag color="blue">{L.points_hint}</Tag>
-            </Space>
-          }
-          style={{ borderRadius: 12, marginBottom: 20 }}
-        />
+        <Alert variant="info" className="mb-5 rounded-xl">
+          <Wallet className="h-4 w-4" />
+          <AlertDescription className="flex flex-wrap items-center gap-2">
+            <span>{L.bonus_balance(balance)}</span>
+            <Badge variant="secondary">{L.points_hint}</Badge>
+          </AlertDescription>
+        </Alert>
       )}
 
       {chipLevels.length === 0 && invoices.length === 0 && (
@@ -192,15 +193,8 @@ export default function BuyTab() {
       )}
 
       {chipLevels.map((chips, depth) => (
-        <div key={depth} style={{ marginBottom: 16 }}>
-          <div style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: "rgba(255,255,255,0.30)",
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-            marginBottom: 8,
-          }}>
+        <div key={depth} className="mb-4">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             {chipLabel(depth)}
           </div>
           <div className="chip-row-wrap">
@@ -224,15 +218,8 @@ export default function BuyTab() {
       )}
 
       {invoices.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: "rgba(255,255,255,0.30)",
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-            marginBottom: 8,
-          }}>
+        <div className="mb-4">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             {invoiceLabel}
           </div>
           <div className="tariff-scroll-wrap">
@@ -253,13 +240,13 @@ export default function BuyTab() {
                       <div className="tariff-card__currency">{inv.currency}</div>
                     </div>
                     {(inv.days ?? 0) > 0 && (
-                      <div style={{ fontSize: 11, opacity: 0.5, marginTop: 4 }}>
+                      <div className="mt-1 text-[11px] opacity-50">
                         {L.days(inv.days ?? 0)}
                       </div>
                     )}
                     {isSelected && (
                       <div className="tariff-card__check">
-                        <CheckOutlined />
+                        <Check size={12} />
                       </div>
                     )}
                   </div>
@@ -271,91 +258,67 @@ export default function BuyTab() {
       )}
 
       {selectedInvoice && (
-        <div style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          padding: "16px 20px",
-          background: "rgba(124,156,255,0.08)",
-          border: "1px solid rgba(124,156,255,0.25)",
-          borderRadius: 16,
-          marginTop: 8,
-          animation: "slideUp 0.2s ease",
-        }}>
+        <div className="mt-2 flex flex-col gap-2.5 rounded-2xl border border-border bg-card px-5 py-4">
           <div>
-            <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
-              {selectedInvoice.text}
-            </Text>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 2 }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color: "#9DB8FF" }}>
-                {payPrice.toFixed(0)}
-              </span>
-              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.45)" }}>{payCurrency}</span>
+            <span className="text-[13px] text-muted-foreground">{selectedInvoice.text}</span>
+            <div className="mt-0.5 flex items-baseline gap-1.5">
+              <span className="text-[22px] font-extrabold text-foreground">{payPrice.toFixed(0)}</span>
+              <span className="text-sm text-muted-foreground">{payCurrency}</span>
             </div>
           </div>
-          <Space direction="vertical" style={{ width: "100%" }} size={8}>
+          <div className="flex flex-col gap-2">
             {canPayCredits && (
               <Button
-                type="primary"
-                size="large"
-                loading={payingCreditsId === selectedInvoiceId}
+                size="lg"
+                disabled={payingCreditsId === selectedInvoiceId}
                 onClick={handlePayCredits}
-                style={{ borderRadius: 12, fontWeight: 700, width: "100%" }}
+                className="w-full rounded-xl font-bold"
               >
                 {L.btn_pay_credits(pointsCost)}
               </Button>
             )}
             <Button
-              size="large"
-              loading={buyingId === selectedInvoiceId}
+              size="lg"
+              variant="outline"
+              disabled={buyingId === selectedInvoiceId}
               onClick={handleBuyFiat}
-              style={{
-                borderRadius: 12,
-                fontWeight: 700,
-                width: "100%",
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                color: "#fff",
-              }}
+              className="w-full rounded-xl font-bold"
             >
               {L.btn_pay} · {payPrice.toFixed(0)} {payCurrency}
             </Button>
-          </Space>
+          </div>
         </div>
       )}
 
-      <Modal
-        open={!!invoice}
-        onCancel={() => setInvoice(null)}
-        footer={null}
-        centered
-        title={<Text strong style={{ color: "#fff" }}>{L.invoice_title}</Text>}
-      >
-        {invoice && (
-          <Space direction="vertical" style={{ width: "100%" }} size={16}>
-            <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px 20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <Text style={{ color: "rgba(255,255,255,0.5)" }}>{L.to_pay}</Text>
-                <Text strong style={{ color: "#9DB8FF", fontSize: 20 }}>
-                  {invoice.amount.toFixed(0)} {invoice.currency}
-                </Text>
+      <Dialog open={!!invoice} onOpenChange={(open) => !open && setInvoice(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{L.invoice_title}</DialogTitle>
+          </DialogHeader>
+          {invoice && (
+            <div className="flex flex-col gap-4">
+              <div className="rounded-2xl bg-secondary px-5 py-4">
+                <div className="mb-2 flex justify-between">
+                  <span className="text-muted-foreground">{L.to_pay}</span>
+                  <span className="text-xl font-semibold text-foreground">
+                    {invoice.amount.toFixed(0)} {invoice.currency}
+                  </span>
+                </div>
               </div>
+              <Button
+                size="lg"
+                className="h-12 w-full rounded-xl font-semibold"
+                onClick={() => {
+                  window.open(invoice.url, "_blank");
+                  setInvoice(null);
+                }}
+              >
+                {L.btn_proceed}
+              </Button>
             </div>
-            <Button
-              type="primary"
-              block
-              size="large"
-              onClick={() => {
-                window.open(invoice.url, "_blank");
-                setInvoice(null);
-              }}
-              style={{ height: 48, borderRadius: 12, fontWeight: 600 }}
-            >
-              {L.btn_proceed}
-            </Button>
-          </Space>
-        )}
-      </Modal>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

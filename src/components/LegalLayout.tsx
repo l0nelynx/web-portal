@@ -1,12 +1,10 @@
-import { Button, Typography } from "antd";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
+import { Button } from "@/components/ui/button";
 import BrandLogo from "./BrandLogo";
 import { BRAND_NAME, BOT_URL } from "../branding";
 import { useLang } from "../locale";
 import { LegalDoc } from "../pages/legal/content";
 import { usePageMeta } from "../seo";
-
-const { Title, Paragraph, Text } = Typography;
 
 interface Props {
   doc: LegalDoc;
@@ -18,71 +16,46 @@ export default function LegalLayout({ doc }: Props) {
   usePageMeta({ title: `${doc.title} | ${BRAND_NAME}`, robots: "noindex, follow" });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0B0B14", color: "rgba(255,255,255,0.9)" }}>
+    <div className="min-h-screen bg-background text-foreground">
       {/* Top bar */}
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "16px 24px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          background: "rgba(11,11,20,0.85)",
-          backdropFilter: "blur(20px)",
-        }}
-      >
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+      <nav className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/85 px-6 py-4 backdrop-blur-xl">
+        <Link to="/" className="flex items-center gap-2.5 no-underline">
           <BrandLogo size={30} />
-          <Text strong style={{ color: "#fff", fontSize: 16 }}>{BRAND_NAME}</Text>
+          <span className="text-base font-semibold text-foreground">{BRAND_NAME}</span>
         </Link>
         <Button
-          size="small"
+          size="sm"
+          variant="outline"
+          className="min-w-[34px] rounded-md border-border bg-secondary text-xs text-muted-foreground"
           onClick={toggle}
-          style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "rgba(255,255,255,0.6)",
-            borderRadius: 6,
-            fontSize: 12,
-            minWidth: 34,
-          }}
         >
           {L.lang_toggle}
         </Button>
       </nav>
 
       {/* Document */}
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "32px 20px 80px" }}>
-        <Link to="/" style={{ color: "#7C9CFF", fontSize: 14, textDecoration: "none" }}>
+      <div className="mx-auto max-w-[820px] px-5 py-8 pb-20">
+        <Link to="/" className="text-sm text-primary no-underline underline-offset-4 hover:underline">
           {L.legal_back}
         </Link>
 
-        <Title level={1} style={{ color: "#fff", fontSize: 32, marginTop: 20, marginBottom: 8 }}>
-          {doc.title}
-        </Title>
-        <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{doc.updated}</Text>
+        <h1 className="mb-2 mt-5 text-[32px] font-bold text-foreground">{doc.title}</h1>
+        <span className="text-[13px] text-muted-foreground">{doc.updated}</span>
 
         {doc.intro && (
-          <Paragraph style={{ color: "rgba(255,255,255,0.7)", fontSize: 15, marginTop: 20, lineHeight: 1.7 }}>
-            {doc.intro}
-          </Paragraph>
+          <p className="mt-5 text-[15px] leading-relaxed text-muted-foreground">{doc.intro}</p>
         )}
 
         {doc.sections.map((s, i) => (
-          <section key={i} style={{ marginTop: 28 }}>
-            <Title level={3} style={{ color: "#fff", fontSize: 18, marginBottom: 10 }}>
-              {s.heading}
-            </Title>
+          <section key={i} className="mt-7">
+            <h3 className="mb-2.5 text-lg font-semibold text-foreground">{s.heading}</h3>
             {s.paragraphs?.map((p, j) => (
-              <Paragraph key={j} style={{ color: "rgba(255,255,255,0.7)", fontSize: 15, lineHeight: 1.7 }}>
+              <p key={j} className="text-[15px] leading-relaxed text-muted-foreground">
                 {p}
-              </Paragraph>
+              </p>
             ))}
             {s.bullets && (
-              <ul style={{ color: "rgba(255,255,255,0.7)", fontSize: 15, lineHeight: 1.8, paddingLeft: 22 }}>
+              <ul className="list-disc pl-6 text-[15px] leading-8 text-muted-foreground">
                 {s.bullets.map((b, j) => (
                   <li key={j}>{b}</li>
                 ))}
@@ -92,33 +65,21 @@ export default function LegalLayout({ doc }: Props) {
         ))}
 
         {doc.footnote && (
-          <div
-            style={{
-              marginTop: 36,
-              padding: "16px 20px",
-              borderRadius: 12,
-              background: "rgba(124,156,255,0.08)",
-              border: "1px solid rgba(124,156,255,0.2)",
-              color: "rgba(255,255,255,0.75)",
-              fontSize: 14,
-            }}
-          >
+          <div className="mt-9 rounded-xl border border-border bg-secondary px-5 py-4 text-sm text-foreground/90">
             {doc.footnote}
           </div>
         )}
 
         {/* Footer with clickable contact + disclaimer */}
-        <div style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="mt-10 border-t border-border pt-5">
           {BOT_URL && (
-            <Paragraph style={{ margin: 0 }}>
-              <a href={BOT_URL} target="_blank" rel="noopener noreferrer" style={{ color: "#7C9CFF" }}>
+            <p className="m-0">
+              <a href={BOT_URL} target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline">
                 {L.footer_telegram}
               </a>
-            </Paragraph>
+            </p>
           )}
-          <Text style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-            {L.footer_disclaimer}
-          </Text>
+          <span className="text-xs text-muted-foreground">{L.footer_disclaimer}</span>
         </div>
       </div>
     </div>

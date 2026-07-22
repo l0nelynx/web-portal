@@ -1,16 +1,29 @@
-import { Alert, Button, Modal, Popconfirm, Spin, Tag, Typography } from "antd";
-import { DeleteOutlined, LaptopOutlined, MobileOutlined, ReloadOutlined } from "@ant-design/icons";
+import { Laptop, Smartphone, Trash2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ApiError, devices, DeviceItem } from "../../api/client";
 import { useLang } from "../../locale";
-
-const { Title, Text } = Typography;
 
 function platformIcon(platform: string | null) {
   const p = (platform || "").toLowerCase();
   if (p.includes("android") || p.includes("ios") || p.includes("mobile"))
-    return <MobileOutlined />;
-  return <LaptopOutlined />;
+    return <Smartphone size={18} />;
+  return <Laptop size={18} />;
 }
 
 export default function DevicesTab() {
@@ -37,7 +50,7 @@ export default function DevicesTab() {
       await load();
     } catch (e) {
       const msg = e instanceof ApiError && e.status === 429 ? L.err_rate_limited_dev : L.err_remove_dev;
-      Modal.error({ title: "Error", content: msg, centered: true });
+      toast.error(msg);
     } finally {
       setRemovingHwid(null);
     }
@@ -45,33 +58,28 @@ export default function DevicesTab() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <Title level={4} style={{ color: "#fff", margin: 0 }}>
-          <LaptopOutlined style={{ marginRight: 8 }} />
+      <div className="mb-6 flex items-center justify-between">
+        <h4 className="m-0 flex items-center gap-2 text-lg font-semibold text-white">
+          <Laptop size={18} />
           {L.dev_title}
-          {data && (
-            <Tag style={{ marginLeft: 8, verticalAlign: "middle" }}>{data.total}</Tag>
-          )}
-        </Title>
-        <Button icon={<ReloadOutlined />} onClick={load} loading={loading} style={{ borderRadius: 10 }}>
+          {data && <Badge variant="secondary">{data.total}</Badge>}
+        </h4>
+        <Button variant="outline" onClick={load} disabled={loading} className="rounded-lg">
+          {loading ? <Spinner className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
           {L.btn_refresh}
         </Button>
       </div>
 
       {loading && !data ? (
-        <div style={{ textAlign: "center", padding: 60 }}><Spin size="large" /></div>
+        <div className="py-16 text-center"><Spinner className="mx-auto h-8 w-8" /></div>
       ) : error ? (
-        <Alert type="error" message={error} showIcon style={{ borderRadius: 12 }} />
+        <Alert variant="destructive" className="rounded-xl">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : !data?.devices.length ? (
-        <div style={{
-          textAlign: "center",
-          padding: "48px 24px",
-          background: "rgba(255,255,255,0.04)",
-          borderRadius: 20,
-          border: "1px dashed rgba(255,255,255,0.10)",
-        }}>
-          <LaptopOutlined style={{ fontSize: 40, color: "rgba(255,255,255,0.2)", marginBottom: 12 }} />
-          <Text style={{ display: "block", color: "rgba(255,255,255,0.35)" }}>{L.no_devices}</Text>
+        <div className="rounded-xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
+          <Laptop className="mx-auto mb-3 h-10 w-10 text-white/20" />
+          <span className="block text-white/35">{L.no_devices}</span>
         </div>
       ) : (
         <div>
@@ -85,38 +93,49 @@ export default function DevicesTab() {
                 <div className="device-card__meta">
                   {[dev.platform, dev.os_version].filter(Boolean).join(" · ")}
                   {dev.created_at && (
-                    <span style={{ marginLeft: 8 }}>
+                    <span className="ml-2">
                       · {new Date(dev.created_at).toLocaleDateString()}
                     </span>
                   )}
                 </div>
               </div>
               <div className="device-card__actions">
-                <Popconfirm
-                  title={L.confirm_remove}
-                  description={L.confirm_remove_desc}
-                  onConfirm={() => handleRemove(dev.hwid)}
-                  okText={L.ok_remove}
-                  cancelText={L.cancel}
-                  okButtonProps={{ danger: true }}
-                >
-                  <Button
-                    danger
-                    icon={<DeleteOutlined />}
-                    size="small"
-                    loading={removingHwid === dev.hwid}
-                    style={{ borderRadius: 8 }}
-                  />
-                </Popconfirm>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      disabled={removingHwid === dev.hwid}
+                      className="h-8 w-8 rounded-lg"
+                    >
+                      {removingHwid === dev.hwid ? <Spinner className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{L.confirm_remove}</AlertDialogTitle>
+                      <AlertDialogDescription>{L.confirm_remove_desc}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{L.cancel}</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                        onClick={() => handleRemove(dev.hwid)}
+                      >
+                        {L.ok_remove}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <Text style={{ display: "block", marginTop: 12, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
+      <span className="mt-3 block text-xs text-white/30">
         {L.dev_auto_registered}
-      </Text>
+      </span>
     </div>
   );
 }

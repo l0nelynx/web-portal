@@ -1,10 +1,12 @@
-import { Alert, Button, Progress, Spin, Tag, Typography } from "antd";
-import { CalendarOutlined, LinkOutlined, ReloadOutlined, WifiOutlined } from "@ant-design/icons";
+import { Calendar, Link as LinkIcon, RefreshCw, Wifi } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { me, MeResponse, SubscriptionInfo } from "../../api/client";
 import { useLang } from "../../locale";
-
-const { Title, Text } = Typography;
 
 function SubCard({ sub, L }: { sub: SubscriptionInfo; L: ReturnType<typeof useLang>["L"] }) {
   const usagePct =
@@ -18,17 +20,17 @@ function SubCard({ sub, L }: { sub: SubscriptionInfo; L: ReturnType<typeof useLa
     disabled: L.status_disabled,
     limited: L.status_limited,
   };
-  const statusColorMap: Record<string, string> = {
-    active: "success", expired: "error", disabled: "default", limited: "warning",
+  const statusVariantMap: Record<string, "success" | "destructive" | "secondary" | "warning"> = {
+    active: "success", expired: "destructive", disabled: "secondary", limited: "warning",
   };
 
   return (
     <div className="sub-card">
       <div className="sub-card__header">
         <span className="sub-card__tariff">{sub.tariff}</span>
-        <Tag color={statusColorMap[sub.status || ""] || "default"}>
+        <Badge variant={statusVariantMap[sub.status || ""] || "secondary"}>
           {statusMap[sub.status || ""] || sub.status || "—"}
-        </Tag>
+        </Badge>
       </div>
 
       <div className="sub-card__days-row">
@@ -38,18 +40,16 @@ function SubCard({ sub, L }: { sub: SubscriptionInfo; L: ReturnType<typeof useLa
 
       {sub.data_limit_gb && sub.data_limit_gb > 0 ? (
         <div className="sub-card__progress">
-          <Progress
-            percent={usagePct}
-            strokeColor={usagePct >= 90 ? "#FF8A8A" : "url(#progressGrad)"}
-            trailColor="rgba(255,255,255,0.09)"
-            status={usagePct >= 95 ? "exception" : "active"}
-            format={(pct) => (
-              <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>{pct}%</Text>
-            )}
-          />
-          <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
+          <div className="flex items-center gap-2">
+            <Progress
+              value={usagePct}
+              className={usagePct >= 90 ? "progress-danger" : undefined}
+            />
+            <span className="text-xs text-muted-foreground">{usagePct}%</span>
+          </div>
+          <span className="text-xs text-muted-foreground">
             {sub.traffic_used_gb.toFixed(2)} GB / {sub.data_limit_gb} GB
-          </Text>
+          </span>
         </div>
       ) : null}
 
@@ -75,13 +75,9 @@ function SubCard({ sub, L }: { sub: SubscriptionInfo; L: ReturnType<typeof useLa
       </div>
 
       {sub.status === "active" && sub.subscription_url && (
-        <div style={{ padding: "12px 22px 18px" }}>
-          <Button
-            type="primary"
-            icon={<LinkOutlined />}
-            onClick={() => window.open(sub.subscription_url!, "_blank")}
-            style={{ borderRadius: 12 }}
-          >
+        <div className="px-[22px] pb-[18px] pt-3">
+          <Button className="rounded-xl" onClick={() => window.open(sub.subscription_url!, "_blank")}>
+            <LinkIcon className="h-4 w-4" />
             {L.copy_sub_link}
           </Button>
         </div>
@@ -108,38 +104,30 @@ export default function SubscriptionTab({ onBuyClick }: { onBuyClick: () => void
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <Title level={4} style={{ color: "#fff", margin: 0 }}>
-          <WifiOutlined style={{ marginRight: 8 }} />{L.sub_title}
-        </Title>
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={load}
-          loading={loading}
-          style={{ borderRadius: 10 }}
-        >
+      <div className="mb-6 flex items-center justify-between">
+        <h4 className="m-0 flex items-center gap-2 text-lg font-semibold text-foreground">
+          <Wifi size={18} />{L.sub_title}
+        </h4>
+        <Button variant="outline" onClick={load} disabled={loading} className="rounded-lg">
+          {loading ? <Spinner className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
           {L.btn_refresh}
         </Button>
       </div>
 
       {loading && !data ? (
-        <div style={{ textAlign: "center", padding: 60 }}><Spin size="large" /></div>
+        <div className="py-16 text-center"><Spinner className="mx-auto h-8 w-8" /></div>
       ) : error ? (
-        <Alert type="error" message={error} showIcon style={{ borderRadius: 12 }} />
+        <Alert variant="destructive" className="rounded-xl">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : data?.subscription ? (
         <SubCard sub={data.subscription} L={L} />
       ) : (
-        <div style={{
-          textAlign: "center",
-          padding: "60px 24px",
-          background: "rgba(255,255,255,0.04)",
-          borderRadius: 20,
-          border: "1px dashed rgba(255,255,255,0.10)",
-        }}>
-          <CalendarOutlined style={{ fontSize: 48, color: "rgba(255,255,255,0.2)", marginBottom: 16 }} />
-          <Title level={4} style={{ color: "rgba(255,255,255,0.5)" }}>{L.no_sub_title}</Title>
-          <Text style={{ color: "rgba(255,255,255,0.35)", display: "block", marginBottom: 24 }}>{L.no_sub_text}</Text>
-          <Button type="primary" size="large" onClick={onBuyClick} style={{ borderRadius: 12 }}>
+        <div className="rounded-[20px] border border-dashed border-border bg-card px-6 py-16 text-center">
+          <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <h4 className="text-lg font-semibold text-muted-foreground">{L.no_sub_title}</h4>
+          <span className="mb-6 block text-muted-foreground">{L.no_sub_text}</span>
+          <Button size="lg" onClick={onBuyClick} className="rounded-xl">
             {L.btn_buy_sub}
           </Button>
         </div>

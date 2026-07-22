@@ -1,8 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import { AuthProvider } from "./auth/AuthContext";
 import WebApp from "./App";
+import "./index.css";
 import "./theme.css";
 
 // GitHub Pages SPA redirect: 404.html encodes the real path as /?p=/some/path

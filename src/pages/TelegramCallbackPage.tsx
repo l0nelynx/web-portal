@@ -1,10 +1,8 @@
 import { useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Spin, Typography } from "antd";
+import { useNavigate, useSearchParams } from "react-router";
+import { Spinner } from "@/components/ui/spinner";
 import { auth, AuthResponse, ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
-
-const { Text } = Typography;
 
 /**
  * Landing page for the Telegram OpenID Connect redirect.
@@ -64,20 +62,9 @@ export default function TelegramCallbackPage() {
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 16,
-      }}
-    >
-      <Spin size="large" />
-      <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
-        Signing in with Telegram…
-      </Text>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <Spinner className="h-8 w-8" />
+      <span className="text-sm text-white/50">Signing in with Telegram…</span>
     </div>
   );
 }

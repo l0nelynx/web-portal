@@ -1,22 +1,22 @@
-import { Alert, Button, Card, Form, Input, Space, Spin, Tag, Typography } from "antd";
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  GiftOutlined,
-  LockOutlined,
-  MailOutlined,
-  KeyOutlined,
-} from "@ant-design/icons";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { CheckCircle2, XCircle, Gift, Lock, Mail, KeyRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { ApiError, auth, invite, ValidateInviteResponse } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
 import BrandLogo from "../components/BrandLogo";
 import { BRAND_NAME } from "../branding";
 import { usePageMeta } from "../seo";
-
-const { Title, Text } = Typography;
 
 interface InviteStatus {
   checked: boolean;
@@ -25,18 +25,39 @@ interface InviteStatus {
   checking: boolean;
 }
 
+function buildSchema(L: ReturnType<typeof useLang>["L"]) {
+  return z
+    .object({
+      invite_code: z.string().min(1, L.val_invite_req),
+      email: z.string().min(1, L.val_email_req).email(L.val_email_format),
+      password: z.string().min(1, L.val_pwd_req).min(8, L.val_pwd_min),
+      confirm: z.string().min(1, L.val_confirm_req),
+    })
+    .refine((v) => v.password === v.confirm, {
+      message: L.val_confirm_match,
+      path: ["confirm"],
+    });
+}
+
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
+
 export default function RegisterPage() {
   const { setUserAfterRegister } = useAuth();
   const { L } = useLang();
   const navigate = useNavigate();
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   usePageMeta({ title: `${L.reg_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>({
     checked: false, valid: null, data: null, checking: false,
   });
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const schema = buildSchema(L);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   function onInviteChange(e: React.ChangeEvent<HTMLInputElement>) {
     const code = e.target.value.trim().toUpperCase();
@@ -64,9 +85,8 @@ export default function RegisterPage() {
     return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
   }, []);
 
-  async function onFinish(values: { email: string; password: string; confirm: string; invite_code: string }) {
+  async function onFinish(values: FormValues) {
     if (!inviteStatus.valid) { setError(L.err_req_invite); return; }
-    setLoading(true);
     setError(null);
     try {
       const resp = await auth.register(
@@ -88,149 +108,132 @@ export default function RegisterPage() {
       } else {
         setError(L.err_network);
       }
-    } finally {
-      setLoading(false);
     }
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ position: "fixed", top: "20%", left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "radial-gradient(ellipse, rgba(6,214,160,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
-
-      <div style={{ width: "100%", maxWidth: 440, position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <Link to="/" style={{ textDecoration: "none" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+    <div className="relative flex min-h-screen items-center justify-center p-6">
+      <div className="relative w-full max-w-[440px]">
+        <div className="mb-8 text-center">
+          <Link to="/" className="no-underline">
+            <div className="inline-flex items-center gap-2.5">
               <BrandLogo size={38} />
-              <Text strong style={{ fontSize: 20, color: "#fff" }}>{BRAND_NAME}</Text>
+              <span className="text-xl font-bold text-foreground">{BRAND_NAME}</span>
             </div>
           </Link>
         </div>
 
-        <Card
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20 }}
-          styles={{ body: { padding: 36 } }}
-        >
-          <Title level={3} style={{ color: "#fff", margin: "0 0 8px", textAlign: "center" }}>
-            {L.reg_title}
-          </Title>
-          <Text style={{ color: "rgba(255,255,255,0.5)", display: "block", textAlign: "center", marginBottom: 28, fontSize: 14 }}>
-            {L.reg_subtitle}
-          </Text>
+        <Card className="p-9">
+          <h3 className="mb-2 text-center text-2xl font-semibold text-foreground">{L.reg_title}</h3>
+          <p className="mb-7 text-center text-sm text-muted-foreground">{L.reg_subtitle}</p>
 
           {error && (
-            <Alert type="error" message={error} style={{ marginBottom: 20, borderRadius: 10 }} showIcon closable onClose={() => setError(null)} />
+            <Alert variant="destructive" className="mb-5 rounded-lg">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
           {inviteStatus.valid && (inviteStatus.data?.credit_grant ?? 0) > 0 && (
-            <Alert
-              type="success"
-              icon={<GiftOutlined />}
-              message={
-                <Space>
-                  <span>{L.discount_accepted}</span>
-                  <Tag color="green">{L.credit_grant_text(inviteStatus.data!.credit_grant!)}</Tag>
-                </Space>
-              }
-              style={{ marginBottom: 20, borderRadius: 10 }}
-              showIcon
-            />
+            <Alert variant="success" className="mb-5 rounded-lg">
+              <Gift className="h-4 w-4" />
+              <AlertDescription className="flex flex-wrap items-center gap-2">
+                <span>{L.discount_accepted}</span>
+                <Badge variant="success">{L.credit_grant_text(inviteStatus.data!.credit_grant!)}</Badge>
+              </AlertDescription>
+            </Alert>
           )}
 
-          <Form layout="vertical" form={form} onFinish={onFinish} size="large">
-            <Form.Item
-              name="invite_code"
-              label={<Text style={{ color: "rgba(255,255,255,0.75)" }}>{L.invite_label}</Text>}
-              rules={[{ required: true, message: L.val_invite_req }]}
-              validateStatus={inviteStatus.checking ? "validating" : inviteStatus.checked ? (inviteStatus.valid ? "success" : "error") : ""}
-              help={
-                inviteStatus.checking ? (
-                  <Space><Spin size="small" /><span style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>{L.invite_checking}</span></Space>
-                ) : inviteStatus.checked && !inviteStatus.valid ? (
-                  <Space style={{ color: "#ff7875" }}><CloseCircleOutlined /><span>{L.invite_invalid}</span></Space>
-                ) : inviteStatus.valid ? (
-                  <Space style={{ color: "#52c41a" }}><CheckCircleOutlined /><span>{L.invite_valid}</span></Space>
-                ) : null
-              }
-            >
-              <Input
-                prefix={<KeyOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                placeholder={L.invite_placeholder}
-                onChange={onInviteChange}
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", borderRadius: 12, textTransform: "uppercase", letterSpacing: "1px" }}
-                maxLength={20}
-              />
-            </Form.Item>
+          <form onSubmit={handleSubmit(onFinish)} className="flex flex-col gap-4">
+            <div>
+              <Label className="mb-1.5 block text-muted-foreground">{L.invite_label}</Label>
+              <div className="relative">
+                <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder={L.invite_placeholder}
+                  maxLength={20}
+                  className="h-12 rounded-xl pl-9 uppercase tracking-wider"
+                  {...register("invite_code")}
+                  onChange={(e) => {
+                    register("invite_code").onChange(e);
+                    onInviteChange(e);
+                  }}
+                />
+              </div>
+              {errors.invite_code ? (
+                <p className="mt-1 text-xs text-destructive">{errors.invite_code.message}</p>
+              ) : inviteStatus.checking ? (
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Spinner className="h-3 w-3" /> {L.invite_checking}
+                </p>
+              ) : inviteStatus.checked && !inviteStatus.valid ? (
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-destructive">
+                  <XCircle className="h-3.5 w-3.5" /> {L.invite_invalid}
+                </p>
+              ) : inviteStatus.valid ? (
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-emerald-500">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {L.invite_valid}
+                </p>
+              ) : null}
+            </div>
 
-            <Form.Item
-              name="email"
-              label={<Text style={{ color: "rgba(255,255,255,0.75)" }}>Email</Text>}
-              rules={[{ required: true, message: L.val_email_req }, { type: "email", message: L.val_email_format }]}
-            >
-              <Input
-                prefix={<MailOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                placeholder="your@email.com"
-                autoComplete="email"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", borderRadius: 12 }}
-              />
-            </Form.Item>
+            <div>
+              <Label className="mb-1.5 block text-muted-foreground">Email</Label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                  className="h-12 rounded-xl pl-9"
+                  {...register("email")}
+                />
+              </div>
+              {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
+            </div>
 
-            <Form.Item
-              name="password"
-              label={<Text style={{ color: "rgba(255,255,255,0.75)" }}>{L.pwd_label}</Text>}
-              rules={[{ required: true, message: L.val_pwd_req }, { min: 8, message: L.val_pwd_min }]}
-            >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                placeholder={L.pwd_placeholder}
-                autoComplete="new-password"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", borderRadius: 12 }}
-              />
-            </Form.Item>
+            <div>
+              <Label className="mb-1.5 block text-muted-foreground">{L.pwd_label}</Label>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="password"
+                  placeholder={L.pwd_placeholder}
+                  autoComplete="new-password"
+                  className="h-12 rounded-xl pl-9"
+                  {...register("password")}
+                />
+              </div>
+              {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
+            </div>
 
-            <Form.Item
-              name="confirm"
-              label={<Text style={{ color: "rgba(255,255,255,0.75)" }}>{L.confirm_label}</Text>}
-              dependencies={["password"]}
-              rules={[
-                { required: true, message: L.val_confirm_req },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue("password") === value) return Promise.resolve();
-                    return Promise.reject(new Error(L.val_confirm_match));
-                  },
-                }),
-              ]}
-              style={{ marginBottom: 24 }}
-            >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                placeholder={L.confirm_placeholder}
-                autoComplete="new-password"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", borderRadius: 12 }}
-              />
-            </Form.Item>
+            <div>
+              <Label className="mb-1.5 block text-muted-foreground">{L.confirm_label}</Label>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="password"
+                  placeholder={L.confirm_placeholder}
+                  autoComplete="new-password"
+                  className="h-12 rounded-xl pl-9"
+                  {...register("confirm")}
+                />
+              </div>
+              {errors.confirm && <p className="mt-1 text-xs text-destructive">{errors.confirm.message}</p>}
+            </div>
 
             <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={loading}
-              disabled={!inviteStatus.valid}
-              style={{
-                background: inviteStatus.valid ? "linear-gradient(135deg, #7C9CFF, #B47CFF)" : "rgba(255,255,255,0.1)",
-                border: "none", height: 48, borderRadius: 12, fontSize: 16, fontWeight: 600,
-              }}
+              type="submit"
+              disabled={isSubmitting || !inviteStatus.valid}
+              className="h-12 rounded-xl text-base font-semibold"
             >
               {L.btn_create}
             </Button>
-          </Form>
+          </form>
 
-          <div style={{ textAlign: "center", marginTop: 24 }}>
-            <Text style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
+          <div className="mt-6 text-center">
+            <span className="text-xs text-muted-foreground">
               {L.have_account}{" "}
-              <Link to="/login" style={{ color: "#7C9CFF" }}>{L.sign_in}</Link>
-            </Text>
+              <Link to="/login" className="text-primary underline-offset-4 hover:underline">{L.sign_in}</Link>
+            </span>
           </div>
         </Card>
       </div>

@@ -1,40 +1,49 @@
-import { Alert, Button, Card, Form, Input, Typography } from "antd";
-import { LockOutlined, MailOutlined, NumberOutlined } from "@ant-design/icons";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Lock, Mail, Hash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import BrandLogo from "../components/BrandLogo";
 import { BRAND_NAME } from "../branding";
 import { ApiError, password } from "../api/client";
 import { useLang } from "../locale";
 import { usePageMeta } from "../seo";
 
-const { Title, Text } = Typography;
+function requestSchema(L: ReturnType<typeof useLang>["L"]) {
+  return z.object({
+    email: z.string().min(1, L.val_email_req).email(L.val_email_format),
+  });
+}
 
-const inputStyle = {
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.12)",
-  color: "#fff",
-  borderRadius: 12,
-} as const;
+function confirmSchema(L: ReturnType<typeof useLang>["L"]) {
+  return z
+    .object({
+      code: z.string().min(1, L.val_code_req).length(6, L.val_code_len),
+      password: z.string().min(1, L.val_pwd_req).min(8, L.val_pwd_min),
+      confirm: z.string().min(1, L.val_confirm_req),
+    })
+    .refine((v) => v.password === v.confirm, { message: L.val_confirm_match, path: ["confirm"] });
+}
 
-const primaryBtnStyle = {
-  background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-  border: "none",
-  height: 48,
-  borderRadius: 12,
-  fontSize: 16,
-  fontWeight: 600,
-} as const;
+type RequestValues = z.infer<ReturnType<typeof requestSchema>>;
+type ConfirmValues = z.infer<ReturnType<typeof confirmSchema>>;
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const { L, toggle } = useLang();
   const [step, setStep] = useState<"request" | "confirm" | "done">("request");
   const [emailAddr, setEmailAddr] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   usePageMeta({ title: `${L.forgot_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
+
+  const requestForm = useForm<RequestValues>({ resolver: zodResolver(requestSchema(L)) });
+  const confirmForm = useForm<ConfirmValues>({ resolver: zodResolver(confirmSchema(L)) });
 
   function mapError(e: unknown): string {
     if (e instanceof ApiError) {
@@ -50,8 +59,7 @@ export default function ForgotPasswordPage() {
     return L.err_network;
   }
 
-  async function onRequest(values: { email: string }) {
-    setLoading(true);
+  async function onRequest(values: RequestValues) {
     setError(null);
     try {
       const addr = values.email.trim().toLowerCase();
@@ -61,13 +69,10 @@ export default function ForgotPasswordPage() {
       setStep("confirm");
     } catch (e) {
       setError(mapError(e));
-    } finally {
-      setLoading(false);
     }
   }
 
-  async function onConfirm(values: { code: string; password: string }) {
-    setLoading(true);
+  async function onConfirm(values: ConfirmValues) {
     setError(null);
     try {
       await password.resetConfirm(emailAddr, values.code.trim(), values.password);
@@ -75,180 +80,134 @@ export default function ForgotPasswordPage() {
       setStep("done");
     } catch (e) {
       setError(mapError(e));
-    } finally {
-      setLoading(false);
     }
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
+    <div className="flex min-h-screen items-center justify-center p-6">
       <Button
-        size="small"
+        size="sm"
+        variant="outline"
+        className="fixed right-4 top-4 z-10 min-w-[34px] rounded-md border-border bg-secondary text-xs text-muted-foreground"
         onClick={toggle}
-        style={{
-          position: "fixed",
-          top: 16,
-          right: 16,
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.6)",
-          borderRadius: 6,
-          fontSize: 12,
-          minWidth: 34,
-          zIndex: 10,
-        }}
       >
         {L.lang_toggle}
       </Button>
 
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <Link to="/" style={{ textDecoration: "none" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+      <div className="w-full max-w-[420px]">
+        <div className="mb-8 text-center">
+          <Link to="/" className="no-underline">
+            <div className="inline-flex items-center gap-2.5">
               <BrandLogo size={38} />
-              <Text strong style={{ fontSize: 20, color: "#fff" }}>
-                {BRAND_NAME}
-              </Text>
+              <span className="text-xl font-bold text-foreground">{BRAND_NAME}</span>
             </div>
           </Link>
         </div>
 
-        <Card
-          style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 20,
-          }}
-          styles={{ body: { padding: 36 } }}
-        >
-          <Title level={3} style={{ color: "#fff", margin: "0 0 8px", textAlign: "center" }}>
-            {L.forgot_title}
-          </Title>
-          <Text
-            style={{
-              color: "rgba(255,255,255,0.5)",
-              display: "block",
-              textAlign: "center",
-              marginBottom: 28,
-            }}
-          >
-            {L.forgot_subtitle}
-          </Text>
+        <Card className="p-9">
+          <h3 className="mb-2 text-center text-2xl font-semibold text-foreground">{L.forgot_title}</h3>
+          <p className="mb-7 text-center text-muted-foreground">{L.forgot_subtitle}</p>
 
           {error && (
-            <Alert
-              type="error"
-              message={error}
-              style={{ marginBottom: 20, borderRadius: 10 }}
-              showIcon
-              closable
-              onClose={() => setError(null)}
-            />
+            <Alert variant="destructive" className="mb-5 rounded-lg">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
           {info && !error && (
-            <Alert
-              type="info"
-              message={info}
-              style={{ marginBottom: 20, borderRadius: 10 }}
-              showIcon
-            />
+            <Alert variant="info" className="mb-5 rounded-lg">
+              <AlertDescription>{info}</AlertDescription>
+            </Alert>
           )}
 
           {step === "done" ? (
             <Button
-              type="primary"
-              block
-              style={primaryBtnStyle}
+              className="h-12 w-full rounded-xl text-base font-semibold"
               onClick={() => navigate("/login", { replace: true })}
             >
               {L.btn_login}
             </Button>
           ) : step === "request" ? (
-            <Form layout="vertical" size="large" onFinish={onRequest}>
-              <Form.Item
-                name="email"
-                rules={[
-                  { required: true, message: L.val_email_req },
-                  { type: "email", message: L.val_email_format },
-                ]}
+            <form onSubmit={requestForm.handleSubmit(onRequest)} className="flex flex-col gap-4">
+              <div>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Email"
+                    autoComplete="email"
+                    className="h-12 rounded-xl pl-9"
+                    {...requestForm.register("email")}
+                  />
+                </div>
+                {requestForm.formState.errors.email && (
+                  <p className="mt-1 text-xs text-destructive">{requestForm.formState.errors.email.message}</p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                disabled={requestForm.formState.isSubmitting}
+                className="h-12 rounded-xl text-base font-semibold"
               >
-                <Input
-                  prefix={<MailOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                  placeholder="Email"
-                  autoComplete="email"
-                  style={inputStyle}
-                />
-              </Form.Item>
-              <Button type="primary" htmlType="submit" block loading={loading} style={primaryBtnStyle}>
                 {L.btn_send_code}
               </Button>
-            </Form>
+            </form>
           ) : (
-            <Form layout="vertical" size="large" onFinish={onConfirm}>
-              <Form.Item
-                name="code"
-                rules={[
-                  { required: true, message: L.val_code_req },
-                  { len: 6, message: L.val_code_len },
-                ]}
+            <form onSubmit={confirmForm.handleSubmit(onConfirm)} className="flex flex-col gap-4">
+              <div>
+                <div className="relative">
+                  <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder={L.verify_code_label}
+                    maxLength={6}
+                    className="h-12 rounded-xl pl-9"
+                    {...confirmForm.register("code")}
+                  />
+                </div>
+                {confirmForm.formState.errors.code && (
+                  <p className="mt-1 text-xs text-destructive">{confirmForm.formState.errors.code.message}</p>
+                )}
+              </div>
+              <div>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder={L.new_pwd_label}
+                    autoComplete="new-password"
+                    className="h-12 rounded-xl pl-9"
+                    {...confirmForm.register("password")}
+                  />
+                </div>
+                {confirmForm.formState.errors.password && (
+                  <p className="mt-1 text-xs text-destructive">{confirmForm.formState.errors.password.message}</p>
+                )}
+              </div>
+              <div>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder={L.confirm_placeholder}
+                    autoComplete="new-password"
+                    className="h-12 rounded-xl pl-9"
+                    {...confirmForm.register("confirm")}
+                  />
+                </div>
+                {confirmForm.formState.errors.confirm && (
+                  <p className="mt-1 text-xs text-destructive">{confirmForm.formState.errors.confirm.message}</p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                disabled={confirmForm.formState.isSubmitting}
+                className="h-12 rounded-xl text-base font-semibold"
               >
-                <Input
-                  prefix={<NumberOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                  placeholder={L.verify_code_label}
-                  maxLength={6}
-                  style={inputStyle}
-                />
-              </Form.Item>
-              <Form.Item
-                name="password"
-                rules={[
-                  { required: true, message: L.val_pwd_req },
-                  { min: 8, message: L.val_pwd_min },
-                ]}
-              >
-                <Input.Password
-                  prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                  placeholder={L.new_pwd_label}
-                  autoComplete="new-password"
-                  style={inputStyle}
-                />
-              </Form.Item>
-              <Form.Item
-                name="confirm"
-                dependencies={["password"]}
-                rules={[
-                  { required: true, message: L.val_confirm_req },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || getFieldValue("password") === value) return Promise.resolve();
-                      return Promise.reject(new Error(L.val_confirm_match));
-                    },
-                  }),
-                ]}
-              >
-                <Input.Password
-                  prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                  placeholder={L.confirm_placeholder}
-                  autoComplete="new-password"
-                  style={inputStyle}
-                />
-              </Form.Item>
-              <Button type="primary" htmlType="submit" block loading={loading} style={primaryBtnStyle}>
                 {L.btn_reset_password}
               </Button>
-            </Form>
+            </form>
           )}
 
-          <div style={{ textAlign: "center", marginTop: 20 }}>
-            <Link to="/login" style={{ color: "#7C9CFF", fontWeight: 500 }}>
+          <div className="mt-5 text-center">
+            <Link to="/login" className="font-medium text-primary underline-offset-4 hover:underline">
               {L.back_to_login}
             </Link>
           </div>

@@ -1,6 +1,7 @@
-import { ConfigProvider, Spin } from "antd";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import { useEffect } from "react";
+import { Toaster } from "@/components/ui/sonner";
+import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "./auth/AuthContext";
 import { LangProvider } from "./locale";
 import { pageView } from "./analytics";
@@ -15,21 +16,13 @@ import TelegramCallbackPage from "./pages/TelegramCallbackPage";
 import PolicyPage from "./pages/legal/PolicyPage";
 import AgreementPage from "./pages/legal/AgreementPage";
 import OfferPage from "./pages/legal/OfferPage";
-import { webThemeConfig } from "./theme/webTheme";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Spin size="large" />
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }
@@ -56,8 +49,8 @@ function RouteTracker() {
 export default function WebApp() {
   return (
     <LangProvider>
-    <ConfigProvider {...webThemeConfig}>
       <RouteTracker />
+      <Toaster />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -86,7 +79,6 @@ export default function WebApp() {
         <Route path="/offer" element={<OfferPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </ConfigProvider>
     </LangProvider>
   );
 }

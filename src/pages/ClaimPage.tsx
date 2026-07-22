@@ -1,13 +1,12 @@
-import { Alert, Button, Card, Form, Input, Spin, Typography } from "antd";
-import {
-  CheckCircleOutlined,
-  LinkOutlined,
-  LockOutlined,
-  MailOutlined,
-  NumberOutlined,
-} from "@ant-design/icons";
+import { useForm } from "react-hook-form";
+import { CheckCircle2, Link2, Lock, Mail, Hash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import BrandLogo from "../components/BrandLogo";
 import TelegramLoginButton from "../components/TelegramLoginButton";
 import { BRAND_NAME } from "../branding";
@@ -20,8 +19,6 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
 import { usePageMeta } from "../seo";
-
-const { Title, Text } = Typography;
 
 type Step =
   | "url"
@@ -69,28 +66,6 @@ function shortUuidOf(url: string): string | null {
   }
 }
 
-const cardStyle = {
-  background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  borderRadius: 20,
-} as const;
-
-const inputStyle = {
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.12)",
-  color: "#fff",
-  borderRadius: 12,
-} as const;
-
-const primaryBtnStyle = {
-  background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-  border: "none",
-  height: 48,
-  borderRadius: 12,
-  fontSize: 16,
-  fontWeight: 600,
-} as const;
-
 export default function ClaimPage() {
   const { user, profile, loading: authLoading, setUserAfterRegister } = useAuth();
   const navigate = useNavigate();
@@ -105,6 +80,10 @@ export default function ClaimPage() {
   const [error, setError] = useState<string | null>(null);
   const [appLinkPending, setAppLinkPending] = useState(false);
   const bootstrapped = useRef(false);
+
+  const urlForm = useForm<{ url: string }>();
+  const loginForm = useForm<{ password: string }>();
+  const completeForm = useForm<{ code?: string; password: string; confirm: string; acc_email?: string }>();
 
   function mapError(e: unknown): string {
     if (e instanceof ApiError) {
@@ -177,6 +156,7 @@ export default function ClaimPage() {
     const fromLoc = urlFromLocation();
     if (fromLoc) {
       setSubUrl(fromLoc);
+      urlForm.setValue("url", fromLoc);
       stripClaimUrlFromLocation();
     }
     if (user) {
@@ -214,9 +194,14 @@ export default function ClaimPage() {
   async function onComplete(values: {
     code?: string;
     password: string;
+    confirm: string;
     acc_email?: string;
   }) {
     if (!resolved) return;
+    if (values.password !== values.confirm) {
+      setError(L.val_confirm_match);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -258,141 +243,105 @@ export default function ClaimPage() {
   const hint = resolved?.email_hint ?? "";
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
+    <div className="flex min-h-screen items-center justify-center p-6">
       <Button
-        size="small"
+        size="sm"
+        variant="outline"
+        className="fixed right-4 top-4 z-10 min-w-[34px] rounded-md border-border bg-secondary text-xs text-muted-foreground"
         onClick={toggle}
-        style={{
-          position: "fixed",
-          top: 16,
-          right: 16,
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.6)",
-          borderRadius: 6,
-          fontSize: 12,
-          minWidth: 34,
-          zIndex: 10,
-        }}
       >
         {L.lang_toggle}
       </Button>
 
-      <div style={{ width: "100%", maxWidth: 440, position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <Link to="/" style={{ textDecoration: "none" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+      <div className="relative w-full max-w-[440px]">
+        <div className="mb-8 text-center">
+          <Link to="/" className="no-underline">
+            <div className="inline-flex items-center gap-2.5">
               <BrandLogo size={38} />
-              <Text strong style={{ fontSize: 20, color: "#fff" }}>
-                {BRAND_NAME}
-              </Text>
+              <span className="text-xl font-bold text-foreground">{BRAND_NAME}</span>
             </div>
           </Link>
         </div>
 
-        <Card style={cardStyle} styles={{ body: { padding: 36 } }}>
-          <Title level={3} style={{ color: "#fff", margin: "0 0 8px", textAlign: "center" }}>
+        <Card className="p-9">
+          <h3 className="mb-2 text-center text-2xl font-semibold text-foreground">
             {step === "done" ? L.claim_done_title : step === "foreign" ? L.claim_foreign_title : L.claim_title}
-          </Title>
+          </h3>
           {step !== "done" && step !== "foreign" && (
-            <Text
-              style={{
-                color: "rgba(255,255,255,0.5)",
-                display: "block",
-                textAlign: "center",
-                marginBottom: 28,
-              }}
-            >
-              {L.claim_subtitle}
-            </Text>
+            <span className="mb-7 block text-center text-muted-foreground">{L.claim_subtitle}</span>
           )}
 
           {error && (
-            <Alert
-              type="error"
-              message={error}
-              style={{ marginBottom: 20, borderRadius: 10 }}
-              showIcon
-              closable
-              onClose={() => setError(null)}
-            />
+            <Alert variant="destructive" className="mb-5 rounded-lg">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
           {step === "url" && (
-            <Form
-              layout="vertical"
-              size="large"
-              onFinish={(v: { url: string }) => {
+            <form
+              onSubmit={urlForm.handleSubmit((v) => {
                 setSubUrl(v.url.trim());
                 void startClaim(v.url.trim());
-              }}
-              initialValues={{ url: subUrl }}
+              })}
+              className="flex flex-col gap-4"
             >
-              <Form.Item
-                name="url"
-                label={<Text style={{ color: "rgba(255,255,255,0.6)" }}>{L.claim_url_label}</Text>}
-                rules={[{ required: true, message: L.err_claim_bad_url }]}
-              >
-                <Input
-                  prefix={<LinkOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
-                  placeholder={L.claim_url_placeholder}
-                  style={inputStyle}
-                />
-              </Form.Item>
-              <Button type="primary" htmlType="submit" block style={primaryBtnStyle}>
+              <div>
+                <label className="mb-1.5 block text-sm text-muted-foreground">{L.claim_url_label}</label>
+                <div className="relative">
+                  <Link2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder={L.claim_url_placeholder}
+                    className="h-12 rounded-xl pl-9"
+                    {...urlForm.register("url", { required: true })}
+                  />
+                </div>
+              </div>
+              <Button type="submit" className="h-12 rounded-xl text-base font-semibold">
                 {L.btn_claim_check}
               </Button>
-            </Form>
+            </form>
           )}
 
           {step === "checking" && (
-            <div style={{ textAlign: "center", padding: "32px 0" }}>
-              <Spin size="large" />
-              <div style={{ marginTop: 16 }}>
-                <Text style={{ color: "rgba(255,255,255,0.5)" }}>{L.claim_checking}</Text>
+            <div className="py-8 text-center">
+              <Spinner className="mx-auto h-8 w-8" />
+              <div className="mt-4">
+                <span className="text-muted-foreground">{L.claim_checking}</span>
               </div>
             </div>
           )}
 
           {step === "login" && resolved && (
             <>
-              <Alert
-                type="info"
-                message={L.claim_login_hint(hint)}
-                style={{ marginBottom: 20, borderRadius: 10 }}
-                showIcon
-              />
-              <Form layout="vertical" size="large" onFinish={onLogin}>
-                <Form.Item name="password" rules={[{ required: true, message: L.val_pwd_req }]}>
-                  <Input.Password
-                    prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
+              <Alert variant="info" className="mb-5 rounded-lg">
+                <AlertDescription>{L.claim_login_hint(hint)}</AlertDescription>
+              </Alert>
+              <form onSubmit={loginForm.handleSubmit(onLogin)} className="flex flex-col gap-4">
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="password"
                     placeholder={L.pwd_label}
                     autoComplete="current-password"
-                    style={inputStyle}
+                    className="h-12 rounded-xl pl-9"
+                    {...loginForm.register("password", { required: true })}
                   />
-                </Form.Item>
-                <Button type="primary" htmlType="submit" block loading={loading} style={primaryBtnStyle}>
+                </div>
+                <Button type="submit" disabled={loading} className="h-12 rounded-xl text-base font-semibold">
                   {L.btn_login}
                 </Button>
-              </Form>
-              <div style={{ textAlign: "center", marginTop: 16 }}>
-                <Link to="/forgot-password" style={{ color: "#7C9CFF", fontSize: 13 }}>
+              </form>
+              <div className="mt-4 text-center">
+                <Link to="/forgot-password" className="text-[13px] text-primary underline-offset-4 hover:underline">
                   {L.forgot_link}
                 </Link>
               </div>
               {resolved.email_verified === false && (
-                <div style={{ textAlign: "center", marginTop: 12 }}>
+                <div className="mt-3 text-center">
                   <Button
-                    type="link"
-                    style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, padding: 0 }}
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 text-[13px] text-muted-foreground"
                     onClick={() => {
                       setNeedsOtp(false);
                       setError(null);
@@ -404,7 +353,7 @@ export default function ClaimPage() {
                 </div>
               )}
               {resolved.has_telegram && (
-                <div style={{ marginTop: 16 }}>
+                <div className="mt-4">
                   <TelegramLoginButton
                     label={L.btn_tg_login}
                     onSuccess={(resp) => {
@@ -420,94 +369,68 @@ export default function ClaimPage() {
 
           {(step === "setup" || step === "register") && resolved && (
             <>
-              <Alert
-                type="info"
-                message={
-                  step === "setup"
+              <Alert variant="info" className="mb-5 rounded-lg">
+                <AlertDescription>
+                  {step === "setup"
                     ? L.claim_setup_hint(hint)
                     : needsOtp
                       ? L.claim_register_hint(hint)
-                      : L.claim_register_bind_hint
-                }
-                style={{ marginBottom: 20, borderRadius: 10 }}
-                showIcon
-              />
-              <Form layout="vertical" size="large" onFinish={onComplete}>
+                      : L.claim_register_bind_hint}
+                </AlertDescription>
+              </Alert>
+              <form onSubmit={completeForm.handleSubmit(onComplete)} className="flex flex-col gap-4">
                 {needsOtp && (
-                  <Form.Item
-                    name="code"
-                    rules={[
-                      { required: true, message: L.val_code_req },
-                      { len: 6, message: L.val_code_len },
-                    ]}
-                  >
+                  <div className="relative">
+                    <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      prefix={<NumberOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
                       placeholder={L.verify_code_label}
                       maxLength={6}
-                      style={inputStyle}
+                      className="h-12 rounded-xl pl-9"
+                      {...completeForm.register("code", { required: true, minLength: 6, maxLength: 6 })}
                     />
-                  </Form.Item>
+                  </div>
                 )}
                 {step === "register" && (
-                  <Form.Item
-                    name="acc_email"
-                    rules={[
-                      { required: true, message: L.val_email_req },
-                      { type: "email", message: L.val_email_format },
-                    ]}
-                  >
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      prefix={<MailOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
                       placeholder={L.claim_acc_email_label}
                       autoComplete="email"
-                      style={inputStyle}
+                      className="h-12 rounded-xl pl-9"
+                      {...completeForm.register("acc_email", { required: true })}
                     />
-                  </Form.Item>
+                  </div>
                 )}
-                <Form.Item
-                  name="password"
-                  rules={[
-                    { required: true, message: L.val_pwd_req },
-                    { min: 8, message: L.val_pwd_min },
-                  ]}
-                >
-                  <Input.Password
-                    prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="password"
                     placeholder={L.new_pwd_label}
                     autoComplete="new-password"
-                    style={inputStyle}
+                    className="h-12 rounded-xl pl-9"
+                    {...completeForm.register("password", { required: true, minLength: 8 })}
                   />
-                </Form.Item>
-                <Form.Item
-                  name="confirm"
-                  dependencies={["password"]}
-                  rules={[
-                    { required: true, message: L.val_confirm_req },
-                    ({ getFieldValue }) => ({
-                      validator(_, value) {
-                        if (!value || getFieldValue("password") === value) return Promise.resolve();
-                        return Promise.reject(new Error(L.val_confirm_match));
-                      },
-                    }),
-                  ]}
-                >
-                  <Input.Password
-                    prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.3)" }} />}
+                </div>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="password"
                     placeholder={L.confirm_placeholder}
                     autoComplete="new-password"
-                    style={inputStyle}
+                    className="h-12 rounded-xl pl-9"
+                    {...completeForm.register("confirm", { required: true })}
                   />
-                </Form.Item>
-                <Button type="primary" htmlType="submit" block loading={loading} style={primaryBtnStyle}>
+                </div>
+                <Button type="submit" disabled={loading} className="h-12 rounded-xl text-base font-semibold">
                   {L.btn_confirm}
                 </Button>
-              </Form>
+              </form>
               {needsOtp && (
-                <div style={{ textAlign: "center", marginTop: 16 }}>
+                <div className="mt-4 text-center">
                   <Button
-                    type="link"
-                    style={{ color: "#7C9CFF", fontSize: 13 }}
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 text-[13px] text-primary"
                     onClick={async () => {
                       try {
                         await claim.otpRequest(resolved.claim_token);
@@ -527,56 +450,42 @@ export default function ClaimPage() {
           {(step === "done" || step === "foreign") && (
             <>
               {step === "done" ? (
-                <div style={{ textAlign: "center", marginBottom: 24 }}>
-                  <CheckCircleOutlined style={{ fontSize: 44, color: "#6EE7A0" }} />
-                  <div style={{ marginTop: 12 }}>
-                    <Text style={{ color: "rgba(255,255,255,0.6)" }}>{L.claim_done_text}</Text>
+                <div className="mb-6 text-center">
+                  <CheckCircle2 className="mx-auto h-11 w-11 text-emerald-500" />
+                  <div className="mt-3">
+                    <span className="text-muted-foreground">{L.claim_done_text}</span>
                   </div>
                 </div>
               ) : (
-                <Alert
-                  type="warning"
-                  message={L.claim_foreign_text}
-                  style={{ marginBottom: 20, borderRadius: 10 }}
-                  showIcon
-                />
+                <Alert variant="warning" className="mb-5 rounded-lg">
+                  <AlertDescription>{L.claim_foreign_text}</AlertDescription>
+                </Alert>
               )}
               {step === "done" && (
                 <>
                   <Button
-                    type="primary"
-                    block
-                    loading={appLinkPending}
-                    style={primaryBtnStyle}
+                    disabled={appLinkPending}
                     onClick={openInApp}
+                    className="h-12 w-full rounded-xl text-base font-semibold"
                   >
                     {L.btn_open_in_app}
                   </Button>
-                  <div style={{ textAlign: "center", marginTop: 8 }}>
-                    <Text style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-                      {L.claim_open_app_hint}
-                    </Text>
+                  <div className="mt-2 text-center">
+                    <span className="text-xs text-muted-foreground">{L.claim_open_app_hint}</span>
                   </div>
                 </>
               )}
               {(resolved?.subscription_url || subUrl) && (
                 <Button
-                  block
-                  style={{
-                    marginTop: 12,
-                    height: 44,
-                    borderRadius: 12,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    color: "rgba(255,255,255,0.75)",
-                  }}
+                  variant="outline"
+                  className="mt-3 h-11 w-full rounded-xl"
                   onClick={importOnly}
                 >
                   {L.btn_import_only}
                 </Button>
               )}
-              <div style={{ textAlign: "center", marginTop: 20 }}>
-                <Link to="/dashboard" style={{ color: "#7C9CFF", fontWeight: 500 }}>
+              <div className="mt-5 text-center">
+                <Link to="/dashboard" className="font-medium text-primary underline-offset-4 hover:underline">
                   {L.btn_go_dashboard}
                 </Link>
               </div>

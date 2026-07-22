@@ -1,13 +1,26 @@
-import { Alert, App, Badge, Button, Card, Form, Image, Input, Space, Spin, Tag, Typography } from "antd";
 import {
-  ArrowLeftOutlined,
-  CustomerServiceOutlined,
-  PaperClipOutlined,
-  PlusOutlined,
-  SendOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+  ArrowLeft,
+  Headset,
+  Paperclip,
+  Plus,
+  Send,
+  User,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 import { AttachmentOut, ApiError, support, TicketDetail, TicketSummary } from "../../api/client";
 import { useAuthedImage } from "../../hooks/useAuthedImage";
 import { useLang } from "../../locale";
@@ -18,27 +31,21 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 function AttachmentThumb({ attachment }: { attachment: AttachmentOut }) {
   const objectUrl = useAuthedImage(attachment.url);
   if (!objectUrl) {
-    return <div style={{ width: 88, height: 88, background: "rgba(255,255,255,0.06)", borderRadius: 8 }} />;
+    return <div className="h-[88px] w-[88px] rounded-lg bg-secondary" />;
   }
   return (
-    <Image
-      src={objectUrl}
-      width={88}
-      height={88}
-      style={{ objectFit: "cover", borderRadius: 8 }}
-    />
+    <a href={objectUrl} target="_blank" rel="noreferrer">
+      <img src={objectUrl} width={88} height={88} className="rounded-lg object-cover" />
+    </a>
   );
 }
 
-const { Title, Text, Paragraph } = Typography;
-const { TextArea } = Input;
-
 type SupportView = "list" | "create" | "detail";
 
-const STATUS_COLORS: Record<string, string> = {
-  open: "processing",
+const STATUS_BADGE: Record<string, "default" | "warning" | "secondary"> = {
+  open: "default",
   in_progress: "warning",
-  closed: "default",
+  closed: "secondary",
 };
 
 function formatDate(iso: string): string {
@@ -55,7 +62,6 @@ function formatDate(iso: string): string {
 }
 
 export default function SupportTab() {
-  const { message: msg } = App.useApp();
   const { L } = useLang();
 
   const [view, setView] = useState<SupportView>("list");
@@ -68,7 +74,13 @@ export default function SupportTab() {
   const [replyText, setReplyText] = useState("");
   const [pendingImages, setPendingImages] = useState<File[]>([]);
 
-  const [createForm] = Form.useForm();
+  const createSchema = z.object({
+    subject: z.string().min(1, L.val_subject_req).max(200),
+    message: z.string().min(1, L.val_message_req).max(4000),
+  });
+  const createForm = useForm<z.infer<typeof createSchema>>({ resolver: zodResolver(createSchema) });
+  const messageVal = createForm.watch("message") || "";
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,12 +97,12 @@ export default function SupportTab() {
     const incoming = Array.from(files);
     const combined = [...pendingImages, ...incoming];
     if (combined.length > MAX_IMAGES) {
-      msg.error(L.err_too_many_images);
+      toast.error(L.err_too_many_images);
       return;
     }
     for (const f of incoming) {
       if (f.size > MAX_IMAGE_BYTES) {
-        msg.error(L.err_image_too_large);
+        toast.error(L.err_image_too_large);
         return;
       }
     }
@@ -114,7 +126,7 @@ export default function SupportTab() {
       const list = await support.listTickets();
       setTickets(list);
     } catch {
-      msg.error(L.err_load_tickets);
+      toast.error(L.err_load_tickets);
     } finally {
       setListLoading(false);
     }
@@ -127,26 +139,26 @@ export default function SupportTab() {
       const t = await support.getTicket(id);
       setTicket(t);
     } catch {
-      msg.error(L.err_load_ticket);
+      toast.error(L.err_load_ticket);
       setView("list");
     } finally {
       setDetailLoading(false);
     }
   }
 
-  async function handleCreate(values: { subject: string; message: string }) {
+  async function handleCreate(values: z.infer<typeof createSchema>) {
     setCreateLoading(true);
     try {
       const t = await support.createTicket(values.subject, values.message);
-      createForm.resetFields();
+      createForm.reset();
       setTicket(t);
       setView("detail");
       await loadTickets();
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) {
-        msg.error(L.err_too_many_tickets);
+        toast.error(L.err_too_many_tickets);
       } else {
-        msg.error(L.err_create_ticket);
+        toast.error(L.err_create_ticket);
       }
     } finally {
       setCreateLoading(false);
@@ -165,7 +177,7 @@ export default function SupportTab() {
         prev ? { ...prev, messages: [...prev.messages, newMsg] } : prev
       );
     } catch {
-      msg.error(L.err_send_reply);
+      toast.error(L.err_send_reply);
     } finally {
       setReplyLoading(false);
     }
@@ -185,63 +197,44 @@ export default function SupportTab() {
   if (view === "list") {
     return (
       <div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-          <Title level={4} style={{ color: "#fff", margin: 0 }}>
-            <CustomerServiceOutlined style={{ marginRight: 8 }} />{L.support_title}
-          </Title>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setView("create")}
-            style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}
-          >
+        <div className="mb-6 flex items-center justify-between">
+          <h4 className="m-0 flex items-center gap-2 text-lg font-semibold text-foreground">
+            <Headset size={18} />{L.support_title}
+          </h4>
+          <Button onClick={() => setView("create")} className="gap-2 rounded-lg">
+            <Plus size={16} />
             {L.btn_new_ticket}
           </Button>
         </div>
 
         {listLoading ? (
-          <div style={{ textAlign: "center", padding: 40 }}><Spin /></div>
+          <div className="py-10 text-center"><Spinner className="mx-auto h-6 w-6" /></div>
         ) : tickets.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 0" }}>
-            <CustomerServiceOutlined style={{ fontSize: 48, color: "rgba(255,255,255,0.2)", marginBottom: 16 }} />
-            <br />
-            <Text style={{ color: "rgba(255,255,255,0.4)" }}>{L.ticket_list_empty}</Text>
+          <div className="py-16 text-center">
+            <Headset className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <span className="text-muted-foreground">{L.ticket_list_empty}</span>
           </div>
         ) : (
-          <Space direction="vertical" style={{ width: "100%" }} size={12}>
+          <div className="flex flex-col gap-3">
             {tickets.map((t) => (
               <Card
                 key={t.id}
-                hoverable
                 onClick={() => openTicket(t.id)}
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  borderRadius: 14,
-                  cursor: "pointer",
-                }}
-                styles={{ body: { padding: "14px 18px" } }}
+                className="cursor-pointer px-[18px] py-3.5 transition-colors hover:bg-accent"
               >
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text strong style={{ color: "#fff", display: "block", marginBottom: 4 }}>
-                      {t.subject}
-                    </Text>
-                    <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
-                      {t.last_message_preview}
-                    </Text>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="mb-1 block truncate font-semibold text-foreground">{t.subject}</span>
+                    <span className="block truncate text-[13px] text-muted-foreground">{t.last_message_preview}</span>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
-                    <Badge
-                      status={STATUS_COLORS[t.status] as any}
-                      text={<Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>{statusLabel(t.status)}</Text>}
-                    />
-                    <Text style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>{formatDate(t.updated_at)}</Text>
+                  <div className="flex flex-shrink-0 flex-col items-end gap-1.5">
+                    <Badge variant={STATUS_BADGE[t.status] ?? "secondary"}>{statusLabel(t.status)}</Badge>
+                    <span className="text-[11px] text-muted-foreground">{formatDate(t.updated_at)}</span>
                   </div>
                 </div>
               </Card>
             ))}
-          </Space>
+          </div>
         )}
       </div>
     );
@@ -251,57 +244,43 @@ export default function SupportTab() {
   if (view === "create") {
     return (
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={() => setView("list")}
-            style={{ color: "rgba(255,255,255,0.6)", padding: "4px 8px" }}
-          />
-          <Title level={4} style={{ color: "#fff", margin: 0 }}>
-            {L.btn_new_ticket}
-          </Title>
+        <div className="mb-6 flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => setView("list")} className="h-8 w-8 text-muted-foreground">
+            <ArrowLeft size={18} />
+          </Button>
+          <h4 className="m-0 text-lg font-semibold text-foreground">{L.btn_new_ticket}</h4>
         </div>
 
-        <Card
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16 }}
-          styles={{ body: { padding: 24 } }}
-        >
-          <Form form={createForm} layout="vertical" onFinish={handleCreate}>
-            <Form.Item
-              name="subject"
-              label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.ticket_subject_label}</Text>}
-              rules={[{ required: true, message: L.val_subject_req }, { max: 200 }]}
-            >
-              <Input
-                placeholder={L.ticket_subject_placeholder}
-                maxLength={200}
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#fff" }}
-              />
-            </Form.Item>
-            <Form.Item
-              name="message"
-              label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.ticket_message_label}</Text>}
-              rules={[{ required: true, message: L.val_message_req }, { max: 4000 }]}
-            >
-              <TextArea
+        <Card className="p-6">
+          <form onSubmit={createForm.handleSubmit(handleCreate)} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-muted-foreground">{L.ticket_subject_label}</Label>
+              <Input placeholder={L.ticket_subject_placeholder} maxLength={200} {...createForm.register("subject")} />
+              {createForm.formState.errors.subject && (
+                <span className="text-xs text-destructive">{createForm.formState.errors.subject.message}</span>
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-muted-foreground">{L.ticket_message_label}</Label>
+              <Textarea
                 placeholder={L.ticket_message_placeholder}
                 rows={5}
                 maxLength={4000}
-                showCount
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#fff", resize: "none" }}
+                className="resize-none"
+                {...createForm.register("message")}
               />
-            </Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={createLoading}
-              icon={<SendOutlined />}
-              style={{ background: "linear-gradient(135deg, #7C9CFF, #B47CFF)", border: "none", borderRadius: 10 }}
-            >
+              <div className="flex items-center justify-between">
+                {createForm.formState.errors.message ? (
+                  <span className="text-xs text-destructive">{createForm.formState.errors.message.message}</span>
+                ) : <span />}
+                <span className="text-xs text-muted-foreground">{messageVal.length}/4000</span>
+              </div>
+            </div>
+            <Button type="submit" disabled={createLoading} className="w-fit gap-2 rounded-lg">
+              {createLoading ? <Spinner className="h-4 w-4" /> : <Send size={16} />}
               {L.btn_send_ticket}
             </Button>
-          </Form>
+          </form>
         </Card>
       </div>
     );
@@ -310,177 +289,133 @@ export default function SupportTab() {
   /* ── Ticket detail / thread ──────────────────────────────────────────── */
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+      <div className="mb-4 flex items-center gap-3">
         <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
+          variant="ghost"
+          size="icon"
           onClick={() => { setView("list"); setTicket(null); }}
-          style={{ color: "rgba(255,255,255,0.6)", padding: "4px 8px" }}
-        />
-        <div style={{ flex: 1 }}>
+          className="h-8 w-8 text-muted-foreground"
+        >
+          <ArrowLeft size={18} />
+        </Button>
+        <div className="flex-1">
           {ticket && (
             <>
-              <Text strong style={{ color: "#fff", display: "block" }}>{ticket.subject}</Text>
-              <Tag color={STATUS_COLORS[ticket.status]} style={{ marginTop: 2 }}>
+              <span className="block font-semibold text-foreground">{ticket.subject}</span>
+              <Badge variant={STATUS_BADGE[ticket.status] ?? "secondary"} className="mt-0.5">
                 {statusLabel(ticket.status)}
-              </Tag>
+              </Badge>
             </>
           )}
         </div>
       </div>
 
       {detailLoading ? (
-        <div style={{ textAlign: "center", padding: 40 }}><Spin /></div>
+        <div className="py-10 text-center"><Spinner className="mx-auto h-6 w-6" /></div>
       ) : ticket ? (
         <>
           {/* Messages */}
-          <div style={{
-            background: "rgba(255,255,255,0.03)",
-            borderRadius: 14,
-            border: "1px solid rgba(255,255,255,0.08)",
-            padding: 16,
-            marginBottom: 16,
-            maxHeight: 480,
-            overflowY: "auto",
-          }}>
-            <Space direction="vertical" style={{ width: "100%" }} size={12}>
+          <div className="mb-4 max-h-[480px] overflow-y-auto rounded-2xl border border-border bg-card p-4">
+            <div className="flex flex-col gap-3">
               {ticket.messages.map((m) => {
                 const isUser = m.sender === "user";
                 return (
-                  <div
-                    key={m.id}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: isUser ? "flex-end" : "flex-start",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      {!isUser && <CustomerServiceOutlined style={{ color: "#7C9CFF", fontSize: 13 }} />}
-                      <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>
+                  <div key={m.id} className={cn("flex flex-col", isUser ? "items-end" : "items-start")}>
+                    <div className="mb-1 flex items-center gap-1.5">
+                      {!isUser && <Headset size={13} className="text-primary" />}
+                      <span className="text-[11px] text-muted-foreground">
                         {isUser ? L.lbl_you : L.lbl_support_agent} · {formatDate(m.created_at)}
-                      </Text>
-                      {isUser && <UserOutlined style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }} />}
+                      </span>
+                      {isUser && <User size={13} className="text-muted-foreground" />}
                     </div>
-                    <div style={{
-                      background: isUser ? "rgba(6,214,160,0.15)" : "rgba(255,255,255,0.07)",
-                      border: `1px solid ${isUser ? "rgba(6,214,160,0.25)" : "rgba(255,255,255,0.1)"}`,
-                      borderRadius: isUser ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-                      padding: "8px 14px",
-                      maxWidth: "80%",
-                    }}>
+                    <div
+                      className={cn(
+                        "max-w-[80%] rounded-2xl border px-3.5 py-2",
+                        isUser
+                          ? "rounded-br-sm border-emerald-500/25 bg-emerald-500/[0.15]"
+                          : "rounded-bl-sm border-border bg-secondary",
+                      )}
+                    >
                       {m.text && (
-                        <Paragraph style={{ color: "#fff", margin: 0, whiteSpace: "pre-wrap", fontSize: 14 }}>
-                          {m.text}
-                        </Paragraph>
+                        <p className="m-0 whitespace-pre-wrap text-sm text-foreground">{m.text}</p>
                       )}
                       {m.attachments && m.attachments.length > 0 && (
-                        <Image.PreviewGroup>
-                          <Space size={8} wrap style={{ marginTop: m.text ? 8 : 0 }}>
-                            {m.attachments.map((a) => (
-                              <AttachmentThumb key={a.id} attachment={a} />
-                            ))}
-                          </Space>
-                        </Image.PreviewGroup>
+                        <div className={cn("flex flex-wrap gap-2", m.text && "mt-2")}>
+                          {m.attachments.map((a) => (
+                            <AttachmentThumb key={a.id} attachment={a} />
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
                 );
               })}
               <div ref={messagesEndRef} />
-            </Space>
+            </div>
           </div>
 
           {/* Reply input */}
           {ticket.status !== "closed" ? (
             <div>
               {pendingImages.length > 0 && (
-                <Space size={8} wrap style={{ marginBottom: 8 }}>
+                <div className="mb-2 flex flex-wrap gap-2">
                   {pendingImages.map((_f, idx) => (
-                    <div key={idx} style={{ position: "relative" }}>
-                      <img
-                        src={pendingPreviewUrls[idx]}
-                        width={64}
-                        height={64}
-                        style={{ objectFit: "cover", borderRadius: 8 }}
-                      />
-                      <Button
-                        size="small"
-                        danger
-                        shape="circle"
-                        style={{ position: "absolute", top: -8, right: -8 }}
+                    <div key={idx} className="relative">
+                      <img src={pendingPreviewUrls[idx]} width={64} height={64} className="rounded-lg object-cover" />
+                      <button
                         onClick={() => removePendingImage(idx)}
+                        className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
                       >
-                        ×
-                      </Button>
+                        <X size={12} />
+                      </button>
                     </div>
                   ))}
-                </Space>
+                </div>
               )}
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 multiple
-                style={{ display: "none" }}
+                className="hidden"
                 onChange={(e) => {
                   onFilesSelected(e.target.files);
                   e.target.value = "";
                 }}
               />
-              <Space.Compact style={{ width: "100%" }}>
+              <div className="flex items-stretch gap-0">
                 <Button
-                  icon={<PaperClipOutlined />}
+                  variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={pendingImages.length >= MAX_IMAGES}
                   title={L.btn_attach_image}
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: "10px 0 0 10px",
-                    color: "#fff",
-                  }}
-                />
-                <TextArea
+                  className="rounded-r-none"
+                >
+                  <Paperclip size={16} />
+                </Button>
+                <Textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder={L.reply_placeholder}
-                  autoSize={{ minRows: 1, maxRows: 4 }}
                   maxLength={4000}
-                  onPressEnter={(e) => { if (!e.shiftKey) { e.preventDefault(); handleReply(); } }}
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    color: "#fff",
-                    resize: "none",
-                  }}
+                  rows={1}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleReply(); } }}
                   disabled={replyLoading}
+                  className="resize-none rounded-none"
                 />
                 <Button
-                  type="primary"
-                  loading={replyLoading}
                   onClick={handleReply}
-                  disabled={!replyText.trim() && pendingImages.length === 0}
-                  icon={<SendOutlined />}
-                  style={{
-                    background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-                    border: "none",
-                    borderRadius: "0 10px 10px 0",
-                    height: "auto",
-                    alignSelf: "stretch",
-                  }}
+                  disabled={replyLoading || (!replyText.trim() && pendingImages.length === 0)}
+                  className="rounded-l-none"
                 >
-                  {L.btn_send_reply}
+                  {replyLoading ? <Spinner className="h-4 w-4" /> : <Send size={16} />}
                 </Button>
-              </Space.Compact>
+              </div>
             </div>
           ) : (
-            <Alert
-              message={L.ticket_status_closed}
-              type="info"
-              style={{ borderRadius: 10 }}
-              showIcon
-            />
+            <Alert variant="info" className="rounded-lg">
+              <AlertDescription>{L.ticket_status_closed}</AlertDescription>
+            </Alert>
           )}
         </>
       ) : null}

@@ -1,125 +1,112 @@
-import { Alert, Button, Form, Input, Typography } from "antd";
-import { SendOutlined } from "@ant-design/icons";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useState } from "react";
+import { Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { partnership } from "../api/client";
 import { useLang } from "../locale";
 
-const { Text } = Typography;
-const { TextArea } = Input;
-
-interface FormValues {
-  goal: string;
-  description: string;
-  contact: string;
+function buildSchema(L: ReturnType<typeof useLang>["L"]) {
+  return z.object({
+    goal: z.string().trim().min(1, L.val_partner_goal).max(200),
+    description: z.string().trim().min(1, L.val_partner_desc).max(2000),
+    contact: z.string().trim().min(1, L.val_partner_contact).max(200),
+  });
 }
 
-const fieldStyle = {
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.12)",
-  borderRadius: 10,
-  color: "#fff",
-};
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 export default function PartnershipForm() {
   const { L } = useLang();
-  const [form] = Form.useForm<FormValues>();
-  const [loading, setLoading] = useState(false);
+  const schema = buildSchema(L);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  async function onFinish(values: FormValues) {
-    setLoading(true);
+  const descLen = watch("description")?.length ?? 0;
+
+  async function onSubmit(values: FormValues) {
     setError(null);
     try {
-      await partnership.submit({
-        goal: values.goal.trim(),
-        description: values.description.trim(),
-        contact: values.contact.trim(),
-      });
+      await partnership.submit(values);
       setSent(true);
-      form.resetFields();
+      reset();
     } catch {
       setError(L.partner_error);
-    } finally {
-      setLoading(false);
     }
   }
 
   if (sent) {
     return (
-      <Alert
-        type="success"
-        showIcon
-        message={L.partner_success}
-        style={{ borderRadius: 12 }}
-        action={
-          <Button size="small" type="text" onClick={() => setSent(false)} style={{ color: "#7C9CFF" }}>
+      <Alert variant="success" className="rounded-xl">
+        <AlertDescription className="flex items-center justify-between gap-3">
+          <span>{L.partner_success}</span>
+          <Button size="sm" variant="ghost" className="text-primary" onClick={() => setSent(false)}>
             +
           </Button>
-        }
-      />
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       {error && (
-        <Alert
-          type="error"
-          message={error}
-          showIcon
-          closable
-          onClose={() => setError(null)}
-          style={{ marginBottom: 16, borderRadius: 10 }}
-        />
+        <Alert variant="destructive" className="rounded-lg">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
-      <Form.Item
-        name="goal"
-        label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.partner_goal_label}</Text>}
-        rules={[{ required: true, message: L.val_partner_goal }, { max: 200 }]}
-      >
-        <Input placeholder={L.partner_goal_ph} maxLength={200} style={fieldStyle} />
-      </Form.Item>
 
-      <Form.Item
-        name="description"
-        label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.partner_desc_label}</Text>}
-        rules={[{ required: true, message: L.val_partner_desc }, { max: 2000 }]}
-      >
-        <TextArea
+      <div className="flex flex-col gap-2">
+        <Label className="text-muted-foreground">{L.partner_goal_label}</Label>
+        <Input placeholder={L.partner_goal_ph} maxLength={200} {...register("goal")} />
+        {errors.goal && <p className="text-xs text-destructive">{errors.goal.message}</p>}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label className="text-muted-foreground">{L.partner_desc_label}</Label>
+        <Textarea
           placeholder={L.partner_desc_ph}
           rows={4}
           maxLength={2000}
-          showCount
-          style={{ ...fieldStyle, resize: "none" }}
+          className="resize-none"
+          {...register("description")}
         />
-      </Form.Item>
+        <div className="flex items-center justify-between">
+          {errors.description ? (
+            <p className="text-xs text-destructive">{errors.description.message}</p>
+          ) : (
+            <span />
+          )}
+          <span className="text-xs text-muted-foreground">{descLen} / 2000</span>
+        </div>
+      </div>
 
-      <Form.Item
-        name="contact"
-        label={<Text style={{ color: "rgba(255,255,255,0.7)" }}>{L.partner_contact_label}</Text>}
-        rules={[{ required: true, message: L.val_partner_contact }, { max: 200 }]}
-      >
-        <Input placeholder={L.partner_contact_ph} maxLength={200} style={fieldStyle} />
-      </Form.Item>
+      <div className="flex flex-col gap-2">
+        <Label className="text-muted-foreground">{L.partner_contact_label}</Label>
+        <Input placeholder={L.partner_contact_ph} maxLength={200} {...register("contact")} />
+        {errors.contact && <p className="text-xs text-destructive">{errors.contact.message}</p>}
+      </div>
 
       <Button
-        type="primary"
-        htmlType="submit"
-        loading={loading}
-        icon={<SendOutlined />}
-        size="large"
-        style={{
-          background: "linear-gradient(135deg, #7C9CFF, #B47CFF)",
-          border: "none",
-          borderRadius: 12,
-          height: 48,
-          padding: "0 32px",
-          fontWeight: 600,
-        }}
+        type="submit"
+        disabled={isSubmitting}
+        className="h-12 self-start rounded-xl px-8 font-semibold"
       >
+        <Send className="h-4 w-4" />
         {L.partner_submit}
       </Button>
-    </Form>
+    </form>
   );
 }
