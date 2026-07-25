@@ -386,6 +386,17 @@ export interface Translations {
   btn_open_in_app: string;
   btn_import_only: string;
   claim_open_app_hint: string;
+  claim_app_opening: string;
+  claim_app_waiting: string;
+  claim_app_success: string;
+  claim_app_expired: string;
+  claim_app_superseded: string;
+  claim_app_timeout: string;
+  claim_app_error: string;
+  claim_legacy_hint: string;
+  btn_retry_app: string;
+  btn_legacy_app: string;
+  btn_install_app: string;
   btn_go_dashboard: string;
   claim_foreign_title: string;
   claim_foreign_text: string;
@@ -768,6 +779,17 @@ const en: Translations = {
   btn_open_in_app: "Open in app",
   btn_import_only: "Import subscription only (no account)",
   claim_open_app_hint: "The app will sign in automatically. The link is valid for 90 seconds and works once.",
+  claim_app_opening: "Creating a secure one-time sign-in link…",
+  claim_app_waiting: "Waiting for CheezyVPN to confirm sign-in…",
+  claim_app_success: "Sign-in confirmed. You can return to CheezyVPN.",
+  claim_app_expired: "This sign-in link has expired.",
+  claim_app_superseded: "A newer sign-in attempt replaced this link.",
+  claim_app_timeout: "CheezyVPN did not confirm sign-in in time.",
+  claim_app_error: "Couldn't confirm app sign-in. Check your connection and try again.",
+  claim_legacy_hint: "If you use an older CheezyVPN version, open the same link with its legacy handler.",
+  btn_retry_app: "Try again",
+  btn_legacy_app: "Older CheezyVPN version",
+  btn_install_app: "Install CheezyVPN",
   btn_go_dashboard: "Go to dashboard",
   claim_foreign_title: "Different subscription",
   claim_foreign_text: "You are signed in, but this subscription link belongs to a different account. You can transfer it in Settings → Transfer subscription, or import it into the app without signing in.",
@@ -1154,6 +1176,17 @@ const ru: Translations = {
   btn_open_in_app: "Открыть в приложении",
   btn_import_only: "Только импортировать подписку (без аккаунта)",
   claim_open_app_hint: "Приложение авторизуется автоматически. Ссылка действует 90 секунд и работает один раз.",
+  claim_app_opening: "Создаём безопасную одноразовую ссылку для входа…",
+  claim_app_waiting: "Ждём подтверждения входа от CheezyVPN…",
+  claim_app_success: "Вход подтверждён. Можно вернуться в CheezyVPN.",
+  claim_app_expired: "Срок действия ссылки для входа истёк.",
+  claim_app_superseded: "Эта ссылка заменена новой попыткой входа.",
+  claim_app_timeout: "CheezyVPN не подтвердил вход за отведённое время.",
+  claim_app_error: "Не удалось подтвердить вход в приложении. Проверьте соединение и повторите попытку.",
+  claim_legacy_hint: "Если у вас старая версия CheezyVPN, откройте ту же ссылку через прежний обработчик.",
+  btn_retry_app: "Повторить",
+  btn_legacy_app: "Старая версия CheezyVPN",
+  btn_install_app: "Установить CheezyVPN",
   btn_go_dashboard: "Перейти в кабинет",
   claim_foreign_title: "Другая подписка",
   claim_foreign_text: "Вы вошли в аккаунт, но эта ссылка подписки принадлежит другому аккаунту. Перенести её можно в Настройках → Перенос подписки, либо импортируйте её в приложение без входа.",

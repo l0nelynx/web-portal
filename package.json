@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test:handoff": "node scripts/test-app-login-handoff.mjs",
     "postbuild": "node scripts/prerender.mjs",
     "preview": "vite preview"
   },

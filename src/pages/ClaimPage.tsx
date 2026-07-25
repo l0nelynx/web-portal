@@ -19,6 +19,11 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
 import { usePageMeta } from "../seo";
+import {
+  appScheme,
+  AppLoginHandoff,
+  type AppHandoffState,
+} from "../lib/app-login-handoff";
 
 type Step =
   | "url"
@@ -28,6 +33,9 @@ type Step =
   | "register"
   | "done"
   | "foreign";
+
+const APP_DOWNLOAD_URL =
+  "https://github.com/l0nelynx/CheezyVPN-Releases/releases/latest";
 
 /** Subscription URL from `?url=` (Remnawave / catalog) or legacy `#url=`. */
 function urlFromLocation(): string | null {
@@ -53,7 +61,17 @@ function urlFromLocation(): string | null {
 
 function stripClaimUrlFromLocation() {
   if (!window.location.search && !window.location.hash) return;
-  window.history.replaceState(null, "", "/claim");
+  const desktop =
+    new URLSearchParams(window.location.search).get("client") === "desktop";
+  window.history.replaceState(
+    null,
+    "",
+    desktop ? "/claim?client=desktop" : "/claim",
+  );
+}
+
+function isDesktopHandoffFromLocation(): boolean {
+  return new URLSearchParams(window.location.search).get("client") === "desktop";
 }
 
 function shortUuidOf(url: string): string | null {
@@ -78,7 +96,21 @@ export default function ClaimPage() {
   const [needsOtp, setNeedsOtp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [appLinkPending, setAppLinkPending] = useState(false);
+  const [appHandoff, setAppHandoff] = useState<AppHandoffState>("idle");
+  const [showAppFallbacks, setShowAppFallbacks] = useState(false);
+  const isDesktopHandoff = useRef(isDesktopHandoffFromLocation()).current;
+  const appLoginHandoff = useRef<AppLoginHandoff | null>(null);
+  if (!appLoginHandoff.current) {
+    appLoginHandoff.current = new AppLoginHandoff({
+      api: appLogin,
+      desktop: isDesktopHandoff,
+      navigate: (url) => {
+        window.location.href = url;
+      },
+      onState: setAppHandoff,
+      onFallbacks: setShowAppFallbacks,
+    });
+  }
   const bootstrapped = useRef(false);
 
   const urlForm = useForm<{ url: string }>();
@@ -172,6 +204,12 @@ export default function ClaimPage() {
     if (fromLoc) void startClaim(fromLoc);
   }, [authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    return () => {
+      appLoginHandoff.current?.dispose();
+    };
+  }, []);
+
   async function onLogin(values: { password: string }) {
     if (!resolved) return;
     setLoading(true);
@@ -223,22 +261,34 @@ export default function ClaimPage() {
   }
 
   async function openInApp() {
-    setAppLinkPending(true);
     setError(null);
-    try {
-      const { token } = await appLogin.create();
-      window.location.href = `cheezy://login/${token}`;
-    } catch {
-      setError(L.err_app_login);
-    } finally {
-      setAppLinkPending(false);
-    }
+    await appLoginHandoff.current?.start();
+  }
+
+  function openLegacyApp() {
+    appLoginHandoff.current?.openLegacy();
   }
 
   function importOnly() {
     const url = resolved?.subscription_url || subUrl;
-    if (url) window.location.href = `cheezy://add/${encodeURIComponent(url)}`;
+    const scheme = appScheme(isDesktopHandoff);
+    if (url) window.location.href = `${scheme}://add/${encodeURIComponent(url)}`;
   }
+
+  const appHandoffMessage: Partial<Record<AppHandoffState, string>> = {
+    creating: L.claim_app_opening,
+    waiting: L.claim_app_waiting,
+    success: L.claim_app_success,
+    expired: L.claim_app_expired,
+    superseded: L.claim_app_superseded,
+    timeout: L.claim_app_timeout,
+    error: L.claim_app_error,
+  };
+  const appHandoffTerminal =
+    appHandoff === "expired" ||
+    appHandoff === "superseded" ||
+    appHandoff === "timeout" ||
+    appHandoff === "error";
 
   const hint = resolved?.email_hint ?? "";
 
@@ -464,8 +514,12 @@ export default function ClaimPage() {
               {step === "done" && (
                 <>
                   <Button
-                    disabled={appLinkPending}
-                    onClick={openInApp}
+                    disabled={
+                      appHandoff === "creating" ||
+                      appHandoff === "waiting" ||
+                      appHandoff === "success"
+                    }
+                    onClick={() => void openInApp()}
                     className="h-12 w-full rounded-xl text-base font-semibold"
                   >
                     {L.btn_open_in_app}
@@ -473,6 +527,64 @@ export default function ClaimPage() {
                   <div className="mt-2 text-center">
                     <span className="text-xs text-muted-foreground">{L.claim_open_app_hint}</span>
                   </div>
+                  {appHandoff !== "idle" && appHandoffMessage[appHandoff] && (
+                    <Alert
+                      variant={
+                        appHandoff === "success"
+                          ? "success"
+                          : appHandoffTerminal
+                            ? "warning"
+                            : "info"
+                      }
+                      className="mt-4 rounded-lg"
+                    >
+                      <AlertDescription className="flex items-center gap-2">
+                        {(appHandoff === "creating" || appHandoff === "waiting") && (
+                          <Spinner className="h-4 w-4 shrink-0" />
+                        )}
+                        {appHandoffMessage[appHandoff]}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  {appHandoffTerminal && (
+                    <Button
+                      variant="outline"
+                      className="mt-3 h-11 w-full rounded-xl"
+                      onClick={() => void openInApp()}
+                    >
+                      {L.btn_retry_app}
+                    </Button>
+                  )}
+                  {showAppFallbacks && appHandoff !== "success" && (
+                    <div className="mt-3 space-y-2">
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="h-11 w-full rounded-xl"
+                      >
+                        <a href={APP_DOWNLOAD_URL} target="_blank" rel="noreferrer">
+                          {L.btn_install_app}
+                        </a>
+                      </Button>
+                      {isDesktopHandoff &&
+                        appLoginHandoff.current?.canOpenLegacy() &&
+                        appHandoff !== "expired" &&
+                        appHandoff !== "superseded" && (
+                          <>
+                            <Button
+                              variant="link"
+                              className="h-auto w-full whitespace-normal py-2"
+                              onClick={openLegacyApp}
+                            >
+                              {L.btn_legacy_app}
+                            </Button>
+                            <p className="text-center text-xs text-muted-foreground">
+                              {L.claim_legacy_hint}
+                            </p>
+                          </>
+                        )}
+                    </div>
+                  )}
                 </>
               )}
               {(resolved?.subscription_url || subUrl) && (

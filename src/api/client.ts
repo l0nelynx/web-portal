@@ -454,8 +454,16 @@ export interface AppLoginToken {
   expires_in: number;
 }
 
+export type AppLoginStatus =
+  | "pending"
+  | "exchanged"
+  | "expired"
+  | "superseded";
+
 export const appLogin = {
   create: () => post<AppLoginToken>("/android/auth/app-login/create"),
+  status: (token: string) =>
+    post<{ status: AppLoginStatus }>("/android/auth/app-login/status", { token }),
 };
 
 // ---------------------------------------------------------------------------
