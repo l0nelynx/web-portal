@@ -31,6 +31,10 @@ export default function LoginPage() {
   const { L, toggle } = useLang();
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("return_to");
+  const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//")
+    ? returnTo
+    : null;
   usePageMeta({ title: `${L.login_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
 
   const schema = buildSchema(L);
@@ -54,7 +58,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(values.email.trim().toLowerCase(), values.password);
-      navigate("/dashboard", { replace: true });
+      navigate(safeReturnTo ?? "/dashboard", { replace: true });
     } catch (e) {
       if (e instanceof ApiError) {
         const map: Record<string, string> = {
@@ -154,7 +158,7 @@ export default function LoginPage() {
             label={L.btn_tg_login}
             onSuccess={(resp) => {
               setUserAfterRegister(resp.user, resp.tokens);
-              navigate("/dashboard", { replace: true });
+              navigate(safeReturnTo ?? "/dashboard", { replace: true });
             }}
             onError={(code) => {
               if (code === "tg_not_registered") {
@@ -170,7 +174,10 @@ export default function LoginPage() {
           <div className="mt-5 text-center">
             <span className="text-[13px] text-muted-foreground">
               {L.no_account}{" "}
-              <Link to="/register" className="font-medium text-primary underline-offset-4 hover:underline">
+              <Link
+                to={safeReturnTo ? `/register?return_to=${encodeURIComponent(safeReturnTo)}` : "/register"}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
                 {L.btn_register}
               </Link>
             </span>
@@ -179,6 +186,10 @@ export default function LoginPage() {
 
         <div className="mt-4 text-center">
           <span className="text-xs text-muted-foreground">{L.login_invite_hint}</span>
+          <span className="mx-2 text-xs text-border">·</span>
+          <Link to="/instruction" className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+            {L.instruction_link}
+          </Link>
         </div>
       </div>
     </div>

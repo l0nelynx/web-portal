@@ -10,7 +10,7 @@ import {
   Wifi,
 } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "../auth/AuthContext";
@@ -31,10 +31,16 @@ type TabKey = "subscription" | "buy" | "devices" | "support" | "settings";
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { L, toggle } = useLang();
   const isMobile = !useMediaQuery("(min-width: 768px)");
 
-  const [tab, setTab] = useState<TabKey>("subscription");
+  const requestedTab = searchParams.get("tab");
+  const initialTab: TabKey = ["subscription", "buy", "devices", "support", "settings"].includes(
+    requestedTab ?? ""
+  ) ? requestedTab as TabKey : "subscription";
+  const requestedSubscriptionId = Number(searchParams.get("subscription_id"));
+  const [tab, setTab] = useState<TabKey>(initialTab);
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -51,16 +57,30 @@ export default function DashboardPage() {
     navigate("/login", { replace: true });
   }
 
-  function selectTab(key: TabKey) {
+  function selectTab(key: TabKey, subscriptionId?: number) {
     setTab(key);
     setDrawerOpen(false);
+    const next = new URLSearchParams();
+    if (key !== "subscription") next.set("tab", key);
+    if (key === "buy" && subscriptionId) {
+      next.set("subscription_id", String(subscriptionId));
+    }
+    setSearchParams(next, { replace: true });
     pageView(`/dashboard/${key}`);
   }
 
   function renderTab() {
     switch (tab) {
-      case "subscription": return <SubscriptionTab onBuyClick={() => selectTab("buy")} />;
-      case "buy": return <BuyTab />;
+      case "subscription": return <SubscriptionTab onBuyClick={(id) => selectTab("buy", id)} />;
+      case "buy": return (
+        <BuyTab
+          targetSubscriptionId={
+            Number.isInteger(requestedSubscriptionId) && requestedSubscriptionId > 0
+              ? requestedSubscriptionId
+              : undefined
+          }
+        />
+      );
       case "devices": return <DevicesTab />;
       case "support": return <SupportTab />;
       case "settings": return <SettingsTab />;

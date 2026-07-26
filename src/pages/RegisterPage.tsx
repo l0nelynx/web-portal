@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { ApiError, auth, invite, ValidateInviteResponse } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
@@ -25,10 +25,10 @@ interface InviteStatus {
   checking: boolean;
 }
 
-function buildSchema(L: ReturnType<typeof useLang>["L"]) {
+function buildSchema(L: ReturnType<typeof useLang>["L"], inviteRequired: boolean) {
   return z
     .object({
-      invite_code: z.string().min(1, L.val_invite_req),
+      invite_code: inviteRequired ? z.string().min(1, L.val_invite_req) : z.string(),
       email: z.string().min(1, L.val_email_req).email(L.val_email_format),
       password: z.string().min(1, L.val_pwd_req).min(8, L.val_pwd_min),
       confirm: z.string().min(1, L.val_confirm_req),
@@ -45,6 +45,22 @@ export default function RegisterPage() {
   const { setUserAfterRegister } = useAuth();
   const { L } = useLang();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnToRaw = searchParams.get("return_to");
+  const returnTo = returnToRaw?.startsWith("/") && !returnToRaw.startsWith("//")
+    ? returnToRaw
+    : null;
+  const subscriptionContext = (() => {
+    if (!returnTo) return null;
+    try {
+      const parsed = new URL(returnTo, window.location.origin);
+      return parsed.searchParams.get("subscription_context")
+        ?? new URLSearchParams(parsed.hash.replace(/^#/, "")).get("subscription_context");
+    } catch {
+      return null;
+    }
+  })();
+  const inviteRequired = !subscriptionContext;
   const [error, setError] = useState<string | null>(null);
   usePageMeta({ title: `${L.reg_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>({
@@ -52,7 +68,7 @@ export default function RegisterPage() {
   });
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const schema = buildSchema(L);
+  const schema = buildSchema(L, inviteRequired);
   const {
     register,
     handleSubmit,
@@ -86,16 +102,18 @@ export default function RegisterPage() {
   }, []);
 
   async function onFinish(values: FormValues) {
-    if (!inviteStatus.valid) { setError(L.err_req_invite); return; }
+    if (inviteRequired && !inviteStatus.valid) { setError(L.err_req_invite); return; }
     setError(null);
     try {
       const resp = await auth.register(
         values.email.trim().toLowerCase(),
         values.password,
-        values.invite_code.trim().toUpperCase()
+        subscriptionContext
+          ? { subscription_context: subscriptionContext }
+          : { invite_code: values.invite_code.trim().toUpperCase() }
       );
       setUserAfterRegister(resp.user, resp.tokens);
-      navigate("/verify-email", { replace: true });
+      navigate(returnTo ?? "/verify-email", { replace: true });
     } catch (e) {
       if (e instanceof ApiError) {
         const map: Record<string, string> = {
@@ -144,7 +162,7 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit(onFinish)} className="flex flex-col gap-4">
-            <div>
+            {inviteRequired ? <div>
               <Label className="mb-1.5 block text-muted-foreground">{L.invite_label}</Label>
               <div className="relative">
                 <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -174,7 +192,12 @@ export default function RegisterPage() {
                   <CheckCircle2 className="h-3.5 w-3.5" /> {L.invite_valid}
                 </p>
               ) : null}
-            </div>
+            </div> : (
+              <Alert className="rounded-lg border-emerald-500/30 bg-emerald-500/5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                <AlertDescription>{L.instruction_step_3_body}</AlertDescription>
+              </Alert>
+            )}
 
             <div>
               <Label className="mb-1.5 block text-muted-foreground">Email</Label>
@@ -222,7 +245,7 @@ export default function RegisterPage() {
 
             <Button
               type="submit"
-              disabled={isSubmitting || !inviteStatus.valid}
+              disabled={isSubmitting || (inviteRequired && !inviteStatus.valid)}
               className="h-12 rounded-xl text-base font-semibold"
             >
               {L.btn_create}
@@ -232,10 +255,18 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <span className="text-xs text-muted-foreground">
               {L.have_account}{" "}
-              <Link to="/login" className="text-primary underline-offset-4 hover:underline">{L.sign_in}</Link>
+              <Link
+                to={returnTo ? `/login?return_to=${encodeURIComponent(returnTo)}` : "/login"}
+                className="text-primary underline-offset-4 hover:underline"
+              >{L.sign_in}</Link>
             </span>
           </div>
         </Card>
+        <div className="mt-4 text-center">
+          <Link to="/instruction" className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+            {L.instruction_link}
+          </Link>
+        </div>
       </div>
     </div>
   );
