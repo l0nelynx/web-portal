@@ -16,6 +16,8 @@ import TelegramCallbackPage from "./pages/TelegramCallbackPage";
 import PolicyPage from "./pages/legal/PolicyPage";
 import AgreementPage from "./pages/legal/AgreementPage";
 import OfferPage from "./pages/legal/OfferPage";
+import InstructionPage from "./pages/InstructionPage";
+import OAuthAuthorizePage from "./pages/OAuthAuthorizePage";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -56,6 +58,8 @@ export default function WebApp() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/claim" element={<ClaimPage />} />
+        <Route path="/instruction" element={<InstructionPage />} />
+        <Route path="/oauth/authorize" element={<OAuthAuthorizePage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route
           path="/verify-email"

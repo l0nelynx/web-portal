@@ -6,7 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ApiError, WebInvoiceResponse, WebMenuNode, webPayments } from "../../api/client";
+import {
+  ApiError,
+  managedSubscriptions,
+  WebInvoiceResponse,
+  WebMenuNode,
+  webPayments,
+} from "../../api/client";
 import { useLang } from "../../locale";
 
 interface ViewResult {
@@ -29,7 +35,7 @@ function buildView(nodes: WebMenuNode[], selections: (number | null)[], depth = 
   return { chipLevels: [btns, ...nested.chipLevels], invoices: nested.invoices };
 }
 
-export default function BuyTab() {
+export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?: number }) {
   const { L, lang } = useLang();
   const [tree, setTree] = useState<WebMenuNode[]>([]);
   const [balance, setBalance] = useState(0);
@@ -40,6 +46,7 @@ export default function BuyTab() {
   const [buyingId, setBuyingId] = useState<number | null>(null);
   const [payingCreditsId, setPayingCreditsId] = useState<number | null>(null);
   const [invoice, setInvoice] = useState<WebInvoiceResponse | null>(null);
+  const [targetLabel, setTargetLabel] = useState<string | null>(null);
 
   const isRu = lang === "ru";
 
@@ -66,6 +73,17 @@ export default function BuyTab() {
   }, [L.err_load_plans]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (!targetSubscriptionId) {
+      setTargetLabel(null);
+      return;
+    }
+    void managedSubscriptions.list().then(({ subscriptions }) => {
+      const target = subscriptions.find((item) => item.id === targetSubscriptionId);
+      setTargetLabel(target ? target.label || target.tariff : null);
+    }).catch(() => setTargetLabel(null));
+  }, [targetSubscriptionId]);
 
   const { chipLevels, invoices } = useMemo(() => {
     if (!tree.length) return { chipLevels: [], invoices: [] };
@@ -98,7 +116,11 @@ export default function BuyTab() {
     if (!selectedInvoiceId) return;
     setBuyingId(selectedInvoiceId);
     try {
-      const resp = await webPayments.createInvoice(selectedInvoiceId);
+      const resp = await webPayments.createInvoice(
+        selectedInvoiceId,
+        undefined,
+        targetSubscriptionId
+      );
       setInvoice(resp);
     } catch (e) {
       let errMsg = L.err_invoice;
@@ -117,7 +139,7 @@ export default function BuyTab() {
     if (!selectedInvoiceId || !canPayCredits) return;
     setPayingCreditsId(selectedInvoiceId);
     try {
-      const resp = await webPayments.payWithCredits(selectedInvoiceId);
+      const resp = await webPayments.payWithCredits(selectedInvoiceId, targetSubscriptionId);
       if (resp.ok) {
         if (resp.balance_after != null) setBalance(resp.balance_after);
         toast.success(L.msg_paid_with_credits);
@@ -177,6 +199,15 @@ export default function BuyTab() {
         <ShoppingCart size={18} className="text-muted-foreground" />
         <h4 className="m-0 text-lg font-semibold text-foreground">{L.buy_title}</h4>
       </div>
+
+      {targetSubscriptionId && (
+        <Alert variant="info" className="mb-5 rounded-xl">
+          <AlertDescription>
+            {isRu ? "Продление профиля: " : "Renewing profile: "}
+            <strong>{targetLabel || `#${targetSubscriptionId}`}</strong>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {balance > 0 && (
         <Alert variant="info" className="mb-5 rounded-xl">

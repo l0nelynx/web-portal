@@ -360,6 +360,37 @@ export interface Translations {
   val_partner_contact: string;
   // Footer + legal
   footer_disclaimer: string;
+  instruction_link: string;
+  instruction_eyebrow: string;
+  instruction_title: string;
+  instruction_lead: string;
+  instruction_quick_path: string;
+  instruction_step_1_title: string;
+  instruction_step_1_body: string;
+  instruction_step_2_title: string;
+  instruction_step_2_body: string;
+  instruction_step_3_title: string;
+  instruction_step_3_body: string;
+  instruction_step_4_title: string;
+  instruction_step_4_body: string;
+  instruction_separate_title: string;
+  instruction_separate_body: string;
+  instruction_transfer_title: string;
+  instruction_transfer_body: string;
+  instruction_step_5_title: string;
+  instruction_step_5_body: string;
+  instruction_step_6_title: string;
+  instruction_step_6_body: string;
+  instruction_step_7_title: string;
+  instruction_step_7_body: string;
+  instruction_trouble_title: string;
+  instruction_trouble_1: string;
+  instruction_trouble_2: string;
+  instruction_trouble_3: string;
+  instruction_cta_title: string;
+  instruction_cta_body: string;
+  instruction_open_portal: string;
+  instruction_back_home: string;
   footer_legal_heading: string;
   footer_policy: string;
   footer_agreement: string;
@@ -753,6 +784,37 @@ const en: Translations = {
   val_partner_contact: "Please leave a way to contact you",
   // Footer + legal
   footer_disclaimer: "This service is not intended for circumventing lawful restrictions.",
+  instruction_link: "Connection guide",
+  instruction_eyebrow: "From link to connected",
+  instruction_title: "Connect and manage your subscription",
+  instruction_lead: "Your subscription link is the starting point. Open it in a browser to attach it to an account, choose an app, renew it, or return later from any device.",
+  instruction_quick_path: "Subscription link → browser page → account → app profile → connected",
+  instruction_step_1_title: "Find your subscription link",
+  instruction_step_1_body: "Marketplace customers receive a separate URL with every order. Telegram and web customers usually keep one permanent URL. Do not publish it: anyone with the link can open your subscription page.",
+  instruction_step_2_title: "Open the link in a browser",
+  instruction_step_2_body: "The browser page is the control point for this exact subscription. It still works as a normal subscription endpoint for compatible apps, while the visual page provides setup and account actions.",
+  instruction_step_3_title: "Sign in or create an account",
+  instruction_step_3_body: "Use email and password or Telegram. When registration starts from a subscription page, no invite is needed and the current subscription is reserved before email verification, so an extra free profile is not created.",
+  instruction_step_4_title: "Attach the subscription",
+  instruction_step_4_body: "After signing in, choose what should happen to this order. The safer default keeps every subscription as a separate managed profile.",
+  instruction_separate_title: "Add separately — recommended",
+  instruction_separate_body: "Keeps the order as its own profile with its own expiry, traffic and devices. You can switch the active profile locally in each app.",
+  instruction_transfer_title: "Transfer remaining time",
+  instruction_transfer_body: "A secondary option for consolidating service time into an existing subscription. Review the source, target and remaining days before confirming; the operation cannot be inferred from the URL alone.",
+  instruction_step_5_title: "Install the app and synchronize",
+  instruction_step_5_body: "Sign in to CheezyVPN on Android or Desktop. The app downloads every subscription attached to your account as a managed profile. A plain add link only imports a local profile and never changes account ownership.",
+  instruction_step_6_title: "Choose the active profile and connect",
+  instruction_step_6_body: "The active profile is a local device choice. Select the profile you need, connect, and use “Manage subscription” to return to its browser page. Renewals target the subscription you selected, not an arbitrary account default.",
+  instruction_step_7_title: "Telegram and renewal",
+  instruction_step_7_body: "Telegram linking remains optional and always asks for confirmation. Renew a particular marketplace order from its subscription page; the checkout opens in the web portal and returns to the same subscription afterward.",
+  instruction_trouble_title: "If something does not work",
+  instruction_trouble_1: "The app did not open: install CheezyVPN, then use manual import from the subscription page.",
+  instruction_trouble_2: "The profile is missing: refresh account profiles and make sure you signed in to the same account used on the subscription page.",
+  instruction_trouble_3: "The subscription is linked elsewhere or a transfer looks wrong: stop and contact support—do not create another account to work around ownership.",
+  instruction_cta_title: "Already have a subscription link?",
+  instruction_cta_body: "Open that link first. It identifies the exact subscription you want to connect or renew.",
+  instruction_open_portal: "Open account",
+  instruction_back_home: "Back to home",
   footer_legal_heading: "Legal",
   footer_policy: "Privacy Policy",
   footer_agreement: "User Agreement",
@@ -1150,6 +1212,37 @@ const ru: Translations = {
   val_partner_contact: "Оставьте способ связи с вами",
   // Footer + legal
   footer_disclaimer: "Данный ресурс не предназначен для обхода блокировок.",
+  instruction_link: "Инструкция по подключению",
+  instruction_eyebrow: "От ссылки до подключения",
+  instruction_title: "Подключение и управление подпиской",
+  instruction_lead: "Ссылка подписки — начальная точка. Откройте её в браузере, чтобы привязать подписку к аккаунту, выбрать приложение, продлить её или вернуться к управлению с другого устройства.",
+  instruction_quick_path: "Ссылка подписки → страница в браузере → аккаунт → профиль в приложении → подключено",
+  instruction_step_1_title: "Найдите ссылку подписки",
+  instruction_step_1_body: "Покупатели маркетплейса получают отдельный URL для каждого заказа. У пользователей Telegram и веб-портала обычно один постоянный URL. Не публикуйте ссылку: тот, у кого она есть, сможет открыть страницу подписки.",
+  instruction_step_2_title: "Откройте ссылку в браузере",
+  instruction_step_2_body: "Страница в браузере — центр управления именно этой подпиской. URL продолжает работать как обычный endpoint для совместимых приложений, а визуальная страница добавляет установку и действия с аккаунтом.",
+  instruction_step_3_title: "Войдите или создайте аккаунт",
+  instruction_step_3_body: "Используйте email и пароль или Telegram. При регистрации со страницы подписки инвайт не нужен, а текущая подписка резервируется до подтверждения email — лишний бесплатный профиль не создаётся.",
+  instruction_step_4_title: "Привяжите подписку",
+  instruction_step_4_body: "После входа выберите, что сделать с заказом. Безопасный вариант по умолчанию сохраняет каждую подписку отдельным управляемым профилем.",
+  instruction_separate_title: "Добавить отдельно — рекомендуем",
+  instruction_separate_body: "Заказ остаётся отдельным профилем со своим сроком, трафиком и устройствами. Активный профиль можно выбирать локально в каждом приложении.",
+  instruction_transfer_title: "Перенести остаток срока",
+  instruction_transfer_body: "Дополнительный вариант для объединения оставшегося времени с существующей подпиской. Перед подтверждением проверьте источник, цель и число дней: такое действие нельзя безопасно определять только по URL.",
+  instruction_step_5_title: "Установите приложение и синхронизируйте",
+  instruction_step_5_body: "Войдите в CheezyVPN на Android или Desktop. Приложение загрузит все подписки аккаунта как управляемые профили. Обычная add-ссылка только импортирует локальный профиль и никогда не меняет владельца в аккаунте.",
+  instruction_step_6_title: "Выберите профиль и подключитесь",
+  instruction_step_6_body: "Активный профиль выбирается отдельно на каждом устройстве. Выберите нужный, подключитесь, а кнопка «Управлять подпиской» вернёт на её страницу в браузере. Продление применяется к выбранной подписке, а не к случайной основной.",
+  instruction_step_7_title: "Telegram и продление",
+  instruction_step_7_body: "Привязка Telegram необязательна и всегда требует подтверждения. Продлевайте конкретный заказ с его страницы подписки: оплата откроется в веб-портале и затем вернёт вас к той же подписке.",
+  instruction_trouble_title: "Если что-то не работает",
+  instruction_trouble_1: "Приложение не открылось: установите CheezyVPN и используйте ручной импорт со страницы подписки.",
+  instruction_trouble_2: "Профиль не появился: обновите профили аккаунта и проверьте, что вошли в тот же аккаунт, который использовали на странице подписки.",
+  instruction_trouble_3: "Подписка уже привязана к другому аккаунту или перенос выглядит неверно: остановитесь и напишите в поддержку — не создавайте ещё один аккаунт для обхода владельца.",
+  instruction_cta_title: "Ссылка подписки уже есть?",
+  instruction_cta_body: "Сначала откройте её. Именно ссылка определяет подписку, которую вы хотите подключить или продлить.",
+  instruction_open_portal: "Открыть аккаунт",
+  instruction_back_home: "На главную",
   footer_legal_heading: "Документы",
   footer_policy: "Политика конфиденциальности",
   footer_agreement: "Пользовательское соглашение",

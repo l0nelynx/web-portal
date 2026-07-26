@@ -151,8 +151,11 @@ export const auth = {
   login: (email: string, password: string) =>
     post<AuthResponse>("/android/auth/login", { email, password }, false),
 
-  register: (email: string, password: string, invite_code: string) =>
-    post<AuthResponse>("/web/register", { email, password, invite_code }, false),
+  register: (
+    email: string,
+    password: string,
+    opts: { invite_code?: string; subscription_context?: string }
+  ) => post<AuthResponse>("/web/register", { email, password, ...opts }, false),
 
   refresh: (refresh_token: string) =>
     post<TokenPair>("/android/auth/refresh", { refresh_token }, false),
@@ -168,6 +171,16 @@ export const auth = {
 
   telegramExchange: (code: string, state: string) =>
     post<AuthResponse>("/web/auth/telegram/exchange", { code, state }, false),
+};
+
+export const subscriptionSso = {
+  authorize: (body: {
+    client_id: string;
+    redirect_uri: string;
+    code_challenge: string;
+    code_challenge_method: string;
+    state: string;
+  }) => post<{ redirect_url: string }>("/web/oauth/authorize", body),
 };
 
 // ---------------------------------------------------------------------------
@@ -220,6 +233,22 @@ export interface MeResponse {
 
 export const me = {
   get: () => get<MeResponse>("/android/me"),
+};
+
+export interface ManagedSubscription extends SubscriptionInfo {
+  id: number;
+  rw_id: number;
+  label: string | null;
+  product_key: string | null;
+  is_primary: boolean;
+}
+
+export const managedSubscriptions = {
+  list: () => get<{ subscriptions: ManagedSubscription[] }>("/android/subscriptions"),
+  setPrimary: (subscription_id: number) =>
+    post<{ status: string; subscription_id: number }>(
+      `/android/subscriptions/${subscription_id}/primary`
+    ),
 };
 
 // ---------------------------------------------------------------------------
@@ -323,10 +352,14 @@ export interface WebPayCreditsResponse {
 
 export const webPayments = {
   getMenu: () => get<WebMenuResponse>("/web/payments/menu"),
-  createInvoice: (node_id: number, description?: string) =>
-    post<WebInvoiceResponse>("/web/payments/invoice", { node_id, description }),
-  payWithCredits: (node_id: number) =>
-    post<WebPayCreditsResponse>("/web/payments/pay-credits", { node_id }),
+  createInvoice: (node_id: number, description?: string, subscription_id?: number) =>
+    post<WebInvoiceResponse>("/web/payments/invoice", {
+      node_id,
+      description,
+      subscription_id,
+    }),
+  payWithCredits: (node_id: number, subscription_id?: number) =>
+    post<WebPayCreditsResponse>("/web/payments/pay-credits", { node_id, subscription_id }),
 };
 
 // ---------------------------------------------------------------------------

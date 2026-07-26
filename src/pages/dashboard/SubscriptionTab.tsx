@@ -5,10 +5,28 @@ import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { me, MeResponse, SubscriptionInfo } from "../../api/client";
+import {
+  ManagedSubscription,
+  managedSubscriptions,
+  me,
+  MeResponse,
+  SubscriptionInfo,
+} from "../../api/client";
 import { useLang } from "../../locale";
 
-function SubCard({ sub, L }: { sub: SubscriptionInfo; L: ReturnType<typeof useLang>["L"] }) {
+function SubCard({
+  sub,
+  L,
+  isRu,
+  onBuy,
+  onSetPrimary,
+}: {
+  sub: SubscriptionInfo | ManagedSubscription;
+  L: ReturnType<typeof useLang>["L"];
+  isRu: boolean;
+  onBuy: () => void;
+  onSetPrimary?: () => void;
+}) {
   const usagePct =
     sub.data_limit_gb && sub.data_limit_gb > 0
       ? Math.min(100, Math.round((sub.traffic_used_gb / sub.data_limit_gb) * 100))
@@ -28,9 +46,14 @@ function SubCard({ sub, L }: { sub: SubscriptionInfo; L: ReturnType<typeof useLa
     <div className="sub-card">
       <div className="sub-card__header">
         <span className="sub-card__tariff">{sub.tariff}</span>
-        <Badge variant={statusVariantMap[sub.status || ""] || "secondary"}>
-          {statusMap[sub.status || ""] || sub.status || "—"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {"is_primary" in sub && sub.is_primary && (
+            <Badge variant="outline">{isRu ? "Основной" : "Primary"}</Badge>
+          )}
+          <Badge variant={statusVariantMap[sub.status || ""] || "secondary"}>
+            {statusMap[sub.status || ""] || sub.status || "—"}
+          </Badge>
+        </div>
       </div>
 
       <div className="sub-card__days-row">
@@ -74,28 +97,42 @@ function SubCard({ sub, L }: { sub: SubscriptionInfo; L: ReturnType<typeof useLa
         )}
       </div>
 
-      {sub.status === "active" && sub.subscription_url && (
-        <div className="px-[22px] pb-[18px] pt-3">
+      <div className="flex flex-wrap gap-2 px-[22px] pb-[18px] pt-3">
+        {sub.status === "active" && sub.subscription_url && (
           <Button className="rounded-xl" onClick={() => window.open(sub.subscription_url!, "_blank")}>
             <LinkIcon className="h-4 w-4" />
             {L.copy_sub_link}
           </Button>
-        </div>
-      )}
+        )}
+        <Button className="rounded-xl" variant="outline" onClick={onBuy}>
+          {isRu ? "Продлить" : "Renew"}
+        </Button>
+        {onSetPrimary && (
+          <Button className="rounded-xl" variant="ghost" onClick={onSetPrimary}>
+            {isRu ? "Сделать основным" : "Make primary"}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
 
-export default function SubscriptionTab({ onBuyClick }: { onBuyClick: () => void }) {
-  const { L } = useLang();
+export default function SubscriptionTab({ onBuyClick }: { onBuyClick: (id?: number) => void }) {
+  const { L, lang } = useLang();
+  const isRu = lang === "ru";
   const [data, setData] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [subscriptions, setSubscriptions] = useState<ManagedSubscription[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try { setData(await me.get()); }
+    try {
+      const [meResponse, managed] = await Promise.all([me.get(), managedSubscriptions.list()]);
+      setData(meResponse);
+      setSubscriptions(managed.subscriptions);
+    }
     catch { setError(L.err_load_sub); }
     finally { setLoading(false); }
   }, [L]);
@@ -120,14 +157,30 @@ export default function SubscriptionTab({ onBuyClick }: { onBuyClick: () => void
         <Alert variant="destructive" className="rounded-xl">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      ) : subscriptions.length > 0 ? (
+        <div className="flex flex-col gap-4">
+          {subscriptions.map((sub) => (
+            <SubCard
+              key={sub.id}
+              sub={sub}
+              L={L}
+              isRu={isRu}
+              onBuy={() => onBuyClick(sub.id)}
+              onSetPrimary={sub.is_primary ? undefined : async () => {
+                await managedSubscriptions.setPrimary(sub.id);
+                await load();
+              }}
+            />
+          ))}
+        </div>
       ) : data?.subscription ? (
-        <SubCard sub={data.subscription} L={L} />
+        <SubCard sub={data.subscription} L={L} isRu={isRu} onBuy={() => onBuyClick()} />
       ) : (
         <div className="rounded-[20px] border border-dashed border-border bg-card px-6 py-16 text-center">
           <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
           <h4 className="text-lg font-semibold text-muted-foreground">{L.no_sub_title}</h4>
           <span className="mb-6 block text-muted-foreground">{L.no_sub_text}</span>
-          <Button size="lg" onClick={onBuyClick} className="rounded-xl">
+          <Button size="lg" onClick={() => onBuyClick()} className="rounded-xl">
             {L.btn_buy_sub}
           </Button>
         </div>

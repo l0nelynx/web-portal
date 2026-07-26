@@ -227,6 +227,9 @@ export default function LandingPage() {
 
         <div className="flex items-center gap-1.5 sm:gap-2">
           <div className="hidden items-center sm:flex">
+            <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <Link to="/instruction">{L.instruction_link}</Link>
+            </Button>
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => scrollTo("features")}>
               {L.nav_solutions}
             </Button>
@@ -532,6 +535,9 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-wrap gap-4 sm:gap-7">
+            <Link to="/instruction" className="text-[13px] text-muted-foreground hover:text-foreground">
+              {L.instruction_link}
+            </Link>
             <Link to="/policy" className="text-[13px] text-muted-foreground hover:text-foreground">
               {L.footer_policy}
             </Link>
