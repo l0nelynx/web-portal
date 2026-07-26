@@ -153,6 +153,8 @@ export interface Translations {
   invite_checking: string;
   invite_invalid: string;
   invite_valid: string;
+  register_from_subscription_hint: string;
+  oauth_authorize_loading: string;
   discount_accepted: string;
   credit_grant_text: (n: number) => string;
   pwd_label: string;
@@ -365,28 +367,42 @@ export interface Translations {
   instruction_title: string;
   instruction_lead: string;
   instruction_quick_path: string;
+  instruction_toc_1: string;
+  instruction_toc_2: string;
+  instruction_toc_3: string;
+  instruction_toc_4: string;
+  instruction_toc_5: string;
   instruction_step_1_title: string;
   instruction_step_1_body: string;
   instruction_step_2_title: string;
   instruction_step_2_body: string;
+  instruction_benefit_1: string;
+  instruction_benefit_2: string;
+  instruction_benefit_3: string;
+  instruction_benefit_4: string;
   instruction_step_3_title: string;
   instruction_step_3_body: string;
-  instruction_step_4_title: string;
-  instruction_step_4_body: string;
+  instruction_note_register_title: string;
+  instruction_note_register_body: string;
+  instruction_note_existing_title: string;
+  instruction_note_existing_body: string;
   instruction_separate_title: string;
   instruction_separate_body: string;
   instruction_transfer_title: string;
   instruction_transfer_body: string;
+  instruction_note_skip_title: string;
+  instruction_note_skip_body: string;
+  instruction_step_4_title: string;
+  instruction_step_4_body: string;
+  instruction_note_cheezy_title: string;
+  instruction_note_cheezy_body: string;
   instruction_step_5_title: string;
   instruction_step_5_body: string;
-  instruction_step_6_title: string;
-  instruction_step_6_body: string;
-  instruction_step_7_title: string;
-  instruction_step_7_body: string;
   instruction_trouble_title: string;
   instruction_trouble_1: string;
   instruction_trouble_2: string;
   instruction_trouble_3: string;
+  instruction_trouble_4: string;
   instruction_cta_title: string;
   instruction_cta_body: string;
   instruction_open_portal: string;
@@ -582,6 +598,8 @@ const en: Translations = {
   invite_checking: "Checking code…",
   invite_invalid: "Invalid code",
   invite_valid: "Code accepted",
+  register_from_subscription_hint: "Registration from a subscription page needs no invite. This subscription is reserved until you verify email — an extra free profile is not created.",
+  oauth_authorize_loading: "Signing you in…",
   discount_accepted: "Code accepted!",
   credit_grant_text: (n) => `${n} bonus points 🪙`,
   pwd_label: "Password",
@@ -786,33 +804,47 @@ const en: Translations = {
   footer_disclaimer: "This service is not intended for circumventing lawful restrictions.",
   instruction_link: "Connection guide",
   instruction_eyebrow: "From link to connected",
-  instruction_title: "Connect and manage your subscription",
-  instruction_lead: "Your subscription link is the starting point. Open it in a browser to attach it to an account, choose an app, renew it, or return later from any device.",
-  instruction_quick_path: "Subscription link → browser page → account → app profile → connected",
-  instruction_step_1_title: "Find your subscription link",
-  instruction_step_1_body: "Marketplace customers receive a separate URL with every order. Telegram and web customers usually keep one permanent URL. Do not publish it: anyone with the link can open your subscription page.",
-  instruction_step_2_title: "Open the link in a browser",
-  instruction_step_2_body: "The browser page is the control point for this exact subscription. It still works as a normal subscription endpoint for compatible apps, while the visual page provides setup and account actions.",
-  instruction_step_3_title: "Sign in or create an account",
-  instruction_step_3_body: "Use email and password or Telegram. When registration starts from a subscription page, no invite is needed and the current subscription is reserved before email verification, so an extra free profile is not created.",
-  instruction_step_4_title: "Attach the subscription",
-  instruction_step_4_body: "After signing in, choose what should happen to this order. The safer default keeps every subscription as a separate managed profile.",
+  instruction_title: "How to connect after purchase",
+  instruction_lead: "After payment you get a subscription URL. Use it right away in a compatible app, or open it in a browser for a guided setup — including an optional account for renewals and devices.",
+  instruction_quick_path: "Subscription URL → setup page → client → import → connect",
+  instruction_toc_1: "Link",
+  instruction_toc_2: "Page",
+  instruction_toc_3: "Account",
+  instruction_toc_4: "Client",
+  instruction_toc_5: "Connect",
+  instruction_step_1_title: "You received a subscription URL",
+  instruction_step_1_body: "After payment you get a personal subscription link. Paste it into a compatible VPN client right away, or open it in a browser for the step-by-step guide. Keep the link private — anyone with it can open your subscription page.",
+  instruction_step_2_title: "Open the URL in a browser",
+  instruction_step_2_body: "The page shows how to install a client and import the subscription. It also offers to create an account so you can manage everything in one place.",
+  instruction_benefit_1: "Renew and manage your subscription from the personal cabinet or app",
+  instruction_benefit_2: "Add other purchased subscriptions and switch between them",
+  instruction_benefit_3: "See and manage connected devices",
+  instruction_benefit_4: "Sign in from any device without hunting for the original link",
+  instruction_step_3_title: "Create an account — or skip for now",
+  instruction_step_3_body: "An account is optional but recommended. You can register, sign in to an existing account, or continue straight to installing a client.",
+  instruction_note_register_title: "Creating an account for the first time",
+  instruction_note_register_body: "Enter your email and password twice, then confirm with the 6-digit code from the email. If the message does not arrive, check Spam / Junk.",
+  instruction_note_existing_title: "Signing in to an existing account",
+  instruction_note_existing_body: "If this account already has a different subscription, you will choose what to do with the new one:",
   instruction_separate_title: "Add separately — recommended",
-  instruction_separate_body: "Keeps the order as its own profile with its own expiry, traffic and devices. You can switch the active profile locally in each app.",
-  instruction_transfer_title: "Transfer remaining time",
-  instruction_transfer_body: "A secondary option for consolidating service time into an existing subscription. Review the source, target and remaining days before confirming; the operation cannot be inferred from the URL alone.",
-  instruction_step_5_title: "Install the app and synchronize",
-  instruction_step_5_body: "Sign in to CheezyVPN on Android or Desktop. The app downloads every subscription attached to your account as a managed profile. A plain add link only imports a local profile and never changes account ownership.",
-  instruction_step_6_title: "Choose the active profile and connect",
-  instruction_step_6_body: "The active profile is a local device choice. Select the profile you need, connect, and use “Manage subscription” to return to its browser page. Renewals target the subscription you selected, not an arbitrary account default.",
-  instruction_step_7_title: "Telegram and renewal",
-  instruction_step_7_body: "Telegram linking remains optional and always asks for confirmation. Renew a particular marketplace order from its subscription page; the checkout opens in the web portal and returns to the same subscription afterward.",
+  instruction_separate_body: "Keeps both subscriptions independent. You can switch between them in the app and personal cabinet, and renew each one on its own.",
+  instruction_transfer_title: "Extend the existing subscription",
+  instruction_transfer_body: "Adds the newly purchased time to the subscription already on the account. Available only when both subscriptions are the same plan.",
+  instruction_note_skip_title: "Continue without an account",
+  instruction_note_skip_body: "Follow the install steps below and add the subscription URL to the client. You can create an account later from the same subscription page.",
+  instruction_step_4_title: "Install a client and add the subscription",
+  instruction_step_4_body: "Pick your platform, download a client from the subscription page, then import the subscription URL into it.",
+  instruction_note_cheezy_title: "CheezyVPN vs other clients",
+  instruction_note_cheezy_body: "In the official CheezyVPN app you may be asked again to sign in or register — or choose “Add subscription without an account”. Other compatible clients simply import the URL as described on the page.",
+  instruction_step_5_title: "Connect",
+  instruction_step_5_body: "Once the subscription is in the app — with or without an account — select a server and turn the connection on. That is it.",
   instruction_trouble_title: "If something does not work",
-  instruction_trouble_1: "The app did not open: install CheezyVPN, then use manual import from the subscription page.",
-  instruction_trouble_2: "The profile is missing: refresh account profiles and make sure you signed in to the same account used on the subscription page.",
-  instruction_trouble_3: "The subscription is linked elsewhere or a transfer looks wrong: stop and contact support—do not create another account to work around ownership.",
+  instruction_trouble_1: "No verification email: check Spam / Junk, wait a minute, then request a new code.",
+  instruction_trouble_2: "“Extend existing” is unavailable: the plans differ — choose “Add separately” instead.",
+  instruction_trouble_3: "CheezyVPN asks to sign in again: sign in, register, or pick “Add without an account”.",
+  instruction_trouble_4: "Profile missing after account setup: refresh profiles and make sure you used the same account as on the subscription page.",
   instruction_cta_title: "Already have a subscription link?",
-  instruction_cta_body: "Open that link first. It identifies the exact subscription you want to connect or renew.",
+  instruction_cta_body: "Open that link first. It is the starting point for setup, renewals, and account binding.",
   instruction_open_portal: "Open account",
   instruction_back_home: "Back to home",
   footer_legal_heading: "Legal",
@@ -1006,6 +1038,8 @@ const ru: Translations = {
   invite_checking: "Проверка кода…",
   invite_invalid: "Недействительный код",
   invite_valid: "Код действителен",
+  register_from_subscription_hint: "При регистрации со страницы подписки инвайт не нужен. Текущая подписка резервируется до подтверждения email — лишний бесплатный профиль не создаётся.",
+  oauth_authorize_loading: "Выполняется вход…",
   discount_accepted: "Код принят!",
   credit_grant_text: (n) => `${n} бонусных баллов 🪙`,
   pwd_label: "Пароль",
@@ -1214,33 +1248,47 @@ const ru: Translations = {
   footer_disclaimer: "Данный ресурс не предназначен для обхода блокировок.",
   instruction_link: "Инструкция по подключению",
   instruction_eyebrow: "От ссылки до подключения",
-  instruction_title: "Подключение и управление подпиской",
-  instruction_lead: "Ссылка подписки — начальная точка. Откройте её в браузере, чтобы привязать подписку к аккаунту, выбрать приложение, продлить её или вернуться к управлению с другого устройства.",
-  instruction_quick_path: "Ссылка подписки → страница в браузере → аккаунт → профиль в приложении → подключено",
-  instruction_step_1_title: "Найдите ссылку подписки",
-  instruction_step_1_body: "Покупатели маркетплейса получают отдельный URL для каждого заказа. У пользователей Telegram и веб-портала обычно один постоянный URL. Не публикуйте ссылку: тот, у кого она есть, сможет открыть страницу подписки.",
-  instruction_step_2_title: "Откройте ссылку в браузере",
-  instruction_step_2_body: "Страница в браузере — центр управления именно этой подпиской. URL продолжает работать как обычный endpoint для совместимых приложений, а визуальная страница добавляет установку и действия с аккаунтом.",
-  instruction_step_3_title: "Войдите или создайте аккаунт",
-  instruction_step_3_body: "Используйте email и пароль или Telegram. При регистрации со страницы подписки инвайт не нужен, а текущая подписка резервируется до подтверждения email — лишний бесплатный профиль не создаётся.",
-  instruction_step_4_title: "Привяжите подписку",
-  instruction_step_4_body: "После входа выберите, что сделать с заказом. Безопасный вариант по умолчанию сохраняет каждую подписку отдельным управляемым профилем.",
+  instruction_title: "Как подключиться после покупки",
+  instruction_lead: "После оплаты вы получаете URL подписки. Его можно сразу вставить в совместимый клиент или открыть в браузере — там пошаговая установка и предложение создать аккаунт для управления.",
+  instruction_quick_path: "URL подписки → страница с инструкцией → клиент → импорт → подключение",
+  instruction_toc_1: "Ссылка",
+  instruction_toc_2: "Страница",
+  instruction_toc_3: "Аккаунт",
+  instruction_toc_4: "Клиент",
+  instruction_toc_5: "Подключение",
+  instruction_step_1_title: "Вы получили URL подписки",
+  instruction_step_1_body: "После оплаты приходит персональная ссылка. Её можно сразу вставить в совместимый VPN-клиент или открыть в браузере и пройти установку по шагам. Не публикуйте ссылку: тот, у кого она есть, откроет вашу страницу подписки.",
+  instruction_step_2_title: "Откройте URL в браузере",
+  instruction_step_2_body: "На странице — инструкция по установке клиента и импорту подписки, а также предложение создать аккаунт, чтобы управлять всем в одном месте.",
+  instruction_benefit_1: "Продлевать и управлять подпиской в личном кабинете или приложении",
+  instruction_benefit_2: "Добавлять другие купленные подписки и переключаться между ними",
+  instruction_benefit_3: "Видеть и управлять подключёнными устройствами",
+  instruction_benefit_4: "Входить с любого устройства, не ища исходную ссылку",
+  instruction_step_3_title: "Создайте аккаунт — или пропустите",
+  instruction_step_3_body: "Аккаунт не обязателен, но удобен. Можно зарегистрироваться, войти в существующий аккаунт или сразу перейти к установке клиента.",
+  instruction_note_register_title: "Регистрация впервые",
+  instruction_note_register_body: "Введите email и пароль дважды, затем подтвердите код из письма. Если письма нет — проверьте папку «Спам».",
+  instruction_note_existing_title: "Вход в существующий аккаунт",
+  instruction_note_existing_body: "Если на аккаунте уже есть другая подписка, вам предложат выбрать, что сделать с новой:",
   instruction_separate_title: "Добавить отдельно — рекомендуем",
-  instruction_separate_body: "Заказ остаётся отдельным профилем со своим сроком, трафиком и устройствами. Активный профиль можно выбирать локально в каждом приложении.",
-  instruction_transfer_title: "Перенести остаток срока",
-  instruction_transfer_body: "Дополнительный вариант для объединения оставшегося времени с существующей подпиской. Перед подтверждением проверьте источник, цель и число дней: такое действие нельзя безопасно определять только по URL.",
-  instruction_step_5_title: "Установите приложение и синхронизируйте",
-  instruction_step_5_body: "Войдите в CheezyVPN на Android или Desktop. Приложение загрузит все подписки аккаунта как управляемые профили. Обычная add-ссылка только импортирует локальный профиль и никогда не меняет владельца в аккаунте.",
-  instruction_step_6_title: "Выберите профиль и подключитесь",
-  instruction_step_6_body: "Активный профиль выбирается отдельно на каждом устройстве. Выберите нужный, подключитесь, а кнопка «Управлять подпиской» вернёт на её страницу в браузере. Продление применяется к выбранной подписке, а не к случайной основной.",
-  instruction_step_7_title: "Telegram и продление",
-  instruction_step_7_body: "Привязка Telegram необязательна и всегда требует подтверждения. Продлевайте конкретный заказ с его страницы подписки: оплата откроется в веб-портале и затем вернёт вас к той же подписке.",
+  instruction_separate_body: "Обе подписки остаются независимыми. Их можно переключать в приложении и личном кабинете и продлевать по отдельности.",
+  instruction_transfer_title: "Продлить существующую подписку",
+  instruction_transfer_body: "Срок только что купленной подписки добавляется к уже привязанной. Работает только если обе подписки одного тарифа.",
+  instruction_note_skip_title: "Продолжить без аккаунта",
+  instruction_note_skip_body: "Следуйте шагам установки ниже и добавьте URL подписки в клиент. Аккаунт можно создать позже с той же страницы подписки.",
+  instruction_step_4_title: "Установите клиент и добавьте подписку",
+  instruction_step_4_body: "Выберите платформу, скачайте клиент со страницы подписки и импортируйте в него URL.",
+  instruction_note_cheezy_title: "CheezyVPN и другие клиенты",
+  instruction_note_cheezy_body: "В официальном CheezyVPN снова могут предложить войти или зарегистрироваться — либо выбрать «Добавить подписку без аккаунта». В других совместимых клиентах URL просто импортируется по инструкции на странице.",
+  instruction_step_5_title: "Подключитесь",
+  instruction_step_5_body: "Когда подписка уже в приложении — с аккаунтом или без — выберите сервер и включите соединение. Готово.",
   instruction_trouble_title: "Если что-то не работает",
-  instruction_trouble_1: "Приложение не открылось: установите CheezyVPN и используйте ручной импорт со страницы подписки.",
-  instruction_trouble_2: "Профиль не появился: обновите профили аккаунта и проверьте, что вошли в тот же аккаунт, который использовали на странице подписки.",
-  instruction_trouble_3: "Подписка уже привязана к другому аккаунту или перенос выглядит неверно: остановитесь и напишите в поддержку — не создавайте ещё один аккаунт для обхода владельца.",
+  instruction_trouble_1: "Нет письма с кодом: проверьте «Спам», подождите минуту и запросите код ещё раз.",
+  instruction_trouble_2: "«Продлить существующую» недоступно: тарифы разные — выберите «Добавить отдельно».",
+  instruction_trouble_3: "CheezyVPN снова просит войти: войдите, зарегистрируйтесь или выберите «Добавить без аккаунта».",
+  instruction_trouble_4: "Профиль не появился после аккаунта: обновите профили и убедитесь, что вошли в тот же аккаунт, что на странице подписки.",
   instruction_cta_title: "Ссылка подписки уже есть?",
-  instruction_cta_body: "Сначала откройте её. Именно ссылка определяет подписку, которую вы хотите подключить или продлить.",
+  instruction_cta_body: "Сначала откройте её. Именно с неё начинается установка, продление и привязка к аккаунту.",
   instruction_open_portal: "Открыть аккаунт",
   instruction_back_home: "На главную",
   footer_legal_heading: "Документы",

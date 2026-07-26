@@ -195,7 +195,7 @@ export default function RegisterPage() {
             </div> : (
               <Alert className="rounded-lg border-emerald-500/30 bg-emerald-500/5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                <AlertDescription>{L.instruction_step_3_body}</AlertDescription>
+                <AlertDescription>{L.register_from_subscription_hint}</AlertDescription>
               </Alert>
             )}
 

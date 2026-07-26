@@ -60,7 +60,7 @@ export default function OAuthAuthorizePage() {
         ) : (
           <div className="flex flex-col items-center gap-4">
             <Spinner className="h-7 w-7" />
-            <p className="text-sm text-muted-foreground">{L.instruction_step_3_body}</p>
+            <p className="text-sm text-muted-foreground">{L.oauth_authorize_loading}</p>
           </div>
         )}
       </div>
