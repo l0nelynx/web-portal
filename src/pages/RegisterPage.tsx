@@ -17,6 +17,12 @@ import { useLang } from "../locale";
 import BrandLogo from "../components/BrandLogo";
 import { BRAND_NAME } from "../branding";
 import { usePageMeta } from "../seo";
+import {
+  clearLegacySubscriptionContext,
+  isSubscriptionPageReturnTo,
+  legacySubscriptionContext,
+  safeLocalReturnTo,
+} from "../lib/return-to";
 
 interface InviteStatus {
   checked: boolean;
@@ -47,19 +53,9 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnToRaw = searchParams.get("return_to");
-  const returnTo = returnToRaw?.startsWith("/") && !returnToRaw.startsWith("//")
-    ? returnToRaw
-    : null;
-  const subscriptionContext = (() => {
-    if (!returnTo) return null;
-    try {
-      const parsed = new URL(returnTo, window.location.origin);
-      return parsed.searchParams.get("subscription_context")
-        ?? new URLSearchParams(parsed.hash.replace(/^#/, "")).get("subscription_context");
-    } catch {
-      return null;
-    }
-  })();
+  const returnTo = safeLocalReturnTo(returnToRaw);
+  const subscriptionFlow = isSubscriptionPageReturnTo(returnTo);
+  const subscriptionContext = legacySubscriptionContext(returnTo);
   const [error, setError] = useState<string | null>(null);
   usePageMeta({ title: `${L.reg_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>({
@@ -111,14 +107,25 @@ export default function RegisterPage() {
       const resp = await auth.register(
         values.email.trim().toLowerCase(),
         values.password,
-        subscriptionContext
-          ? { subscription_context: subscriptionContext }
+        subscriptionFlow
+          ? {
+              subscription_flow: true,
+              ...(subscriptionContext
+                ? { subscription_context: subscriptionContext }
+                : {}),
+            }
           : trimmedInvite
             ? { invite_code: trimmedInvite }
             : {}
       );
+      clearLegacySubscriptionContext(returnTo);
       setUserAfterRegister(resp.user, resp.tokens);
-      navigate(returnTo ?? "/verify-email", { replace: true });
+      navigate(
+        returnTo
+          ? `/verify-email?return_to=${encodeURIComponent(returnTo)}`
+          : "/verify-email",
+        { replace: true },
+      );
     } catch (e) {
       if (e instanceof ApiError) {
         const map: Record<string, string> = {
@@ -167,7 +174,7 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit(onFinish)} className="flex flex-col gap-4">
-            {subscriptionContext ? (
+            {subscriptionFlow ? (
               <Alert className="rounded-lg border-emerald-500/30 bg-emerald-500/5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                 <AlertDescription>{L.register_from_subscription_hint}</AlertDescription>

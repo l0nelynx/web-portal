@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Navigate, useLocation, useSearchParams } from "react-router";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
@@ -16,6 +16,7 @@ export default function OAuthAuthorizePage() {
   const [params] = useSearchParams();
   const started = useRef(false);
   const [error, setError] = useState<string | null>(null);
+  const [fragmentCaptured, setFragmentCaptured] = useState(!location.hash);
   usePageMeta({ title: `${L.login_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
 
   const clientId = params.get("client_id") ?? "";
@@ -24,9 +25,24 @@ export default function OAuthAuthorizePage() {
   const method = params.get("code_challenge_method") ?? "S256";
   const state = params.get("state") ?? "";
   const valid = Boolean(clientId && redirectUri && challenge && state);
+  const identityVerified = Boolean(user?.email_verified || user?.has_telegram);
+
+  useLayoutEffect(() => {
+    if (!location.hash) {
+      setFragmentCaptured(true);
+      return;
+    }
+    const context = new URLSearchParams(location.hash.replace(/^#/, ""))
+      .get("subscription_context");
+    if (context && state) {
+      sessionStorage.setItem(`subscription_context:${state}`, context);
+    }
+    window.history.replaceState(null, "", `${location.pathname}${location.search}`);
+    setFragmentCaptured(true);
+  }, [location.hash, location.pathname, location.search, state]);
 
   useEffect(() => {
-    if (loading || !user || !valid || started.current) return;
+    if (!fragmentCaptured || loading || !user || !identityVerified || !valid || started.current) return;
     started.current = true;
     subscriptionSso.authorize({
       client_id: clientId,
@@ -40,12 +56,22 @@ export default function OAuthAuthorizePage() {
       const code = reason instanceof ApiError ? reason.code : "authorization_failed";
       setError(code === "invalid_redirect_uri" ? "Invalid subscription-page callback." : L.err_login);
     });
-  }, [loading, user, valid, clientId, redirectUri, challenge, method, state, L.err_login]);
+  }, [fragmentCaptured, loading, user, identityVerified, valid, clientId, redirectUri, challenge, method, state, L.err_login]);
 
+  if (!fragmentCaptured) return null;
   if (!valid) return <Navigate to="/instruction" replace />;
   if (!loading && !user) {
-    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    const returnTo = `${location.pathname}${location.search}`;
     return <Navigate to={`/login?return_to=${encodeURIComponent(returnTo)}`} replace />;
+  }
+  if (!loading && user && !identityVerified) {
+    const returnTo = `${location.pathname}${location.search}`;
+    return (
+      <Navigate
+        to={`/verify-email?return_to=${encodeURIComponent(returnTo)}`}
+        replace
+      />
+    );
   }
 
   return (

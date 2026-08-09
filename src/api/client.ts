@@ -154,7 +154,11 @@ export const auth = {
   register: (
     email: string,
     password: string,
-    opts: { invite_code?: string; subscription_context?: string }
+    opts: {
+      invite_code?: string;
+      subscription_context?: string;
+      subscription_flow?: boolean;
+    }
   ) => post<AuthResponse>("/web/register", { email, password, ...opts }, false),
 
   refresh: (refresh_token: string) =>

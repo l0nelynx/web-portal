@@ -9,7 +9,9 @@ import "./theme.css";
 // GitHub Pages SPA redirect: 404.html encodes the real path as /?p=/some/path
 const ghRedirect = new URLSearchParams(window.location.search).get("p");
 if (ghRedirect) {
-  window.history.replaceState(null, "", ghRedirect);
+  const restoredHash = sessionStorage.getItem("_spa_restore_hash") ?? "";
+  sessionStorage.removeItem("_spa_restore_hash");
+  window.history.replaceState(null, "", ghRedirect + restoredHash);
 }
 
 

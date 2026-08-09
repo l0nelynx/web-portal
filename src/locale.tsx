@@ -142,6 +142,7 @@ export interface Translations {
   btn_resend: string;
   verify_success_title: string;
   verify_success_text: string;
+  verify_success_subscription_text: string;
   err_verify: string;
   err_code_invalid: string;
   err_code_expired: string;
@@ -587,6 +588,7 @@ const en: Translations = {
   btn_resend: "Resend",
   verify_success_title: "Email confirmed!",
   verify_success_text: "Redirecting to your account…",
+  verify_success_subscription_text: "Returning to your subscription…",
   err_verify: "Verification failed",
   err_code_invalid: "Invalid or expired code",
   err_code_expired: "Code expired. Request a new one.",
@@ -1027,6 +1029,7 @@ const ru: Translations = {
   btn_resend: "Отправить повторно",
   verify_success_title: "Email подтверждён!",
   verify_success_text: "Переход в личный кабинет…",
+  verify_success_subscription_text: "Возвращаемся к вашей подписке…",
   err_verify: "Ошибка подтверждения",
   err_code_invalid: "Неверный или истёкший код",
   err_code_expired: "Код истёк. Запросите новый.",

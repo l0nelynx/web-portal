@@ -110,6 +110,8 @@ jobs:
 
           write_shell login "Sign In | ${BRAND}" "noindex, follow"
           write_shell register "Create Account | ${BRAND}" "noindex, follow"
+          write_shell verify-email "Verify Email | ${BRAND}" "noindex, follow"
+          write_shell oauth/authorize "Authorize | ${BRAND}" "noindex, follow"
           write_shell policy "Privacy Policy | ${BRAND}" "noindex, follow"
           write_shell agreement "User Agreement | ${BRAND}" "noindex, follow"
           write_shell offer "Public Offer | ${BRAND}" "noindex, follow"

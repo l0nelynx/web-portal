@@ -2,5 +2,8 @@
 <script>
   var path = window.location.pathname;
   var search = window.location.search;
+  if (window.location.hash) {
+    sessionStorage.setItem('_spa_restore_hash', window.location.hash);
+  }
   window.location.replace('/?p=' + encodeURIComponent(path + search));
 </script>

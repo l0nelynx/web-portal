@@ -15,6 +15,7 @@ import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
 import { usePageMeta } from "../seo";
+import { safeLocalReturnTo } from "../lib/return-to";
 
 function buildSchema(L: ReturnType<typeof useLang>["L"]) {
   return z.object({
@@ -32,9 +33,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("return_to");
-  const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//")
-    ? returnTo
-    : null;
+  const safeReturnTo = safeLocalReturnTo(returnTo);
   usePageMeta({ title: `${L.login_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
 
   const schema = buildSchema(L);

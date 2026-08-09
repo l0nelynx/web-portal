@@ -10,10 +10,11 @@ import { Link } from "react-router";
 import BrandLogo from "../components/BrandLogo";
 import { BRAND_NAME } from "../branding";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { ApiError, email } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
+import { isSubscriptionPageReturnTo, safeLocalReturnTo } from "../lib/return-to";
 
 function buildSchema(L: ReturnType<typeof useLang>["L"]) {
   return z.object({
@@ -26,6 +27,9 @@ type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 export default function VerifyEmailPage() {
   const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = safeLocalReturnTo(searchParams.get("return_to"));
+  const returnsToSubscription = isSubscriptionPageReturnTo(returnTo);
   const { L } = useLang();
   const [sendLoading, setSendLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +71,7 @@ export default function VerifyEmailPage() {
       await email.verify(values.code.trim());
       await refreshProfile();
       setVerified(true);
-      setTimeout(() => navigate("/dashboard", { replace: true }), 2000);
+      setTimeout(() => navigate(returnTo ?? "/dashboard", { replace: true }), 1200);
     } catch (e) {
       if (e instanceof ApiError) {
         const map: Record<string, string> = {
@@ -89,7 +93,11 @@ export default function VerifyEmailPage() {
         <div className="text-center">
           <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-emerald-500" />
           <h3 className="text-2xl font-semibold text-foreground">{L.verify_success_title}</h3>
-          <span className="text-muted-foreground">{L.verify_success_text}</span>
+          <span className="text-muted-foreground">
+            {returnsToSubscription
+              ? L.verify_success_subscription_text
+              : L.verify_success_text}
+          </span>
         </div>
       </div>
     );
