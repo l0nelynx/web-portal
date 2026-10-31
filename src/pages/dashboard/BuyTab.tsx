@@ -267,7 +267,7 @@ export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?
                   >
                     <div className="tariff-card__name">{n.text}</div>
                     <div className="tariff-card__price-row">
-                      <div className="tariff-card__price">{inv.amount.toFixed(0)}</div>
+                      <div className="tariff-card__price">{inv.amount}</div>
                       <div className="tariff-card__currency">{inv.currency}</div>
                     </div>
                     {(inv.days ?? 0) > 0 && (
@@ -293,7 +293,7 @@ export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?
           <div>
             <span className="text-[13px] text-muted-foreground">{selectedInvoice.text}</span>
             <div className="mt-0.5 flex items-baseline gap-1.5">
-              <span className="text-[22px] font-extrabold text-foreground">{payPrice.toFixed(0)}</span>
+              <span className="text-[22px] font-extrabold text-foreground">{payPrice}</span>
               <span className="text-sm text-muted-foreground">{payCurrency}</span>
             </div>
           </div>
@@ -315,7 +315,7 @@ export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?
               onClick={handleBuyFiat}
               className="w-full rounded-xl font-bold"
             >
-              {L.btn_pay} · {payPrice.toFixed(0)} {payCurrency}
+              {L.btn_pay} · {payPrice} {payCurrency}
             </Button>
           </div>
         </div>
@@ -332,7 +332,7 @@ export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?
                 <div className="mb-2 flex justify-between">
                   <span className="text-muted-foreground">{L.to_pay}</span>
                   <span className="text-xl font-semibold text-foreground">
-                    {invoice.amount.toFixed(0)} {invoice.currency}
+                    {invoice.amount} {invoice.currency}
                   </span>
                 </div>
               </div>
