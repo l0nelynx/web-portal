@@ -43,7 +43,7 @@ function RequireVerified({ children }: { children: React.ReactNode }) {
 function RouteTracker() {
   const location = useLocation();
   useEffect(() => {
-    pageView(location.pathname);
+    if (location.pathname !== "/dashboard") pageView(location.pathname);
   }, [location.pathname]);
   return null;
 }

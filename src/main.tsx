@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { AuthProvider } from "./auth/AuthContext";
 import WebApp from "./App";
+import { initAnalytics } from "./analytics";
 import "./index.css";
 import "./theme.css";
 
@@ -14,6 +15,8 @@ if (ghRedirect) {
   window.history.replaceState(null, "", ghRedirect + restoredHash);
 }
 
+
+initAnalytics();
 
 // Render immediately — failover check runs in background
 ReactDOM.createRoot(document.getElementById("web-root")!).render(

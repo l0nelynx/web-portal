@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { trackEvent } from "../analytics";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CheckCircle2, XCircle, Gift, Lock, Mail, KeyRound } from "lucide-react";
@@ -119,6 +120,7 @@ export default function RegisterPage() {
             : {}
       );
       clearLegacySubscriptionContext(returnTo);
+      trackEvent("sign_up", { method: "email" });
       setUserAfterRegister(resp.user, resp.tokens);
       navigate(
         returnTo

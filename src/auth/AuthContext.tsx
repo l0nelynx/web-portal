@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { trackEvent } from "../analytics";
 import {
+  ApiError,
   auth,
   clearTokens,
   getAccessToken,
@@ -22,6 +24,38 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
+const REFRESH_EARLY_SECONDS = 60;
+
+function isAuthRejected(error: unknown) {
+  return error instanceof ApiError && (error.status === 401 || error.status === 403);
+}
+
+// Rotation is single-use. Another tab may finish renewing while we wait.
+async function renewStoredSession(expectedRefresh: string) {
+  async function rotate() {
+    if (getRefreshToken() !== expectedRefresh) return;
+    try {
+      const pair = await auth.refresh(expectedRefresh);
+      if (getRefreshToken() === expectedRefresh) {
+        setTokens(pair.access_token, pair.refresh_token);
+        return pair.expires_in;
+      }
+    } catch (error) {
+      if (getRefreshToken() !== expectedRefresh) return;
+      if (isAuthRejected(error)) clearTokens();
+      throw error;
+    }
+  }
+  return navigator.locks ? navigator.locks.request("web-auth-refresh", rotate) : rotate();
+}
+
+// The expiry only schedules renewal. The server authenticates the token via /me.
+function secondsUntilExpiry(token: string) {
+  try {
+    const { exp } = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    if (typeof exp === "number" && Number.isFinite(exp)) return exp - Date.now() / 1000;
+  } catch { /* Older sessions may lack a readable expiry. */ }
+}
 
 function summaryFromProfile(p: MeResponse): UserSummary {
   return {
@@ -39,20 +73,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const scheduleRefresh = useCallback((expiresIn: number) => {
+  const scheduleRefreshIn = useCallback((seconds: number) => {
     if (refreshTimer.current) clearTimeout(refreshTimer.current);
-    const ms = Math.max((expiresIn - 60) * 1000, 5_000);
+    const ms = Math.max(seconds * 1000, 5_000);
     refreshTimer.current = setTimeout(async () => {
       const rt = getRefreshToken();
       if (!rt) return;
       try {
-        const pair = await auth.refresh(rt);
-        setTokens(pair.access_token, pair.refresh_token);
-        scheduleRefresh(pair.expires_in);
-      } catch {
-        clearTokens();
-        setUser(null);
-        setProfile(null);
+        const renewedFor = await renewStoredSession(rt);
+        const token = getAccessToken();
+        if (token) {
+          const remaining = renewedFor ?? secondsUntilExpiry(token);
+          if (remaining !== undefined) scheduleRefreshIn(remaining - REFRESH_EARLY_SECONDS);
+        }
+      } catch (error) {
+        if (isAuthRejected(error)) {
+          setUser(null);
+          setProfile(null);
+        } else if (getRefreshToken() === rt) {
+          scheduleRefreshIn(30);
+        }
       }
     }, ms);
   }, []);
@@ -69,54 +109,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // On mount: restore session from localStorage
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    me.get()
-      .then((data) => {
+    let current = true;
+    async function restore() {
+      try {
+        const token = getAccessToken();
+        const rt = getRefreshToken();
+        if (!token && !rt) return;
+        let data: MeResponse | undefined;
+        let renewedFor: number | undefined;
+        if (token) {
+          try {
+            data = await me.get();
+          } catch (error) {
+            if (!current || !isAuthRejected(error)) return;
+            if (!rt) {
+              if (getAccessToken() === token) clearTokens();
+              return;
+            }
+          }
+        }
+        if (!data && rt) {
+          renewedFor = await renewStoredSession(rt);
+          if (!current || !getAccessToken()) return;
+          data = await me.get();
+        }
+        const access = getAccessToken();
+        if (!current || !data || !access) return;
         setProfile(data);
         setUser(summaryFromProfile(data));
-        setLoading(false);
-      })
-      .catch(() => {
-        const rt = getRefreshToken();
-        if (!rt) {
-          clearTokens();
-          setLoading(false);
-          return;
-        }
-        auth
-          .refresh(rt)
-          .then((pair) => {
-            setTokens(pair.access_token, pair.refresh_token);
-            scheduleRefresh(pair.expires_in);
-            return me.get();
-          })
-          .then((data) => {
-            setProfile(data);
-            setUser(summaryFromProfile(data));
-          })
-          .catch(() => {
-            clearTokens();
-          })
-          .finally(() => setLoading(false));
-      });
-  }, [scheduleRefresh]);
+        const remaining = renewedFor ?? secondsUntilExpiry(access);
+        if (remaining !== undefined) scheduleRefreshIn(remaining - REFRESH_EARLY_SECONDS);
+      } catch { /* Keep stored credentials on a temporary API failure. */ }
+      finally { if (current) setLoading(false); }
+    }
+    void restore();
+    return () => {
+      current = false;
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    };
+  }, [scheduleRefreshIn]);
 
   const login = useCallback(
     async (emailAddr: string, passwordVal: string) => {
       const resp = await auth.login(emailAddr, passwordVal);
+      trackEvent("login", { method: "email" });
       setTokens(resp.tokens.access_token, resp.tokens.refresh_token);
-      scheduleRefresh(resp.tokens.expires_in);
+      scheduleRefreshIn(resp.tokens.expires_in - REFRESH_EARLY_SECONDS);
       setUser(resp.user);
       const data = await me.get();
       setProfile(data);
       setUser(summaryFromProfile(data));
     },
-    [scheduleRefresh]
+    [scheduleRefreshIn]
   );
 
   const logout = useCallback(async () => {
@@ -137,10 +181,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setUserAfterRegister = useCallback(
     (u: UserSummary, tokens: TokenPair) => {
       setTokens(tokens.access_token, tokens.refresh_token);
-      scheduleRefresh(tokens.expires_in);
+      scheduleRefreshIn(tokens.expires_in - REFRESH_EARLY_SECONDS);
       setUser(u);
     },
-    [scheduleRefresh]
+    [scheduleRefreshIn]
   );
 
   return (

@@ -1,19 +1,29 @@
-import { Check, ShoppingCart, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { toast } from "sonner";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { paymentParams, trackEvent } from "../../analytics";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ApiError,
   managedSubscriptions,
+  me,
   WebInvoiceResponse,
   WebMenuNode,
   webPayments,
 } from "../../api/client";
 import { useLang } from "../../locale";
+import { subscriptionName } from "../../lib/subscription-name";
+
+function formatPrice(amount: number, currency: string, lang: string) {
+  try {
+    return amount.toLocaleString(lang, { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 20 });
+  } catch {
+    return `${amount.toLocaleString(lang)} ${currency}`;
+  }
+}
 
 interface ViewResult {
   chipLevels: WebMenuNode[][];
@@ -35,55 +45,57 @@ function buildView(nodes: WebMenuNode[], selections: (number | null)[], depth = 
   return { chipLevels: [btns, ...nested.chipLevels], invoices: nested.invoices };
 }
 
-export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?: number }) {
+export default function BuyTab({ targetSubscriptionId, renewing }: { targetSubscriptionId?: number; renewing: boolean }) {
   const { L, lang } = useLang();
   const [tree, setTree] = useState<WebMenuNode[]>([]);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<"menu" | "target" | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [selections, setSelections] = useState<(number | null)[]>([]);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
   const [buyingId, setBuyingId] = useState<number | null>(null);
   const [payingCreditsId, setPayingCreditsId] = useState<number | null>(null);
   const [invoice, setInvoice] = useState<WebInvoiceResponse | null>(null);
   const [targetLabel, setTargetLabel] = useState<string | null>(null);
-
-  const isRu = lang === "ru";
-
-  const chipLabel = (depth: number) => {
-    if (isRu) return depth === 0 ? "Тариф" : depth === 1 ? "Период" : "Подкатегория";
-    return depth === 0 ? "Tariff" : depth === 1 ? "Period" : "Subcategory";
-  };
-  const invoiceLabel = isRu ? "Метод оплаты" : "Payment method";
-  const selectHint = isRu ? "Выберите категорию выше" : "Select a category above";
-  const noTariffsHint = isRu ? "Тарифы не найдены" : "No tariffs found";
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const resp = await webPayments.getMenu();
-      setTree(resp.tree);
-      setBalance(resp.balance);
-    } catch {
-      setError(L.err_load_plans);
-    } finally {
-      setLoading(false);
-    }
-  }, [L.err_load_plans]);
-
-  useEffect(() => { load(); }, [load]);
+  const busy = useRef(false);
+  const lastList = useRef("");
+  const invoiceAnalytics = useRef<Record<string, unknown>>({});
 
   useEffect(() => {
-    if (!targetSubscriptionId) {
-      setTargetLabel(null);
-      return;
+    let current = true;
+    setLoading(true);
+    setError(null);
+    async function loadTargetName() {
+      if (!renewing) return null;
+      if (!targetSubscriptionId) return (await me.get()).subscription?.tariff ?? null;
+      const { subscriptions } = await managedSubscriptions.list();
+      const target = subscriptions.find(sub => sub.id === targetSubscriptionId);
+      return target ? subscriptionName(target, subscriptions) : null;
     }
-    void managedSubscriptions.list().then(({ subscriptions }) => {
-      const target = subscriptions.find((item) => item.id === targetSubscriptionId);
-      setTargetLabel(target ? target.label || target.tariff : null);
-    }).catch(() => setTargetLabel(null));
-  }, [targetSubscriptionId]);
+
+    async function load() {
+      try {
+        const [menu, name] = await Promise.all([webPayments.getMenu(), loadTargetName()]);
+        if (!current) return;
+        if (renewing && !name) {
+          setError("target");
+          return;
+        }
+        setTargetLabel(name);
+        setTree(menu.tree);
+        setBalance(menu.balance);
+      } catch {
+        if (current) setError("menu");
+      } finally {
+        if (current) setLoading(false);
+      }
+    }
+    void load();
+    return () => { current = false; };
+  }, [targetSubscriptionId, renewing, attempt]);
+
+  const title = renewing ? (targetLabel ? L.renew_named(targetLabel) : L.renew_subscription) : L.buy_title;
 
   const { chipLevels, invoices } = useMemo(() => {
     if (!tree.length) return { chipLevels: [], invoices: [] };
@@ -96,6 +108,17 @@ export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?
   );
 
   const pointsCost = selectedInvoice?.invoice?.points_cost ?? 0;
+  useEffect(() => {
+    const signature = invoices.map((n) => n.id).join(",");
+    if (!signature || signature === lastList.current) return;
+    lastList.current = signature;
+    // Payment choices can have different currencies; report each independently.
+    for (const node of invoices) {
+      if (node.invoice) trackEvent("view_item_list", {
+        ...paymentParams(node.invoice, renewing), item_list_id: "web_tariffs",
+      });
+    }
+  }, [invoices, renewing]);
   const canPayCredits = pointsCost > 0 && balance >= pointsCost;
 
   function selectChip(depth: number, id: number) {
@@ -109,11 +132,18 @@ export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?
   }
 
   function selectInvoice(id: number) {
-    setSelectedInvoiceId((prev) => (prev === id ? null : id));
+    const node = invoices.find((item) => item.id === id);
+    if (id !== selectedInvoiceId && node?.invoice) {
+      trackEvent("select_item", { ...paymentParams(node.invoice, renewing), item_list_id: "web_tariffs" });
+    }
+    setSelectedInvoiceId(id);
   }
 
   async function handleBuyFiat() {
-    if (!selectedInvoiceId) return;
+    if (!selectedInvoiceId || !selectedInvoice?.invoice || busy.current) return;
+    busy.current = true;
+    const params = paymentParams(selectedInvoice.invoice, renewing);
+    trackEvent("begin_checkout", params);
     setBuyingId(selectedInvoiceId);
     try {
       const resp = await webPayments.createInvoice(
@@ -122,6 +152,10 @@ export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?
         targetSubscriptionId
       );
       setInvoice(resp);
+      invoiceAnalytics.current = { ...params, value: resp.amount, currency: resp.currency,
+        items: params.items.map((item) => ({ ...item, price: resp.amount })),
+        transaction_id: resp.transaction_id, payment_provider: resp.provider, payment_type: resp.payment_method };
+      trackEvent("invoice_created", invoiceAnalytics.current);
     } catch (e) {
       let errMsg = L.err_invoice;
       if (e instanceof ApiError) {
@@ -130,17 +164,22 @@ export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?
         else if (e.code === "email_not_verified") errMsg = L.err_not_verified;
       }
       toast.error(errMsg);
+      trackEvent("checkout_error", { ...params, error_code: e instanceof ApiError ? e.code : "network_error" });
     } finally {
+      busy.current = false;
       setBuyingId(null);
     }
   }
 
   async function handlePayCredits() {
-    if (!selectedInvoiceId || !canPayCredits) return;
+    if (!selectedInvoiceId || !canPayCredits || busy.current) return;
+    busy.current = true;
+    trackEvent("credits_checkout", { points_cost: pointsCost, purchase_kind: renewing ? "renewal" : "new" });
     setPayingCreditsId(selectedInvoiceId);
     try {
       const resp = await webPayments.payWithCredits(selectedInvoiceId, targetSubscriptionId);
       if (resp.ok) {
+        trackEvent("credits_purchase", { transaction_id: resp.transaction_id, points_spent: resp.points_spent ?? pointsCost });
         if (resp.balance_after != null) setBalance(resp.balance_after);
         toast.success(L.msg_paid_with_credits);
       }
@@ -152,201 +191,105 @@ export default function BuyTab({ targetSubscriptionId }: { targetSubscriptionId?
       }
       toast.error(errMsg);
     } finally {
+      busy.current = false;
       setPayingCreditsId(null);
     }
   }
 
-  if (loading) {
-    return (
-      <div>
-        <div className="mb-6 flex items-center gap-2">
-          <ShoppingCart size={18} className="text-muted-foreground" />
-          <h4 className="m-0 text-lg font-semibold text-foreground">{L.buy_title}</h4>
-        </div>
-        <div className="flex flex-col gap-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="flex flex-col gap-2">
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div>
-        <div className="mb-6 flex items-center gap-2">
-          <ShoppingCart size={18} className="text-muted-foreground" />
-          <h4 className="m-0 text-lg font-semibold text-foreground">{L.buy_title}</h4>
-        </div>
-        <Alert variant="destructive" className="rounded-xl">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   const payInvoice = selectedInvoice?.invoice;
-  const payPrice = payInvoice?.amount ?? 0;
-  const payCurrency = payInvoice?.currency ?? "";
+  const selectedPath = chipLevels.flatMap((level, depth) => {
+    const chosen = level.find(node => node.id === selections[depth]);
+    return chosen ? [chosen.text] : [];
+  });
+  const description = [targetLabel, selectedPath[0] || payInvoice?.tariff_slug,
+    payInvoice?.days ? L.days(payInvoice.days) : selectedPath[1], ...selectedPath.slice(2),
+  ].filter((part, i, parts) => part && parts.indexOf(part) === i).join(" · ");
+  const processing = buyingId !== null || payingCreditsId !== null;
 
   return (
-    <div>
-      <div className="mb-5 flex items-center gap-2">
-        <ShoppingCart size={18} className="text-muted-foreground" />
-        <h4 className="m-0 text-lg font-semibold text-foreground">{L.buy_title}</h4>
-      </div>
-
-      {targetSubscriptionId && (
-        <Alert variant="info" className="mb-5 rounded-xl">
-          <AlertDescription>
-            {isRu ? "Продление профиля: " : "Renewing profile: "}
-            <strong>{targetLabel || `#${targetSubscriptionId}`}</strong>
-          </AlertDescription>
+    <div className="max-w-3xl">
+      <h1 className="dashboard-title mb-6">{title}</h1>
+      {loading ? (
+        <div className="grid gap-3"><Skeleton className="h-5 w-40" /><Skeleton className="h-10 w-64" /></div>
+      ) : error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error === "target" ? L.renew_target_missing : L.err_load_plans}</AlertDescription>
+          <Button variant="outline" className="mt-3 text-foreground" onClick={() => setAttempt(a => a + 1)}>{L.btn_retry_app}</Button>
         </Alert>
-      )}
-
-      {balance > 0 && (
-        <Alert variant="info" className="mb-5 rounded-xl">
-          <Wallet className="h-4 w-4" />
-          <AlertDescription className="flex flex-wrap items-center gap-2">
-            <span>{L.bonus_balance(balance)}</span>
-            <Badge variant="secondary">{L.points_hint}</Badge>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {chipLevels.length === 0 && invoices.length === 0 && (
-        <div className="tariff-hint">{noTariffsHint}</div>
-      )}
-
-      {chipLevels.map((chips, depth) => (
-        <div key={depth} className="mb-4">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {chipLabel(depth)}
-          </div>
-          <div className="chip-row-wrap">
-            <div className="chip-row">
-              {chips.map((chip) => (
-                <button
-                  key={chip.id}
-                  className={`plan-chip${selections[depth] === chip.id ? " active" : ""}`}
-                  onClick={() => selectChip(depth, chip.id)}
-                >
-                  {chip.text}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {chipLevels.length > 0 && invoices.length === 0 && (
-        <div className="tariff-hint">{selectHint}</div>
-      )}
-
-      {invoices.length > 0 && (
-        <div className="mb-4">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {invoiceLabel}
-          </div>
-          <div className="tariff-scroll-wrap">
-            <div className="tariff-scroll">
-              {invoices.map((n) => {
-                const inv = n.invoice!;
-                const isSelected = selectedInvoiceId === n.id;
-
-                return (
-                  <div
-                    key={n.id}
-                    className={`tariff-card${isSelected ? " selected" : ""}`}
-                    onClick={() => selectInvoice(n.id)}
-                  >
-                    <div className="tariff-card__name">{n.text}</div>
-                    <div className="tariff-card__price-row">
-                      <div className="tariff-card__price">{inv.amount}</div>
-                      <div className="tariff-card__currency">{inv.currency}</div>
-                    </div>
-                    {(inv.days ?? 0) > 0 && (
-                      <div className="mt-1 text-[11px] opacity-50">
-                        {L.days(inv.days ?? 0)}
-                      </div>
-                    )}
-                    {isSelected && (
-                      <div className="tariff-card__check">
-                        <Check size={12} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedInvoice && (
-        <div className="mt-2 flex flex-col gap-2.5 rounded-2xl border border-border bg-card px-5 py-4">
-          <div>
-            <span className="text-[13px] text-muted-foreground">{selectedInvoice.text}</span>
-            <div className="mt-0.5 flex items-baseline gap-1.5">
-              <span className="text-[22px] font-extrabold text-foreground">{payPrice}</span>
-              <span className="text-sm text-muted-foreground">{payCurrency}</span>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            {canPayCredits && (
-              <Button
-                size="lg"
-                disabled={payingCreditsId === selectedInvoiceId}
-                onClick={handlePayCredits}
-                className="w-full rounded-xl font-bold"
-              >
-                {L.btn_pay_credits(pointsCost)}
-              </Button>
-            )}
-            <Button
-              size="lg"
-              variant="outline"
-              disabled={buyingId === selectedInvoiceId}
-              onClick={handleBuyFiat}
-              className="w-full rounded-xl font-bold"
-            >
-              {L.btn_pay} · {payPrice} {payCurrency}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <Dialog open={!!invoice} onOpenChange={(open) => !open && setInvoice(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{L.invoice_title}</DialogTitle>
-          </DialogHeader>
-          {invoice && (
-            <div className="flex flex-col gap-4">
-              <div className="rounded-2xl bg-secondary px-5 py-4">
-                <div className="mb-2 flex justify-between">
-                  <span className="text-muted-foreground">{L.to_pay}</span>
-                  <span className="text-xl font-semibold text-foreground">
-                    {invoice.amount} {invoice.currency}
-                  </span>
-                </div>
+      ) : (
+        <>
+          {balance > 0 && (
+            <Alert className="mb-5 bg-card">
+              <Wallet /><AlertDescription>
+                {L.bonus_balance(balance)} <span className="text-muted-foreground">{L.points_hint}</span>
+              </AlertDescription>
+            </Alert>
+          )}
+          {chipLevels.map((chips, depth) => (
+            <fieldset key={depth} disabled={processing} className="mb-5">
+              <legend className="mb-2 text-sm font-medium">{[L.label_plan, L.plan_period][depth] ?? L.plan_category}</legend>
+              <div className="flex flex-wrap gap-2">
+                {chips.map(chip => (
+                  <Button key={chip.id} aria-pressed={selections[depth] === chip.id}
+                    variant={selections[depth] === chip.id ? "default" : "outline"}
+                    className="h-auto min-h-9 max-w-full whitespace-normal rounded-full transition-none"
+                    onClick={() => selectChip(depth, chip.id)}>{chip.text}</Button>
+                ))}
               </div>
-              <Button
-                size="lg"
-                className="h-12 w-full rounded-xl font-semibold"
-                onClick={() => {
-                  window.open(invoice.url, "_blank");
-                  setInvoice(null);
-                }}
-              >
-                {L.btn_proceed}
-              </Button>
+            </fieldset>
+          ))}
+          {invoices.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{chipLevels.length ? L.choose_category : L.no_tariffs}</p>
+          ) : (
+            <fieldset disabled={processing} className="mb-5">
+              <legend className="mb-2 text-sm font-medium">{L.payment_method}</legend>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {invoices.map(node => {
+                  const inv = node.invoice!;
+                  return (
+                    <label key={node.id} className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-4 has-checked:border-primary has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring">
+                      <input className="size-4 shrink-0 accent-primary" type="radio" name="payment-method"
+                        value={node.id} checked={node.id === selectedInvoiceId} onChange={() => selectInvoice(node.id)} />
+                      <span className="min-w-0 flex-1 text-sm font-medium [overflow-wrap:anywhere]">{node.text}</span>
+                      <span className="text-sm tabular-nums">{formatPrice(inv.amount, inv.currency, lang)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
+          {payInvoice && (
+            <div className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:p-5">
+              <p aria-live="polite" className="text-base font-semibold [overflow-wrap:anywhere]">
+                {[description, formatPrice(payInvoice.amount, payInvoice.currency, lang)].filter(Boolean).join(" · ")}
+              </p>
+              <div className="grid gap-2 sm:flex sm:flex-wrap">
+                <Button disabled={processing} onClick={handleBuyFiat}>{L.btn_proceed}</Button>
+                {canPayCredits && (
+                  <Button variant="outline" disabled={processing} onClick={handlePayCredits}>
+                    {L.btn_pay_credits(pointsCost)}
+                  </Button>
+                )}
+              </div>
             </div>
+          )}
+        </>
+      )}
+      <Dialog open={!!invoice} onOpenChange={open => !open && setInvoice(null)}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogHeader><DialogTitle>{L.invoice_title}</DialogTitle></DialogHeader>
+          {invoice && (
+            <>
+              <p className="rounded-lg bg-secondary p-4 font-medium [overflow-wrap:anywhere]">
+                {[description, formatPrice(invoice.amount, invoice.currency, lang)].filter(Boolean).join(" · ")}
+              </p>
+              <Button asChild size="lg">
+                <a href={invoice.url} target="_blank" rel="noopener noreferrer" onClick={() => {
+                  trackEvent("payment_redirect", invoiceAnalytics.current);
+                  setInvoice(null);
+                }}>{L.btn_proceed}</a>
+              </Button>
+            </>
           )}
         </DialogContent>
       </Dialog>

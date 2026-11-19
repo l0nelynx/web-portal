@@ -1,188 +1,146 @@
-import { Calendar, Link as LinkIcon, RefreshCw, Wifi } from "lucide-react";
+import { Calendar, ChevronDown, ExternalLink, MonitorSmartphone, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
+import { badgeVariants, type BadgeProps } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  ManagedSubscription,
-  managedSubscriptions,
-  me,
-  MeResponse,
-  SubscriptionInfo,
-} from "../../api/client";
+import { managedSubscriptions, me, type ManagedSubscription, type SubscriptionInfo } from "../../api/client";
+import { subscriptionName } from "../../lib/subscription-name";
 import { useLang } from "../../locale";
 
-function SubCard({
-  sub,
-  L,
-  isRu,
-  onBuy,
-  onSetPrimary,
-}: {
+function SubscriptionCard({ sub, name, compact, onRenew, onSetPrimary, saving }: {
   sub: SubscriptionInfo | ManagedSubscription;
-  L: ReturnType<typeof useLang>["L"];
-  isRu: boolean;
-  onBuy: () => void;
+  name: string;
+  compact?: boolean;
+  onRenew: () => void;
   onSetPrimary?: () => void;
+  saving: boolean;
 }) {
-  const usagePct =
-    sub.data_limit_gb && sub.data_limit_gb > 0
-      ? Math.min(100, Math.round((sub.traffic_used_gb / sub.data_limit_gb) * 100))
-      : 0;
-
-  const statusMap: Record<string, string> = {
-    active: L.status_active,
-    expired: L.status_expired,
-    disabled: L.status_disabled,
-    limited: L.status_limited,
+  const { L, lang } = useLang();
+  const status: Record<string, [string, BadgeProps["variant"]]> = {
+    active: [L.status_active, "success"], expired: [L.status_expired, "destructive"],
+    disabled: [L.status_disabled, "secondary"], limited: [L.status_limited, "warning"],
   };
-  const statusVariantMap: Record<string, "success" | "destructive" | "secondary" | "warning"> = {
-    active: "success", expired: "destructive", disabled: "secondary", limited: "warning",
-  };
+  const [statusText, variant] = status[sub.status ?? ""] ?? [sub.status || "—", "secondary"];
+  const until = sub.expire_iso && new Date(sub.expire_iso);
+  const term = until && Number.isFinite(until.getTime())
+    ? L.expires_on(until.toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" }))
+    : `${L.label_days_left}: ${sub.days_left}`;
+  const metadata = [name !== sub.tariff && sub.tariff, term].filter(Boolean).join(" · ");
+  const connection = sub.status === "active" && sub.subscription_url;
+  const limit = sub.data_limit_gb;
+  const usage = limit && limit > 0 ? Math.min(100, Math.max(0, 100 * sub.traffic_used_gb / limit)) : null;
+  const number = new Intl.NumberFormat(lang, { maximumFractionDigits: 2 });
 
-  return (
-    <div className="sub-card">
-      <div className="sub-card__header">
-        <span className="sub-card__tariff">{sub.tariff}</span>
-        <div className="flex items-center gap-2">
-          {"is_primary" in sub && sub.is_primary && (
-            <Badge variant="outline">{isRu ? "Основной" : "Primary"}</Badge>
-          )}
-          <Badge variant={statusVariantMap[sub.status || ""] || "secondary"}>
-            {statusMap[sub.status || ""] || sub.status || "—"}
-          </Badge>
+  const heading = (
+    <>
+      <span className="min-w-0 text-xl font-semibold tracking-tight [overflow-wrap:anywhere]">{name}</span>
+      <span className="flex flex-wrap items-center justify-end gap-1.5">
+        {"is_primary" in sub && sub.is_primary && <span className={badgeVariants({ variant: "outline" })}>{L.primary_subscription}</span>}
+        <span className={badgeVariants({ variant, className: variant === "destructive" ? "bg-destructive/15 text-destructive" : undefined })}>
+          {statusText}
+        </span>
+      </span>
+      <span className="col-span-2 row-start-2 text-sm text-muted-foreground [overflow-wrap:anywhere]">{metadata}</span>
+    </>
+  );
+  const body = (
+    <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border py-4 text-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <span>{usage !== null && limit ? L.traffic_amount(number.format(sub.traffic_used_gb), number.format(limit)) : L.traffic_unlimited}</span>
+          {usage !== null && <Progress aria-hidden="true" className="h-1.5 w-20" value={usage} indicatorClassName={usage >= 90 ? "bg-destructive" : undefined} />}
         </div>
+        <span className="inline-flex items-center gap-2 text-muted-foreground">
+          <MonitorSmartphone size={16} />{L.devices_count(sub.devices_count)}
+        </span>
       </div>
-
-      <div className="sub-card__days-row">
-        <span className="sub-card__days-num">{sub.days_left}</span>
-        <span className="sub-card__days-label">{L.label_days_left.toLowerCase()}</span>
-      </div>
-
-      {sub.data_limit_gb && sub.data_limit_gb > 0 ? (
-        <div className="sub-card__progress">
-          <div className="flex items-center gap-2">
-            <Progress
-              value={usagePct}
-              className={usagePct >= 90 ? "progress-danger" : undefined}
-            />
-            <span className="text-xs text-muted-foreground">{usagePct}%</span>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {sub.traffic_used_gb.toFixed(2)} GB / {sub.data_limit_gb} GB
-          </span>
-        </div>
-      ) : null}
-
-      <div className="sub-card__stats">
-        <div className="sub-card__stat">
-          <span className="sub-card__stat-val">{sub.devices_count}</span>
-          <span className="sub-card__stat-label">{L.label_devices}</span>
-        </div>
-        <div className="sub-card__stat">
-          <span className="sub-card__stat-val">
-            {sub.data_limit_gb ? `${sub.traffic_used_gb.toFixed(1)} GB` : "∞"}
-          </span>
-          <span className="sub-card__stat-label">{L.label_traffic}</span>
-        </div>
-        {sub.expire_iso && (
-          <div className="sub-card__stat">
-            <span className="sub-card__stat-val">
-              {new Date(sub.expire_iso).toLocaleDateString()}
-            </span>
-            <span className="sub-card__stat-label">{L.label_expires}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-wrap gap-2 px-[22px] pb-[18px] pt-3">
-        {sub.status === "active" && sub.subscription_url && (
-          <Button className="rounded-xl" onClick={() => window.open(sub.subscription_url!, "_blank")}>
-            <LinkIcon className="h-4 w-4" />
-            {L.copy_sub_link}
+      <div className="grid gap-2 sm:flex sm:flex-wrap">
+        {connection && (
+          <Button asChild>
+            <a href={connection} target="_blank" rel="noopener noreferrer">{L.setup_connection}<ExternalLink /></a>
           </Button>
         )}
-        <Button className="rounded-xl" variant="outline" onClick={onBuy}>
-          {isRu ? "Продлить" : "Renew"}
-        </Button>
-        {onSetPrimary && (
-          <Button className="rounded-xl" variant="ghost" onClick={onSetPrimary}>
-            {isRu ? "Сделать основным" : "Make primary"}
-          </Button>
-        )}
+        <Button variant={connection ? "outline" : "default"} onClick={onRenew}>{L.renew_subscription}</Button>
+        {onSetPrimary && <Button variant="ghost" onClick={onSetPrimary} disabled={saving}>{L.make_primary}</Button>}
       </div>
     </div>
   );
+  return compact ? (
+    <details className="group rounded-xl border border-border bg-card">
+      <summary className="grid cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 gap-y-1 rounded-xl p-4 focus-visible:outline-2 focus-visible:outline-ring sm:px-6 [&::-webkit-details-marker]:hidden">
+        {heading}<ChevronDown size={16} className="col-start-3 row-span-2 row-start-1 text-muted-foreground group-open:rotate-180" />
+      </summary>
+      {body}
+    </details>
+  ) : (
+    <article className="rounded-xl border border-border bg-card">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 p-4 sm:px-6 sm:py-5">{heading}</header>
+      {body}
+    </article>
+  );
 }
 
-export default function SubscriptionTab({ onBuyClick }: { onBuyClick: (id?: number) => void }) {
-  const { L, lang } = useLang();
-  const isRu = lang === "ru";
-  const [data, setData] = useState<MeResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function SubscriptionTab({ onBuy, onRenew }: {
+  onBuy: () => void;
+  onRenew: (id?: number) => void;
+}) {
+  const { L } = useLang();
+  const [legacy, setLegacy] = useState<SubscriptionInfo | null>(null);
   const [subscriptions, setSubscriptions] = useState<ManagedSubscription[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
+    setError(false);
     try {
-      const [meResponse, managed] = await Promise.all([me.get(), managedSubscriptions.list()]);
-      setData(meResponse);
-      setSubscriptions(managed.subscriptions);
-    }
-    catch { setError(L.err_load_sub); }
+      const [profile, managed] = await Promise.all([me.get(), managedSubscriptions.list()]);
+      setLegacy(profile.subscription);
+      setSubscriptions([...managed.subscriptions].sort((a, b) => Number(b.is_primary) - Number(a.is_primary)));
+    } catch { setError(true); }
     finally { setLoading(false); }
-  }, [L]);
+  }, []);
+  useEffect(() => { void load(); }, [load]);
 
-  useEffect(() => { load(); }, [load]);
+  async function makePrimary(id: number) {
+    setSaving(true);
+    try {
+      await managedSubscriptions.setPrimary(id);
+      await load();
+    } catch { toast.error(L.primary_failed); }
+    finally { setSaving(false); }
+  }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h4 className="m-0 flex items-center gap-2 text-lg font-semibold text-foreground">
-          <Wifi size={18} />{L.sub_title}
-        </h4>
-        <Button variant="outline" onClick={load} disabled={loading} className="rounded-lg">
-          {loading ? <Spinner className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
-          {L.btn_refresh}
+    <div className="max-w-3xl">
+      <div className="dashboard-heading">
+        <h1 className="dashboard-title">{L.sub_title}</h1>
+        <Button variant="outline" onClick={load} disabled={loading || saving}>
+          {loading ? <Spinner /> : <RefreshCw />}{L.btn_refresh}
         </Button>
       </div>
-
-      {loading && !data ? (
-        <div className="py-16 text-center"><Spinner className="mx-auto h-8 w-8" /></div>
-      ) : error ? (
-        <Alert variant="destructive" className="rounded-xl">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : subscriptions.length > 0 ? (
-        <div className="flex flex-col gap-4">
-          {subscriptions.map((sub) => (
-            <SubCard
-              key={sub.id}
-              sub={sub}
-              L={L}
-              isRu={isRu}
-              onBuy={() => onBuyClick(sub.id)}
-              onSetPrimary={sub.is_primary ? undefined : async () => {
-                await managedSubscriptions.setPrimary(sub.id);
-                await load();
-              }}
-            />
+      {error ? (
+        <Alert variant="destructive"><AlertDescription>{L.err_load_sub}</AlertDescription></Alert>
+      ) : subscriptions.length ? (
+        <div className="grid gap-3">
+          {subscriptions.map((sub, index) => (
+            <SubscriptionCard key={sub.id} sub={sub} name={subscriptionName(sub, subscriptions)} compact={index > 0}
+              onRenew={() => onRenew(sub.id)} onSetPrimary={sub.is_primary ? undefined : () => makePrimary(sub.id)} saving={saving} />
           ))}
         </div>
-      ) : data?.subscription ? (
-        <SubCard sub={data.subscription} L={L} isRu={isRu} onBuy={() => onBuyClick()} />
+      ) : legacy ? (
+        <SubscriptionCard sub={legacy} name={legacy.tariff} onRenew={() => onRenew()} saving={false} />
+      ) : loading ? (
+        <div className="py-16 text-center"><Spinner className="mx-auto h-8 w-8" /></div>
       ) : (
-        <div className="rounded-[20px] border border-dashed border-border bg-card px-6 py-16 text-center">
-          <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-          <h4 className="text-lg font-semibold text-muted-foreground">{L.no_sub_title}</h4>
-          <span className="mb-6 block text-muted-foreground">{L.no_sub_text}</span>
-          <Button size="lg" onClick={() => onBuyClick()} className="rounded-xl">
-            {L.btn_buy_sub}
-          </Button>
+        <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
+          <Calendar className="mx-auto mb-3 text-muted-foreground" />
+          <h2 className="mb-5 text-lg font-semibold">{L.no_sub_title}</h2>
+          <Button onClick={onBuy}>{L.btn_buy_sub}</Button>
         </div>
       )}
     </div>

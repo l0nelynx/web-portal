@@ -17,6 +17,16 @@ function savedLang(): Lang {
   return "en";
 }
 
+const russianPluralRules = new Intl.PluralRules("ru");
+
+function ruPlural(n: number, one: string, few: string, many: string) {
+  switch (russianPluralRules.select(n)) {
+    case "one": return one;
+    case "few": return few;
+    default: return many;
+  }
+}
+
 export interface Translations {
   lang_toggle: string;
   // Sidebar / header
@@ -26,6 +36,7 @@ export interface Translations {
   menu_settings: string;
   btn_logout: string;
   header_portal: string;
+  account_link: string;
   // Landing — nav
   nav_solutions: string;
   nav_platform: string;
@@ -179,6 +190,21 @@ export interface Translations {
   val_confirm_match: string;
   val_invite_req: string;
   // Subscription tab
+  primary_subscription: string;
+  make_primary: string;
+  renew_subscription: string;
+  renew_named: (name: string) => string;
+  expires_on: (date: string) => string;
+  traffic_amount: (used: string, limit: string) => string;
+  devices_count: (n: number) => string;
+  primary_failed: string;
+  payment_method: string;
+  plan_period: string;
+  plan_category: string;
+  choose_category: string;
+  renew_target_missing: string;
+  dashboard_navigation: string;
+  toggle_sidebar: string;
   sub_title: string;
   btn_refresh: string;
   no_sub_title: string;
@@ -193,7 +219,7 @@ export interface Translations {
   label_traffic: string;
   traffic_unlimited: string;
   traffic_usage: string;
-  copy_sub_link: string;
+  setup_connection: string;
   status_active: string;
   status_expired: string;
   status_disabled: string;
@@ -466,12 +492,13 @@ export interface Translations {
 
 const en: Translations = {
   lang_toggle: "EN",
-  menu_subscription: "Subscription",
+  menu_subscription: "Subscriptions",
   menu_buy: "Buy",
   menu_devices: "Devices",
   menu_settings: "Settings",
   btn_logout: "Sign Out",
   header_portal: "Client Portal",
+  account_link: "My account",
   // Landing — nav
   nav_solutions: "Solutions",
   nav_platform: "Platform",
@@ -624,11 +651,26 @@ const en: Translations = {
   val_confirm_req: "Repeat your password",
   val_confirm_match: "Passwords do not match",
   val_invite_req: "Enter your invitation code",
-  sub_title: "My Subscription",
+  primary_subscription: "Primary",
+  make_primary: "Make primary",
+  renew_subscription: "Renew",
+  renew_named: (name) => `Renew “${name}”`,
+  expires_on: (date) => `Until ${date}`,
+  traffic_amount: (used, limit) => `${used} of ${limit} GB`,
+  devices_count: (n) => `${n} ${n === 1 ? "device" : "devices"}`,
+  primary_failed: "Could not change the primary subscription.",
+  payment_method: "Payment method",
+  plan_period: "Period",
+  plan_category: "Category",
+  choose_category: "Choose an option above to continue.",
+  renew_target_missing: "This subscription could not be found.",
+  dashboard_navigation: "Navigation",
+  toggle_sidebar: "Toggle sidebar",
+  sub_title: "Subscriptions",
   btn_refresh: "Refresh",
   no_sub_title: "No active subscription",
   no_sub_text: "Choose a plan to get started",
-  btn_buy_sub: "Buy Subscription",
+  btn_buy_sub: "Choose a plan",
   err_load_sub: "Failed to load subscription data",
   label_plan: "Plan",
   label_status: "Status",
@@ -638,7 +680,7 @@ const en: Translations = {
   label_traffic: "Traffic",
   traffic_unlimited: "Unlimited traffic",
   traffic_usage: "Traffic usage",
-  copy_sub_link: "How to connect",
+  setup_connection: "Set up connection",
   status_active: "Active",
   status_expired: "Expired",
   status_disabled: "Disabled",
@@ -670,7 +712,7 @@ const en: Translations = {
   col_added: "Added",
   unknown_device: "Unknown device",
   no_devices: "No connected devices",
-  dev_auto_registered: "Devices are registered automatically when using the client app.",
+  dev_auto_registered: "Your device will appear here after its first connection.",
   confirm_remove: "Remove device?",
   confirm_remove_desc: "This will disconnect the device from VPN",
   ok_remove: "Remove",
@@ -907,12 +949,13 @@ const en: Translations = {
 
 const ru: Translations = {
   lang_toggle: "RU",
-  menu_subscription: "Подписка",
+  menu_subscription: "Подписки",
   menu_buy: "Купить",
   menu_devices: "Устройства",
   menu_settings: "Настройки",
   btn_logout: "Выйти",
   header_portal: "Клиентский портал",
+  account_link: "Личный кабинет",
   // Landing — nav
   nav_solutions: "Возможности",
   nav_platform: "Платформа",
@@ -1065,11 +1108,26 @@ const ru: Translations = {
   val_confirm_req: "Повторите пароль",
   val_confirm_match: "Пароли не совпадают",
   val_invite_req: "Введите код приглашения",
-  sub_title: "Моя подписка",
+  primary_subscription: "Основная",
+  make_primary: "Сделать основной",
+  renew_subscription: "Продлить",
+  renew_named: (name) => `Продлить подписку «${name}»`,
+  expires_on: (date) => `до ${date}`,
+  traffic_amount: (used, limit) => `${used} из ${limit} ГБ`,
+  devices_count: (n) => `${n} ${ruPlural(n, "устройство", "устройства", "устройств")}`,
+  primary_failed: "Не удалось сменить основную подписку.",
+  payment_method: "Способ оплаты",
+  plan_period: "Период",
+  plan_category: "Категория",
+  choose_category: "Выберите вариант выше, чтобы продолжить.",
+  renew_target_missing: "Не удалось найти эту подписку.",
+  dashboard_navigation: "Навигация",
+  toggle_sidebar: "Свернуть или развернуть меню",
+  sub_title: "Подписки",
   btn_refresh: "Обновить",
   no_sub_title: "Нет активной подписки",
   no_sub_text: "Выберите тарифный план для начала работы",
-  btn_buy_sub: "Купить подписку",
+  btn_buy_sub: "Выбрать тариф",
   err_load_sub: "Не удалось загрузить данные подписки",
   label_plan: "Тариф",
   label_status: "Статус",
@@ -1079,7 +1137,7 @@ const ru: Translations = {
   label_traffic: "Трафик",
   traffic_unlimited: "Безлимитный трафик",
   traffic_usage: "Использование трафика",
-  copy_sub_link: "Как подключиться",
+  setup_connection: "Настроить подключение",
   status_active: "Активна",
   status_expired: "Истекла",
   status_disabled: "Отключена",
@@ -1101,11 +1159,7 @@ const ru: Translations = {
   err_not_verified: "Сначала подтвердите email",
   err_invoice: "Ошибка создания счёта. Попробуйте позже.",
   btn_back: "Назад",
-  days: (n) => {
-    if (n === 1) return "1 день";
-    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `${n} дня`;
-    return `${n} дней`;
-  },
+  days: (n) => `${n} ${ruPlural(n, "день", "дня", "дней")}`,
   dev_title: "Устройства",
   err_load_dev: "Не удалось загрузить устройства",
   err_remove_dev: "Не удалось удалить устройство",
@@ -1115,7 +1169,7 @@ const ru: Translations = {
   col_added: "Добавлено",
   unknown_device: "Неизвестное устройство",
   no_devices: "Нет подключённых устройств",
-  dev_auto_registered: "Устройства регистрируются автоматически при использовании клиентского приложения.",
+  dev_auto_registered: "Устройство появится здесь после первого подключения.",
   confirm_remove: "Удалить устройство?",
   confirm_remove_desc: "Отключит это устройство от VPN",
   ok_remove: "Удалить",

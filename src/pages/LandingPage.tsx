@@ -21,6 +21,7 @@ import BrandLogo from "../components/BrandLogo";
 import PartnershipForm from "../components/PartnershipForm";
 import { BRAND_NAME, BOT_URL } from "../branding";
 import { useLang } from "../locale";
+import { useAuth } from "../auth/AuthContext";
 import { HOME_TITLE, usePageMeta } from "../seo";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 
@@ -165,6 +166,7 @@ function DeviceMockup({ variant }: { variant: AppId }) {
 export default function LandingPage() {
   const navigate = useNavigate();
   const { L, toggle } = useLang();
+  const { user } = useAuth();
   const isMobile = !useMediaQuery("(min-width: 576px)");
   const [downloadApp, setDownloadApp] = useState<AppId | null>(null);
   const [downloadPlatform, setDownloadPlatform] = useState<DownloadPlatform>(() => defaultPlatform());
@@ -253,8 +255,8 @@ export default function LandingPage() {
           >
             {L.lang_toggle}
           </Button>
-          <Button size="sm" onClick={() => navigate("/login")}>
-            {isMobile ? L.btn_login : L.header_portal}
+          <Button size="sm" asChild>
+            <Link to="/dashboard">{user ? L.account_link : isMobile ? L.btn_login : L.header_portal}</Link>
           </Button>
         </div>
       </nav>
@@ -294,9 +296,9 @@ export default function LandingPage() {
               variant="outline"
               size="lg"
               className="h-11 px-7 text-[15px] sm:h-[50px] sm:text-base"
-              onClick={() => navigate("/login")}
+              asChild
             >
-              {L.btn_login}
+              <Link to="/dashboard">{user ? L.account_link : L.btn_login}</Link>
             </Button>
           </div>
         </div>

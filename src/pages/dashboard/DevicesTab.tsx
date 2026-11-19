@@ -1,4 +1,5 @@
 import { Laptop, Smartphone, Trash2, RefreshCw } from "lucide-react";
+import { Link } from "react-router";
 import { toast } from "sonner";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ApiError, devices, DeviceItem } from "../../api/client";
+import { useAuth } from "../../auth/AuthContext";
 import { useLang } from "../../locale";
 
 function platformIcon(platform: string | null) {
@@ -27,7 +29,9 @@ function platformIcon(platform: string | null) {
 }
 
 export default function DevicesTab() {
-  const { L } = useLang();
+  const { L, lang } = useLang();
+  const { profile } = useAuth();
+  const connection = profile?.subscription?.status === "active" && profile.subscription.subscription_url;
   const [data, setData] = useState<{ total: number; devices: DeviceItem[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,12 +62,11 @@ export default function DevicesTab() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h4 className="m-0 flex items-center gap-2 text-lg font-semibold text-white">
-          <Laptop size={18} />
+      <div className="dashboard-heading">
+        <h1 className="dashboard-title flex items-center gap-2">
           {L.dev_title}
           {data && <Badge variant="secondary">{data.total}</Badge>}
-        </h4>
+        </h1>
         <Button variant="outline" onClick={load} disabled={loading} className="rounded-lg">
           {loading ? <Spinner className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
           {L.btn_refresh}
@@ -77,33 +80,40 @@ export default function DevicesTab() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : !data?.devices.length ? (
-        <div className="rounded-xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
-          <Laptop className="mx-auto mb-3 h-10 w-10 text-white/20" />
-          <span className="block text-white/35">{L.no_devices}</span>
+        <div className="rounded-xl border border-border bg-card px-6 py-10 text-center">
+          <Laptop className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">{L.no_devices}</h2>
+          <p className="mb-4 mt-1 text-sm text-muted-foreground">{L.dev_auto_registered}</p>
+          <Button asChild variant="outline">
+            {connection
+              ? <a href={connection} target="_blank" rel="noopener noreferrer">{L.setup_connection}</a>
+              : <Link to="/instruction">{L.setup_connection}</Link>}
+          </Button>
         </div>
       ) : (
-        <div>
+        <div className="dashboard-list">
           {data.devices.map((dev) => (
-            <div key={dev.hwid} className="device-card">
-              <div className="device-card__icon">
+            <div key={dev.hwid} className="flex items-center gap-3 p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted">
                 {platformIcon(dev.platform)}
               </div>
-              <div className="device-card__body">
-                <div className="device-card__name">{dev.device_model || L.unknown_device}</div>
-                <div className="device-card__meta">
+              <div className="min-w-0 flex-1">
+                <div className="font-medium [overflow-wrap:anywhere]">{dev.device_model || L.unknown_device}</div>
+                <div className="text-sm text-muted-foreground">
                   {[dev.platform, dev.os_version].filter(Boolean).join(" · ")}
                   {dev.created_at && (
                     <span className="ml-2">
-                      · {new Date(dev.created_at).toLocaleDateString()}
+                      · {new Date(dev.created_at).toLocaleDateString(lang)}
                     </span>
                   )}
                 </div>
               </div>
-              <div className="device-card__actions">
+              <div className="shrink-0">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
-                      variant="destructive"
+                      variant="ghost"
+                      aria-label={`${L.ok_remove} · ${dev.device_model || L.unknown_device}`}
                       size="icon"
                       disabled={removingHwid === dev.hwid}
                       className="h-8 w-8 rounded-lg"
@@ -119,7 +129,7 @@ export default function DevicesTab() {
                     <AlertDialogFooter>
                       <AlertDialogCancel>{L.cancel}</AlertDialogCancel>
                       <AlertDialogAction
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                        className="bg-destructive text-background hover:bg-destructive/95"
                         onClick={() => handleRemove(dev.hwid)}
                       >
                         {L.ok_remove}
@@ -133,9 +143,7 @@ export default function DevicesTab() {
         </div>
       )}
 
-      <span className="mt-3 block text-xs text-white/30">
-        {L.dev_auto_registered}
-      </span>
+      {!!data?.devices.length && !error && <p className="mt-3 text-sm text-muted-foreground">{L.dev_auto_registered}</p>}
     </div>
   );
 }

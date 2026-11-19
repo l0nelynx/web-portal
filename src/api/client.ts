@@ -10,6 +10,8 @@
 // Strip any trailing slash so `${API_BASE}${path}` (path starts with "/") never
 // produces a double slash — a VITE_API_URL set as ".../bot/miniapp/api/" would
 // otherwise hit ".../api//android/..." and 404.
+import { getAnalyticsContext, trackEvent } from "../analytics";
+
 const API_BASE: string = (import.meta.env.VITE_API_URL ?? "/bot/miniapp/api").replace(/\/+$/, "");
 
 export class ApiError extends Error {
@@ -174,7 +176,10 @@ export const auth = {
     ),
 
   telegramExchange: (code: string, state: string) =>
-    post<AuthResponse>("/web/auth/telegram/exchange", { code, state }, false),
+    post<AuthResponse>("/web/auth/telegram/exchange", { code, state }, false).then((resp) => {
+      trackEvent("login", { method: "telegram" });
+      return resp;
+    }),
 };
 
 export const subscriptionSso = {
@@ -356,11 +361,12 @@ export interface WebPayCreditsResponse {
 
 export const webPayments = {
   getMenu: () => get<WebMenuResponse>("/web/payments/menu"),
-  createInvoice: (node_id: number, description?: string, subscription_id?: number) =>
+  createInvoice: async (node_id: number, description?: string, subscription_id?: number) =>
     post<WebInvoiceResponse>("/web/payments/invoice", {
       node_id,
       description,
       subscription_id,
+      analytics: await getAnalyticsContext(),
     }),
   payWithCredits: (node_id: number, subscription_id?: number) =>
     post<WebPayCreditsResponse>("/web/payments/pay-credits", { node_id, subscription_id }),

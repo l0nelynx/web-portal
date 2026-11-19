@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -10,7 +11,7 @@ import BrandLogo from "../components/BrandLogo";
 import TelegramLoginButton from "../components/TelegramLoginButton";
 import { BRAND_NAME } from "../branding";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useLang } from "../locale";
@@ -27,7 +28,7 @@ function buildSchema(L: ReturnType<typeof useLang>["L"]) {
 type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 export default function LoginPage() {
-  const { login, setUserAfterRegister } = useAuth();
+  const { user, loading, login, setUserAfterRegister } = useAuth();
   const navigate = useNavigate();
   const { L, toggle } = useLang();
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +73,11 @@ export default function LoginPage() {
       }
     }
   }
+
+  if (loading) {
+    return <div className="grid min-h-screen place-items-center"><Spinner className="size-8" /></div>;
+  }
+  if (user && !isSubmitting) return <Navigate to={safeReturnTo ?? "/dashboard"} replace />;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-6">

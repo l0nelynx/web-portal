@@ -1,0 +1,38 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import ts from "typescript";
+
+const source = (await readFile("src/analytics.ts", "utf8")).replace("import.meta.env.VITE_GA_ID", '"G-TEST123"');
+const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
+globalThis.window = { location: { origin: "https://vpn.test", href: "https://vpn.test/login?utm_source=telegram&code=secret#token", search: "?utm_source=telegram&code=secret" } };
+const scripts = [];
+globalThis.document = { referrer: "https://source.test/private?email=a@b.test", createElement: () => ({}), head: { appendChild: s => scripts.push(s) } };
+const a = await import(`data:text/javascript;base64,${Buffer.from(js).toString("base64")}`);
+assert.equal(a.safeLocation(window.location.href), "https://vpn.test/login?utm_source=telegram");
+assert.equal(a.safeLocation("https://vpn.test/secret-token?email=test"), "https://vpn.test/other");
+a.initAnalytics(); a.initAnalytics();
+assert.equal(scripts.length, 1);
+const events = () => window.dataLayer.map(x => [...x]);
+assert.equal(events()[1][2].page_referrer, "https://source.test");
+a.pageView("/login"); a.pageView("/login"); a.pageView("/dashboard/buy");
+assert.equal(events().filter(x => x[1] === "page_view").length, 2);
+assert.ok(!JSON.stringify(events()).includes("secret"));
+assert.equal(await a.getAnalyticsContext(), undefined); // Blocked tag's callback times out.
+window.gtag = (_, id, field, callback) => callback(field === "client_id" ? "123.456" : 1234567890);
+assert.deepEqual(await a.getAnalyticsContext(), { client_id: "123.456", session_id: "1234567890" });
+window.gtag = () => { throw Error("blocked"); };
+assert.doesNotThrow(() => a.trackEvent("begin_checkout"));
+assert.equal(await a.getAnalyticsContext(), undefined);
+const params = a.paymentParams({ tariff_slug: "pro", days: 30, amount: 199, currency: "RUB", provider: "test" }, true);
+assert.equal(params.items[0].item_id, "pro:30");
+assert.equal(params.purchase_kind, "renewal");
+console.log("Analytics: URL redaction, page deduplication, attribution IDs, blocked tag and ecommerce passed.");
+const disabledJs = js.replace('"G-TEST123"', '""');
+const disabled = await import(`data:text/javascript;base64,${Buffer.from(disabledJs).toString("base64")}`);
+let calls = 0;
+window.gtag = () => calls++;
+disabled.initAnalytics(); disabled.pageView("/login"); disabled.trackEvent("purchase");
+assert.equal(await disabled.getAnalyticsContext(), undefined);
+assert.equal(calls, 0);
+assert.equal(scripts.length, 1);
+console.log("Analytics: empty measurement ID disables all collection.");

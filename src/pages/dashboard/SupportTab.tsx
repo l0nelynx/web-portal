@@ -48,9 +48,9 @@ const STATUS_BADGE: Record<string, "default" | "warning" | "secondary"> = {
   closed: "secondary",
 };
 
-function formatDate(iso: string): string {
+function formatDate(iso: string, lang: string): string {
   try {
-    return new Date(iso).toLocaleString(undefined, {
+    return new Date(iso).toLocaleString(lang, {
       month: "short",
       day: "numeric",
       hour: "2-digit",
@@ -62,11 +62,12 @@ function formatDate(iso: string): string {
 }
 
 export default function SupportTab() {
-  const { L } = useLang();
+  const { L, lang } = useLang();
 
   const [view, setView] = useState<SupportView>("list");
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
+  const [listError, setListError] = useState(false);
   const [listLoading, setListLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
@@ -122,11 +123,12 @@ export default function SupportTab() {
 
   async function loadTickets() {
     setListLoading(true);
+    setListError(false);
     try {
       const list = await support.listTickets();
       setTickets(list);
     } catch {
-      toast.error(L.err_load_tickets);
+      setListError(true);
     } finally {
       setListLoading(false);
     }
@@ -197,10 +199,8 @@ export default function SupportTab() {
   if (view === "list") {
     return (
       <div>
-        <div className="mb-6 flex items-center justify-between">
-          <h4 className="m-0 flex items-center gap-2 text-lg font-semibold text-foreground">
-            <Headset size={18} />{L.support_title}
-          </h4>
+        <div className="dashboard-heading">
+          <h1 className="dashboard-title">{L.support_title}</h1>
           <Button onClick={() => setView("create")} className="gap-2 rounded-lg">
             <Plus size={16} />
             {L.btn_new_ticket}
@@ -209,18 +209,24 @@ export default function SupportTab() {
 
         {listLoading ? (
           <div className="py-10 text-center"><Spinner className="mx-auto h-6 w-6" /></div>
+        ) : listError ? (
+          <Alert variant="destructive">
+            <AlertDescription>{L.err_load_tickets}</AlertDescription>
+            <Button variant="outline" className="mt-3 text-foreground" onClick={loadTickets}>{L.btn_retry_app}</Button>
+          </Alert>
         ) : tickets.length === 0 ? (
           <div className="py-16 text-center">
             <Headset className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <span className="text-muted-foreground">{L.ticket_list_empty}</span>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="dashboard-list">
             {tickets.map((t) => (
-              <Card
+              <button
+                type="button"
                 key={t.id}
                 onClick={() => openTicket(t.id)}
-                className="cursor-pointer px-[18px] py-3.5 transition-colors hover:bg-accent"
+                className="block w-full cursor-pointer p-4 text-left hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -229,10 +235,10 @@ export default function SupportTab() {
                   </div>
                   <div className="flex flex-shrink-0 flex-col items-end gap-1.5">
                     <Badge variant={STATUS_BADGE[t.status] ?? "secondary"}>{statusLabel(t.status)}</Badge>
-                    <span className="text-[11px] text-muted-foreground">{formatDate(t.updated_at)}</span>
+                    <span className="text-[13px] text-muted-foreground">{formatDate(t.updated_at, lang)}</span>
                   </div>
                 </div>
-              </Card>
+              </button>
             ))}
           </div>
         )}
@@ -245,10 +251,10 @@ export default function SupportTab() {
     return (
       <div>
         <div className="mb-6 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setView("list")} className="h-8 w-8 text-muted-foreground">
+          <Button variant="ghost" size="icon" onClick={() => setView("list")} aria-label={L.btn_back_to_tickets} className="h-8 w-8 text-muted-foreground">
             <ArrowLeft size={18} />
           </Button>
-          <h4 className="m-0 text-lg font-semibold text-foreground">{L.btn_new_ticket}</h4>
+          <h1 className="dashboard-title">{L.btn_new_ticket}</h1>
         </div>
 
         <Card className="p-6">
@@ -293,6 +299,7 @@ export default function SupportTab() {
         <Button
           variant="ghost"
           size="icon"
+          aria-label={L.btn_back_to_tickets}
           onClick={() => { setView("list"); setTicket(null); }}
           className="h-8 w-8 text-muted-foreground"
         >
@@ -301,7 +308,7 @@ export default function SupportTab() {
         <div className="flex-1">
           {ticket && (
             <>
-              <span className="block font-semibold text-foreground">{ticket.subject}</span>
+              <h1 className="dashboard-title">{ticket.subject}</h1>
               <Badge variant={STATUS_BADGE[ticket.status] ?? "secondary"} className="mt-0.5">
                 {statusLabel(ticket.status)}
               </Badge>
@@ -323,8 +330,8 @@ export default function SupportTab() {
                   <div key={m.id} className={cn("flex flex-col", isUser ? "items-end" : "items-start")}>
                     <div className="mb-1 flex items-center gap-1.5">
                       {!isUser && <Headset size={13} className="text-primary" />}
-                      <span className="text-[11px] text-muted-foreground">
-                        {isUser ? L.lbl_you : L.lbl_support_agent} · {formatDate(m.created_at)}
+                      <span className="text-[13px] text-muted-foreground">
+                        {isUser ? L.lbl_you : L.lbl_support_agent} · {formatDate(m.created_at, lang)}
                       </span>
                       {isUser && <User size={13} className="text-muted-foreground" />}
                     </div>
@@ -404,6 +411,7 @@ export default function SupportTab() {
                   className="resize-none rounded-none"
                 />
                 <Button
+                  aria-label={L.btn_send_reply}
                   onClick={handleReply}
                   disabled={replyLoading || (!replyText.trim() && pendingImages.length === 0)}
                   className="rounded-l-none"

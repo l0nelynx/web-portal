@@ -97,7 +97,7 @@ export default function InstructionPage() {
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Button variant="outline" size="sm" onClick={toggle}>{L.lang_toggle}</Button>
             <Button size="sm" asChild>
-              <Link to="/login">
+              <Link to="/dashboard">
                 <span className="sm:hidden">{L.sign_in}</span>
                 <span className="hidden sm:inline">{L.instruction_open_portal}</span>
               </Link>
@@ -262,7 +262,7 @@ export default function InstructionPage() {
                 <Link to="/"><ArrowLeft className="h-4 w-4" />{L.instruction_back_home}</Link>
               </Button>
               <Button className="w-full sm:w-auto" asChild>
-                <Link to="/login">{L.instruction_open_portal}<ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/dashboard">{L.instruction_open_portal}<ArrowRight className="h-4 w-4" /></Link>
               </Button>
             </div>
           </div>

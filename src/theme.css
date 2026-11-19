@@ -66,262 +66,31 @@ body {
   background: oklch(1 0 0 / 20%);
 }
 
-/* ── Chip rows (BuyTab) ───────────────────────────────────── */
-.chip-row-wrap {
-  overflow: hidden;
-}
-
-.chip-row {
+/* Shared layout for the portal sections. */
+.dashboard-heading {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
-  padding: 2px 0 10px;
-}
-
-.plan-chip {
-  display: inline-flex;
-  align-items: center;
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--secondary);
-  color: var(--muted-foreground);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.16s ease;
-  outline: none;
-}
-.plan-chip:hover {
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-.plan-chip.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-foreground);
-}
-
-/* ── Tariff cards ─────────────────────────────────────────── */
-.tariff-scroll-wrap {
-  overflow: hidden;
-  animation: fadeIn 0.2s ease;
-}
-
-.tariff-scroll {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 4px 0 16px;
-}
-
-.tariff-card {
-  flex: 0 0 auto;
-  min-width: 140px;
-  max-width: 200px;
-  min-height: 140px;
-  display: flex;
-  flex-direction: column;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px 14px 14px;
-  cursor: pointer;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
-  position: relative;
-  overflow: hidden;
-}
-.tariff-card:hover {
-  border-color: color-mix(in oklch, var(--foreground) 35%, var(--border));
-}
-.tariff-card.selected {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
-}
-
-.tariff-card__name {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--foreground);
-  line-height: 1.2;
-  flex: 1;
-}
-.tariff-card__price-row {
-  margin-top: 12px;
-}
-.tariff-card__price {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--foreground);
-  line-height: 1.1;
-  letter-spacing: -0.5px;
-}
-.tariff-card.selected .tariff-card__price {
-  color: var(--foreground);
-}
-.tariff-card__price-orig {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  text-decoration: line-through;
-  margin-bottom: 2px;
-}
-.tariff-card__currency {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  font-weight: 500;
-  margin-top: 2px;
-}
-.tariff-card__check {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--primary-foreground);
-  font-size: 10px;
-}
-
-.tariff-hint {
-  text-align: center;
-  padding: 32px 0;
-  color: var(--muted-foreground);
-  font-size: 14px;
-  animation: fadeIn 0.2s ease;
-}
-
-/* ── Subscription card ────────────────────────────────────── */
-.sub-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-.sub-card__header {
-  padding: 18px 22px 14px;
-  display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  border-bottom: 1px solid var(--border);
-}
-.sub-card__tariff {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--foreground);
-  letter-spacing: -0.2px;
-}
-.sub-card__days-row {
-  padding: 20px 22px 0;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.sub-card__days-num {
-  font-size: 60px;
-  font-weight: 800;
-  color: var(--foreground);
-  line-height: 1;
-  letter-spacing: -3px;
-}
-.sub-card__days-label {
-  font-size: 16px;
-  color: var(--muted-foreground);
-  font-weight: 500;
-  padding-bottom: 8px;
-}
-.sub-card__progress {
-  padding: 14px 22px 0;
-}
-.sub-card__stats {
-  display: flex;
-  gap: 0;
-  padding: 14px 0 4px;
-  margin: 0 16px;
-  border-top: 1px solid var(--border);
-  flex-wrap: wrap;
-}
-.sub-card__stat {
-  flex: 1;
-  min-width: 100px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 8px;
-}
-.sub-card__stat + .sub-card__stat {
-  border-left: 1px solid var(--border);
-}
-.sub-card__stat-val {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--foreground);
-  line-height: 1.2;
-}
-.sub-card__stat-label {
-  font-size: 11px;
-  color: var(--muted-foreground);
-  font-weight: 500;
-  margin-top: 4px;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
-/* ── Device cards ─────────────────────────────────────────── */
-.device-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-.device-card__icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--foreground);
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.device-card__body {
-  flex: 1;
-  min-width: 0;
-}
-.device-card__name {
-  font-size: 15px;
+.dashboard-title {
+  font-size: clamp(1.5rem, 2.2vw, 1.75rem);
   font-weight: 600;
-  color: var(--foreground);
-  margin-bottom: 4px;
-}
-.device-card__meta {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  line-height: 1.4;
-}
-.device-card__actions {
-  flex-shrink: 0;
-  align-self: center;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
 }
 
-.progress-danger {
-  background: color-mix(in oklch, var(--destructive) 20%, transparent) !important;
+.dashboard-list {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
 }
-.progress-danger > div {
-  background: var(--destructive) !important;
+
+.dashboard-list > * + * {
+  border-top: 1px solid var(--border);
 }

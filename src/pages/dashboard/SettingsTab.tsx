@@ -6,7 +6,6 @@ import {
   LogOut,
   Mail,
   Send,
-  ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -420,9 +419,9 @@ export default function SettingsTab() {
 
   return (
     <div>
-      <h4 className="mb-6 flex items-center gap-2 text-lg font-semibold text-foreground">
-        <ShieldCheck size={18} />{L.settings_title}
-      </h4>
+      <h1 className="dashboard-title mb-6">
+        {L.settings_title}
+      </h1>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Account info */}
@@ -433,26 +432,26 @@ export default function SettingsTab() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 pt-6 text-sm">
-            <div className="flex items-baseline gap-3">
-              <span className="w-[140px] shrink-0 text-muted-foreground">Email</span>
-              <span className="text-foreground">{user?.email || "—"}</span>
+            <div className="grid min-w-0 gap-1 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-baseline sm:gap-3">
+              <span className="text-muted-foreground">Email</span>
+              <span className="min-w-0 [overflow-wrap:anywhere]">{user?.email || "—"}</span>
             </div>
-            <div className="flex items-baseline gap-3">
-              <span className="w-[140px] shrink-0 text-muted-foreground">{L.label_email_status}</span>
+            <div className="grid min-w-0 gap-1 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-baseline sm:gap-3">
+              <span className="text-muted-foreground">{L.label_email_status}</span>
               {user?.email_verified ? (
-                <Badge variant="success" className="gap-1"><CheckCircle2 size={12} />{L.status_verified}</Badge>
+                <Badge variant="success" className="w-fit gap-1"><CheckCircle2 size={12} />{L.status_verified}</Badge>
               ) : (
                 <div className="flex items-center gap-2">
                   <Badge variant="warning" className="gap-1"><TriangleAlert size={12} />{L.status_not_verified}</Badge>
-                  <Button size="sm" variant="outline" disabled={verifyLoading} onClick={sendVerifyEmail} className="h-6 rounded-md text-[11px]">
+                  <Button size="sm" variant="outline" disabled={verifyLoading} onClick={sendVerifyEmail} className="h-8 rounded-md text-[13px]">
                     {verifyLoading && <Spinner className="h-3 w-3" />}
                     {L.btn_verify}
                   </Button>
                 </div>
               )}
             </div>
-            <div className="flex items-baseline gap-3">
-              <span className="w-[140px] shrink-0 text-muted-foreground">{L.label_telegram}</span>
+            <div className="grid min-w-0 gap-1 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-baseline sm:gap-3">
+              <span className="text-muted-foreground">{L.label_telegram}</span>
               <div className="flex flex-wrap items-center gap-2">
                 {profile?.user.tg_id
                   ? <Badge variant="default" className="gap-1"><Send size={12} />{L.tg_linked}</Badge>
@@ -460,7 +459,7 @@ export default function SettingsTab() {
                 {profile?.user.tg_id ? (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="destructive" disabled={unlinkLoading} className="h-6 rounded-md text-[11px]">
+                      <Button size="sm" variant="outline" disabled={unlinkLoading} className="h-8 rounded-md text-[13px]">
                         {unlinkLoading && <Spinner className="h-3 w-3" />}
                         {L.btn_unlink_telegram}
                       </Button>
@@ -473,7 +472,7 @@ export default function SettingsTab() {
                       <AlertDialogFooter>
                         <AlertDialogCancel>{L.cancel}</AlertDialogCancel>
                         <AlertDialogAction
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                          className="bg-destructive text-background hover:bg-destructive/95"
                           onClick={handleUnlinkTelegram}
                         >
                           {L.btn_unlink_telegram}
@@ -482,7 +481,7 @@ export default function SettingsTab() {
                     </AlertDialogContent>
                   </AlertDialog>
                 ) : (
-                  <Button size="sm" variant="outline" disabled={linkLoading} onClick={handleLinkTelegram} className="h-6 gap-1 rounded-md text-[11px]">
+                  <Button size="sm" variant="outline" disabled={linkLoading} onClick={handleLinkTelegram} className="h-8 gap-1 rounded-md text-[13px]">
                     {linkLoading ? <Spinner className="h-3 w-3" /> : <Link2 size={12} />}
                     {L.btn_link_telegram}
                   </Button>
@@ -493,7 +492,7 @@ export default function SettingsTab() {
               <Alert variant="info" className="mt-3 rounded-lg">
                 <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
                   <span>{L.tg_link_opened}</span>
-                  <Button size="sm" variant="outline" className="h-6 rounded-md text-[11px]"
+                  <Button size="sm" variant="outline" className="h-8 rounded-md text-[13px]"
                     onClick={() => refreshProfile().then(() => setTgLinkOpened(false))}>
                     {L.btn_refresh}
                   </Button>
@@ -570,7 +569,7 @@ export default function SettingsTab() {
                 <Badge variant="success">{promoState.last_promo_code}</Badge>
               </div>
             )}
-            <span className="text-xs text-muted-foreground">{L.promo_balance_hint}</span>
+            <span className="text-[13px] text-muted-foreground">{L.promo_balance_hint}</span>
             <div className="flex">
               <Input
                 value={promoCode}
@@ -607,7 +606,7 @@ export default function SettingsTab() {
             <div className="flex flex-wrap gap-2">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={revokeLoading} className="gap-2 rounded-lg">
+                  <Button variant="outline" disabled={revokeLoading} className="gap-2 rounded-lg">
                     {revokeLoading ? <Spinner className="h-4 w-4" /> : <LogOut size={16} />}
                     {L.btn_revoke_sessions}
                   </Button>
@@ -620,7 +619,7 @@ export default function SettingsTab() {
                   <AlertDialogFooter>
                     <AlertDialogCancel>{L.cancel}</AlertDialogCancel>
                     <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                      className="bg-destructive text-background hover:bg-destructive/95"
                       onClick={revokeAllSessions}
                     >
                       {L.ok_revoke}
