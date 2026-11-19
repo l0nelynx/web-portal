@@ -1,5 +1,5 @@
 import { Calendar, ChevronDown, ExternalLink, MonitorSmartphone, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -8,6 +8,7 @@ import { badgeVariants, type BadgeProps } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { managedSubscriptions, me, type ManagedSubscription, type SubscriptionInfo } from "../../api/client";
 import { subscriptionName } from "../../lib/subscription-name";
+import { trackEvent } from "../../analytics";
 import { useLang } from "../../locale";
 
 function SubscriptionCard({ sub, name, compact, onRenew, onSetPrimary, saving }: {
@@ -60,10 +61,16 @@ function SubscriptionCard({ sub, name, compact, onRenew, onSetPrimary, saving }:
       <div className="grid gap-2 sm:flex sm:flex-wrap">
         {connection && (
           <Button asChild>
-            <a href={connection} target="_blank" rel="noopener noreferrer">{L.setup_connection}<ExternalLink /></a>
+            <a href={connection} target="_blank" rel="noopener noreferrer"
+              onClick={() => trackEvent("connection_setup_clicked", { setup_source: "subscription" })}>
+              {L.setup_connection}<ExternalLink />
+            </a>
           </Button>
         )}
-        <Button variant={connection ? "outline" : "default"} onClick={onRenew}>{L.renew_subscription}</Button>
+        <Button variant={connection ? "outline" : "default"} onClick={() => {
+          trackEvent("renewal_selected", { days_remaining: Math.max(0, sub.days_left) });
+          onRenew();
+        }}>{L.renew_subscription}</Button>
         {onSetPrimary && <Button variant="ghost" onClick={onSetPrimary} disabled={saving}>{L.make_primary}</Button>}
       </div>
     </div>
@@ -93,6 +100,7 @@ export default function SubscriptionTab({ onBuy, onRenew }: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const overviewReported = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -106,10 +114,21 @@ export default function SubscriptionTab({ onBuy, onRenew }: {
   }, []);
   useEffect(() => { void load(); }, [load]);
 
+  useEffect(() => {
+    if (loading || error || overviewReported.current) return;
+    overviewReported.current = true;
+    const visible = subscriptions.length ? subscriptions : legacy ? [legacy] : [];
+    trackEvent("subscription_overview_viewed", {
+      subscription_count: visible.length,
+      active_subscription_count: visible.filter(sub => sub.status === "active").length,
+    });
+  }, [loading, error, subscriptions, legacy]);
+
   async function makePrimary(id: number) {
     setSaving(true);
     try {
       await managedSubscriptions.setPrimary(id);
+      trackEvent("primary_subscription_changed");
       await load();
     } catch { toast.error(L.primary_failed); }
     finally { setSaving(false); }

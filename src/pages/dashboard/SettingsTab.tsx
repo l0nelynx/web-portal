@@ -34,6 +34,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ApiError, email, password, promo, PromoState, sessions, setup, tgLink } from "../../api/client";
+import { trackEvent } from "../../analytics";
 import { useAuth } from "../../auth/AuthContext";
 import { useLang } from "../../locale";
 
@@ -391,6 +392,7 @@ export default function SettingsTab() {
     setPromoError(null);
     try {
       const res = await promo.activate(promoCode.trim());
+      trackEvent("promo_redeemed");
       toast.success(L.msg_promo_activated(res.credit_grant, res.balance));
       setPromoCode("");
       setPromoState((prev) =>

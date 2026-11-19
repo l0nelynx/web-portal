@@ -23,6 +23,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { AttachmentOut, ApiError, support, TicketDetail, TicketSummary } from "../../api/client";
 import { useAuthedImage } from "../../hooks/useAuthedImage";
+import { trackEvent } from "../../analytics";
 import { useLang } from "../../locale";
 
 const MAX_IMAGES = 3;
@@ -152,6 +153,7 @@ export default function SupportTab() {
     setCreateLoading(true);
     try {
       const t = await support.createTicket(values.subject, values.message);
+      trackEvent("support_ticket_created");
       createForm.reset();
       setTicket(t);
       setView("detail");
@@ -173,6 +175,7 @@ export default function SupportTab() {
     setReplyLoading(true);
     try {
       const newMsg = await support.addMessage(ticket.id, text, pendingImages);
+      trackEvent("support_reply_sent");
       setReplyText("");
       setPendingImages([]);
       setTicket((prev) =>

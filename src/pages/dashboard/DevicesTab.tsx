@@ -1,7 +1,7 @@
 import { Laptop, Smartphone, Trash2, RefreshCw } from "lucide-react";
 import { Link } from "react-router";
 import { toast } from "sonner";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ApiError, devices, DeviceItem } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
+import { trackEvent } from "../../analytics";
 import { useLang } from "../../locale";
 
 function platformIcon(platform: string | null) {
@@ -36,6 +37,7 @@ export default function DevicesTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingHwid, setRemovingHwid] = useState<string | null>(null);
+  const listReported = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,10 +49,17 @@ export default function DevicesTab() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    if (loading || error || !data || listReported.current) return;
+    listReported.current = true;
+    trackEvent("device_list_viewed", { device_count: data.total });
+  }, [loading, error, data]);
+
   async function handleRemove(hwid: string) {
     setRemovingHwid(hwid);
     try {
       await devices.remove(hwid);
+      trackEvent("device_removed");
       await load();
     } catch (e) {
       const msg = e instanceof ApiError && e.status === 429 ? L.err_rate_limited_dev : L.err_remove_dev;
@@ -84,7 +93,9 @@ export default function DevicesTab() {
           <Laptop className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
           <h2 className="text-lg font-semibold">{L.no_devices}</h2>
           <p className="mb-4 mt-1 text-sm text-muted-foreground">{L.dev_auto_registered}</p>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" onClick={() => trackEvent("connection_setup_clicked", {
+            setup_source: connection ? "devices_subscription" : "devices_guide",
+          })}>
             {connection
               ? <a href={connection} target="_blank" rel="noopener noreferrer">{L.setup_connection}</a>
               : <Link to="/instruction">{L.setup_connection}</Link>}
