@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { trackEvent } from "../analytics";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,7 +51,7 @@ type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 export default function RegisterPage() {
   const { setUserAfterRegister } = useAuth();
-  const { L } = useLang();
+  const { L, lang } = useLang();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnToRaw = searchParams.get("return_to");
@@ -58,6 +59,11 @@ export default function RegisterPage() {
   const subscriptionFlow = isSubscriptionPageReturnTo(returnTo);
   const subscriptionContext = legacySubscriptionContext(returnTo);
   const [error, setError] = useState<string | null>(null);
+  const [challenge, setChallenge] = useState<ApiError["challenge"]>();
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [widgetAttempt, setWidgetAttempt] = useState(0);
+  const [scriptFailed, setScriptFailed] = useState(false);
+  const [widgetFailed, setWidgetFailed] = useState(false);
   usePageMeta({ title: `${L.reg_title} | ${BRAND_NAME}`, robots: "noindex, follow" });
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>({
     checked: false, valid: null, data: null, checking: false,
@@ -68,6 +74,7 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
@@ -98,6 +105,8 @@ export default function RegisterPage() {
   }, []);
 
   async function onFinish(values: FormValues) {
+    if (challenge && !captchaToken) return;
+    const email = values.email.trim().toLowerCase();
     const trimmedInvite = values.invite_code.trim().toUpperCase();
     if (trimmedInvite && !inviteStatus.valid) {
       setError(L.err_req_invite);
@@ -106,18 +115,14 @@ export default function RegisterPage() {
     setError(null);
     try {
       const resp = await auth.register(
-        values.email.trim().toLowerCase(),
+        email,
         values.password,
-        subscriptionFlow
-          ? {
-              subscription_flow: true,
-              ...(subscriptionContext
-                ? { subscription_context: subscriptionContext }
-                : {}),
-            }
-          : trimmedInvite
-            ? { invite_code: trimmedInvite }
-            : {}
+        {
+          ...(captchaToken && { captcha_token: captchaToken }),
+          ...(subscriptionFlow && { subscription_flow: true }),
+          ...(subscriptionFlow && subscriptionContext && { subscription_context: subscriptionContext }),
+          ...(!subscriptionFlow && trimmedInvite && { invite_code: trimmedInvite }),
+        }
       );
       clearLegacySubscriptionContext(returnTo);
       trackEvent("sign_up", { method: "email" });
@@ -129,8 +134,15 @@ export default function RegisterPage() {
         { replace: true },
       );
     } catch (e) {
+      setCaptchaToken("");
+      setWidgetAttempt((attempt) => attempt + 1);
       if (e instanceof ApiError) {
+        if (e.challenge) {
+          if (getValues("email").trim().toLowerCase() === email) setChallenge(e.challenge);
+          return;
+        }
         const map: Record<string, string> = {
+          challenge_unavailable: L.err_challenge_unavailable,
           email_taken: L.err_email_taken,
           invalid_invite: L.err_invalid_invite,
           rate_limited: L.err_rate_limited,
@@ -223,7 +235,12 @@ export default function RegisterPage() {
                   placeholder="your@email.com"
                   autoComplete="email"
                   className="h-12 rounded-xl pl-9"
-                  {...register("email")}
+                  {...register("email", { onChange: () => {
+                    setChallenge(undefined);
+                    setCaptchaToken("");
+                    setWidgetFailed(false);
+                    setError(null);
+                  } })}
                 />
               </div>
               {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
@@ -259,9 +276,41 @@ export default function RegisterPage() {
               {errors.confirm && <p className="mt-1 text-xs text-destructive">{errors.confirm.message}</p>}
             </div>
 
+            {challenge && (
+              <div className="space-y-2">
+                <p role="status" className="text-sm text-muted-foreground">{L.reg_challenge}</p>
+                <Turnstile
+                  key={widgetAttempt}
+                  siteKey={challenge.site_key}
+                  options={{ action: "web_register", cData: challenge.cdata, language: lang, size: "compact" }}
+                  onSuccess={(token) => { setCaptchaToken(token); setWidgetFailed(false); }}
+                  onExpire={() => setCaptchaToken("")}
+                  onError={() => { setCaptchaToken(""); setWidgetFailed(true); }}
+                  onUnsupported={() => { setCaptchaToken(""); setWidgetFailed(true); }}
+                  scriptOptions={{ onError: () => {
+                    setScriptFailed(true);
+                    setCaptchaToken("");
+                    setWidgetFailed(true);
+                  } }}
+                />
+                {(widgetFailed || scriptFailed) && (
+                  <>
+                    <p role="alert" className="text-sm text-destructive">{L.err_challenge_unavailable}</p>
+                    <Button type="button" variant="outline" onClick={() => {
+                      if (scriptFailed) {
+                        window.location.reload();
+                        return;
+                      }
+                      setWidgetFailed(false);
+                      setWidgetAttempt((attempt) => attempt + 1);
+                    }}>{L.btn_retry_app}</Button>
+                  </>
+                )}
+              </div>
+            )}
             <Button
               type="submit"
-              disabled={isSubmitting || (!!inviteStatus.checked && inviteStatus.valid === false)}
+              disabled={isSubmitting || (!!challenge && !captchaToken) || (!!inviteStatus.checked && inviteStatus.valid === false)}
               className="h-12 rounded-xl text-base font-semibold"
             >
               {L.btn_create}

@@ -179,6 +179,8 @@ export interface Translations {
   err_email_taken: string;
   err_invalid_invite: string;
   err_rate_limited: string;
+  reg_challenge: string;
+  err_challenge_unavailable: string;
   err_req_invite: string;
   err_reg: string;
   err_network: string;
@@ -641,6 +643,8 @@ const en: Translations = {
   err_email_taken: "This email is already registered",
   err_invalid_invite: "Invalid invitation code",
   err_rate_limited: "Too many attempts. Please wait",
+  reg_challenge: "Complete the check to create your account.",
+  err_challenge_unavailable: "Verification is temporarily unavailable. Please try again.",
   err_req_invite: "Enter a valid invitation code, or leave the field empty",
   err_reg: "Registration failed. Please try again.",
   err_network: "Network error. Check your connection.",
@@ -1098,6 +1102,8 @@ const ru: Translations = {
   err_email_taken: "Этот email уже зарегистрирован",
   err_invalid_invite: "Код приглашения недействителен",
   err_rate_limited: "Слишком много попыток. Подождите и попробуйте снова",
+  reg_challenge: "Пройдите проверку, чтобы создать аккаунт.",
+  err_challenge_unavailable: "Проверка временно недоступна. Попробуйте ещё раз.",
   err_req_invite: "Введите действительный код приглашения или оставьте поле пустым",
   err_reg: "Ошибка регистрации. Попробуйте снова.",
   err_network: "Ошибка сети. Проверьте соединение.",

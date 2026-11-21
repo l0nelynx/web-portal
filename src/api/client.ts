@@ -17,6 +17,7 @@ const API_BASE: string = (import.meta.env.VITE_API_URL ?? "/bot/miniapp/api").re
 export class ApiError extends Error {
   status: number;
   code: string;
+  challenge?: { site_key: string; cdata: string };
   constructor(status: number, code: string, message?: string) {
     super(message || code);
     this.status = status;
@@ -66,15 +67,21 @@ async function request<T>(
   try { sessionStorage.setItem("_api_ok", "1"); } catch { /* ignore */ }
 
   if (!res.ok) {
-    let code = `http_${res.status}`;
+    let error = new ApiError(res.status, `http_${res.status}`);
     try {
-      const data = await res.json();
-      if (data?.detail?.code) code = data.detail.code;
-      else if (typeof data?.detail === "string") code = data.detail;
+      const { detail } = await res.json();
+      if (typeof detail === "string") error = new ApiError(res.status, detail);
+      if (typeof detail?.code === "string") {
+        error = new ApiError(res.status, detail.code);
+        if (detail.code === "challenge_required"
+          && typeof detail.site_key === "string" && typeof detail.cdata === "string") {
+          error.challenge = { site_key: detail.site_key, cdata: detail.cdata };
+        }
+      }
     } catch {
       /* ignore */
     }
-    throw new ApiError(res.status, code);
+    throw error;
   }
 
   if (res.status === 204) return undefined as T;
@@ -158,6 +165,7 @@ export const auth = {
     password: string,
     opts: {
       invite_code?: string;
+      captcha_token?: string;
       subscription_context?: string;
       subscription_flow?: boolean;
     }
